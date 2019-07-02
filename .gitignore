@@ -1,0 +1,4 @@
+vendor/
+.idea/
+example/example
+.DS_Store
