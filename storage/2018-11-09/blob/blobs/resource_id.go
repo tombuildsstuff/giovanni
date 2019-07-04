@@ -23,7 +23,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the Resource ID and returns an object which can be used
 // to interact with the Blob Resource
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://foo.blob.core.windows.net/Bar/example.vhd
 	if id == "" {
 		return nil, fmt.Errorf("`id` was empty")
