@@ -62,8 +62,7 @@ func TestParseResourceID(t *testing.T) {
 	}
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
-		c := NewWithEnvironment(v.Environment)
-		actual, err := c.ParseResourceID(v.Input)
+		actual, err := ParseResourceID(v.Input)
 		if err != nil {
 			t.Fatal(err)
 		}

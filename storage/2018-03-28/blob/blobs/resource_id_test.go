@@ -63,8 +63,7 @@ func TestParseResourceID(t *testing.T) {
 	t.Logf("[DEBUG] Top Level Files")
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
-		c := NewWithEnvironment(v.Environment)
-		actual, err := c.ParseResourceID(v.Input)
+		actual, err := ParseResourceID(v.Input)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -104,8 +103,7 @@ func TestParseResourceID(t *testing.T) {
 	t.Logf("[DEBUG] Nested Files")
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
-		c := NewWithEnvironment(v.Environment)
-		actual, err := c.ParseResourceID(v.Input)
+		actual, err := ParseResourceID(v.Input)
 		if err != nil {
 			t.Fatal(err)
 		}

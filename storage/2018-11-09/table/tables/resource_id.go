@@ -22,7 +22,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the Resource ID and returns an object which
 // can be used to interact with the Table within the specified Storage Account
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://foo.table.core.windows.net/Table('foo')
 	if id == "" {
 		return nil, fmt.Errorf("`id` was empty")

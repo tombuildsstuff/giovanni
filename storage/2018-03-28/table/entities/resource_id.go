@@ -24,7 +24,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the specified Resource ID and returns an object which
 // can be used to look up the specified Entity within the specified Table
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://account1.table.core.chinacloudapi.cn/table1(PartitionKey='partition1',RowKey='row1')
 	if id == "" {
 		return nil, fmt.Errorf("`id` was empty")

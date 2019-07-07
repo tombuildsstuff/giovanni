@@ -22,7 +22,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the specified Resource ID and returns an object
 // which can be used to interact with the Storage Shares SDK
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://foo.file.core.windows.net/Bar
 	if id == "" {
 		return nil, fmt.Errorf("`id` was empty")

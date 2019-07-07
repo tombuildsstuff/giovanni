@@ -22,7 +22,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the Resource ID and returns an Object which
 // can be used to interact with a Queue within a Storage Account
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://foo.queue.core.windows.net/Bar
 	if id == "" {
 		return nil, fmt.Errorf("`id` was empty")

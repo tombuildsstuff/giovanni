@@ -23,7 +23,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the Resource ID into an Object
 // which can be used to interact with the Directory within the File Share
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://foo.file.core.windows.net/Bar/Folder
 	if id == "" {
 		return nil, fmt.Errorf("`id` was empty")

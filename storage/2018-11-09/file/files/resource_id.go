@@ -24,7 +24,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the specified Resource ID and returns an object
 // which can be used to interact with Files within a Storage Share.
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://account1.file.core.chinacloudapi.cn/share1/directory1/file1.txt
 	// example: https://account1.file.core.chinacloudapi.cn/share1/directory1/directory2/file1.txt
 

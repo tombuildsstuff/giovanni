@@ -23,7 +23,7 @@ type ResourceID struct {
 
 // ParseResourceID parses the specified Resource ID and returns an object
 // which can be used to interact with the Message within a Queue
-func (client Client) ParseResourceID(id string) (*ResourceID, error) {
+func ParseResourceID(id string) (*ResourceID, error) {
 	// example: https://account1.queue.core.chinacloudapi.cn/queue1/messages/message1
 
 	if id == "" {
