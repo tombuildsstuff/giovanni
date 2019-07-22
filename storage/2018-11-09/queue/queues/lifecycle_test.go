@@ -96,12 +96,21 @@ func TestQueuesLifecycle(t *testing.T) {
 			},
 		},
 		Cors: &Cors{
-			CorsRule: CorsRule{
-				AllowedMethods:  "GET,PUT",
-				AllowedOrigins:  "http://www.example.com",
-				ExposedHeaders:  "x-tempo-*",
-				AllowedHeaders:  "x-tempo-*",
-				MaxAgeInSeconds: 500,
+			CorsRule: []CorsRule{
+				CorsRule{
+					AllowedMethods:  "GET,PUT",
+					AllowedOrigins:  "http://www.example.com",
+					ExposedHeaders:  "x-tempo-*",
+					AllowedHeaders:  "x-tempo-*",
+					MaxAgeInSeconds: 500,
+				},
+				CorsRule{
+					AllowedMethods:  "POST",
+					AllowedOrigins:  "http://www.test.com",
+					ExposedHeaders:  "*",
+					AllowedHeaders:  "x-method-*",
+					MaxAgeInSeconds: 200,
+				},
 			},
 		},
 		HourMetrics: &MetricsConfig{
@@ -131,11 +140,91 @@ func TestQueuesLifecycle(t *testing.T) {
 		t.Fatalf("GetServiceProperties failed: %s", err)
 	}
 
-	if properties.Cors.CorsRule.AllowedMethods != "GET,PUT" {
+	if len(properties.Cors.CorsRule) > 1 {
+		if properties.Cors.CorsRule[0].AllowedMethods != "GET,PUT" {
+			t.Fatalf("CORS Methods weren't set!")
+		}
+		if properties.Cors.CorsRule[1].AllowedMethods != "POST" {
+			t.Fatalf("CORS Methods weren't set!")
+		}
+	} else {
 		t.Fatalf("CORS Methods weren't set!")
 	}
 
 	if properties.HourMetrics.Enabled {
+		t.Fatalf("HourMetrics were enabled when they shouldn't be!")
+	}
+
+	if properties.MinuteMetrics.Enabled {
+		t.Fatalf("MinuteMetrics were enabled when they shouldn't be!")
+	}
+
+	if !properties.Logging.Write {
+		t.Fatalf("Logging Write's was not enabled when they should be!")
+	}
+
+	includeAPIS := true
+	// set some properties
+	props2 := StorageServiceProperties{
+		Logging: &LoggingConfig{
+			Version: "1.0",
+			Delete:  true,
+			Read:    true,
+			Write:   true,
+			RetentionPolicy: RetentionPolicy{
+				Enabled: true,
+				Days:    7,
+			},
+		},
+		Cors: &Cors{
+			CorsRule: []CorsRule{
+				CorsRule{
+					AllowedMethods:  "PUT",
+					AllowedOrigins:  "http://www.example.com",
+					ExposedHeaders:  "x-tempo-*",
+					AllowedHeaders:  "x-tempo-*",
+					MaxAgeInSeconds: 500,
+				},
+			},
+		},
+		HourMetrics: &MetricsConfig{
+			Version: "1.0",
+			Enabled: true,
+			RetentionPolicy: RetentionPolicy{
+				Enabled: true,
+				Days:    7,
+			},
+			IncludeAPIs: &includeAPIS,
+		},
+		MinuteMetrics: &MetricsConfig{
+			Version: "1.0",
+			Enabled: false,
+			RetentionPolicy: RetentionPolicy{
+				Enabled: true,
+				Days:    7,
+			},
+		},
+	}
+
+	_, err = queuesClient.SetServiceProperties(ctx, accountName, props2)
+	if err != nil {
+		t.Fatalf("SetServiceProperties failed: %s", err)
+	}
+
+	properties, err = queuesClient.GetServiceProperties(ctx, accountName)
+	if err != nil {
+		t.Fatalf("GetServiceProperties failed: %s", err)
+	}
+
+	if len(properties.Cors.CorsRule) == 1 {
+		if properties.Cors.CorsRule[0].AllowedMethods != "PUT" {
+			t.Fatalf("CORS Methods weren't set!")
+		}
+	} else {
+		t.Fatalf("CORS Methods weren't set!")
+	}
+
+	if !properties.HourMetrics.Enabled {
 		t.Fatalf("HourMetrics were enabled when they shouldn't be!")
 	}
 
