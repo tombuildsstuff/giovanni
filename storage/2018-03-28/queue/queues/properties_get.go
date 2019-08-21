@@ -58,6 +58,7 @@ func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountNa
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
 		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
+		autorest.WithPath("/"),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))
