@@ -5,10 +5,10 @@ An alternative Azure Storage SDK for Go
 
 This repository is an alternative Azure Storage SDK for Go; which supports for:
 
-- The [Blob Storage API's](https://docs.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api)
-- The [File Storage API's](https://docs.microsoft.com/en-us/rest/api/storageservices/file-service-rest-api)
-- The [Queue Storage API's](https://docs.microsoft.com/en-us/rest/api/storageservices/queue-service-rest-api)
-- The [Table Storage API's](https://docs.microsoft.com/en-us/rest/api/storageservices/table-service-rest-api)
+- The [Blob Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api)
+- The [File Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/file-service-rest-api)
+- The [Queue Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/queue-service-rest-api)
+- The [Table Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/table-service-rest-api)
 
 At this time we support the following API Versions:
 
