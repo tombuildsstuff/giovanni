@@ -58,7 +58,7 @@ func TestAppendBlobLifecycle(t *testing.T) {
 
 	t.Logf("[DEBUG] Appending First Block..")
 	appendInput := AppendBlockInput{
-		Content: []byte{
+		Content: &[]byte{
 			12,
 			48,
 			93,
@@ -82,7 +82,7 @@ func TestAppendBlobLifecycle(t *testing.T) {
 
 	t.Logf("[DEBUG] Appending Second Block..")
 	appendInput = AppendBlockInput{
-		Content: []byte{
+		Content: &[]byte{
 			92,
 			62,
 			64,
@@ -115,7 +115,7 @@ func TestAppendBlobLifecycle(t *testing.T) {
 
 	t.Logf("[DEBUG] Appending Third Block..")
 	appendInput = AppendBlockInput{
-		Content: []byte{
+		Content: &[]byte{
 			64,
 			35,
 			28,
