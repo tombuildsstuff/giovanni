@@ -93,9 +93,10 @@ func (client Client) PutByteRangePreparer(ctx context.Context, accountName, shar
 	}
 
 	headers := map[string]interface{}{
-		"x-ms-version": APIVersion,
-		"x-ms-write":   "update",
-		"x-ms-range":   fmt.Sprintf("bytes=%d-%d", input.StartBytes, input.EndBytes-1),
+		"x-ms-version":   APIVersion,
+		"x-ms-write":     "update",
+		"x-ms-range":     fmt.Sprintf("bytes=%d-%d", input.StartBytes, input.EndBytes-1),
+		"Content-Length": int(len(input.Content)),
 	}
 
 	preparer := autorest.CreatePreparer(
