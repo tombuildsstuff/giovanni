@@ -7,6 +7,10 @@ The following API's are supported by this SDK - more information about each SDK 
 - [Blobs API](blob/blobs)
 - [Containers API](blob/containers)
 
+## DataLakeStore Gen2
+
+- [FileSystems API](datalakestore/filesystems)
+
 ## File Storage
 
 - [Directories API](file/directories)
