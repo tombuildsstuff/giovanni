@@ -6,6 +6,7 @@ An alternative Azure Storage SDK for Go
 This repository is an alternative Azure Storage SDK for Go; which supports for:
 
 - The [Blob Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/blob-service-rest-api)
+- The [DataLakeStorage Gen2 APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/data-lake-storage-gen2)
 - The [File Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/file-service-rest-api)
 - The [Queue Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/queue-service-rest-api)
 - The [Table Storage APIs](https://docs.microsoft.com/en-us/rest/api/storageservices/table-service-rest-api)
@@ -59,6 +60,8 @@ Depending on the API Version / API being used - different authentication mechani
 * A SharedKeyLite Authorizer (for Table Storage)
 
 Examples for all of these can be found below in [the Examples Directory](examples/).
+
+There's a [Pull Request open adding both a SharedKey and a SharedKeyLite authorizer to Azure/go-autorest](http://github.com/Azure/go-autorest/pull/416)  
 
 ## Running the Tests
 
