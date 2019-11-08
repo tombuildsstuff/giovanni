@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/tombuildsstuff/giovanni/testhelpers"
@@ -35,19 +36,32 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 
 	var index = "index.html"
-	var enabled = true
+	//var enabled = true
 	var errorDocument = "404.html"
 
 	input = StorageServiceProperties{
 		StaticWebsite: &StaticWebsite{
-			Enabled: &enabled,
-			IndexDocument: &index,
-			ErrorDocument404Path: &errorDocument,
+			Enabled: true,
+			IndexDocument: index,
+			ErrorDocument404Path: errorDocument,
 		},
 	}
 
 	_, err = accountsClient.SetServiceProperties(ctx, accountName, input)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error setting properties: %s", err))
+	}
+
+	t.Log("[DEBUG] Waiting 2 seconds..")
+	time.Sleep(2 * time.Second)
+
+	result, err := accountsClient.GetServiceProperties(ctx, accountName)
+	if err != nil {
+		t.Fatal(fmt.Errorf("error getting properties: %s", err))
+	}
+
+	website := result.StorageServiceProperties.StaticWebsite
+	if website.Enabled != true {
+		t.Fatalf("Expected the StaticWebsite %t but got %t", true, website.Enabled)
 	}
 }
