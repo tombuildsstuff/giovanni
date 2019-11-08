@@ -9,7 +9,6 @@ import (
 	"net/http"
 )
 
-
 // SetPropertiesSender sends the SetProperties request. The method will close the
 // http.Response Body if it receives an error.
 func (client Client) SetServicePropertiesSender(req *http.Request) (*http.Response, error) {
@@ -21,7 +20,7 @@ func (client Client) SetServicePropertiesSender(req *http.Request) (*http.Respon
 func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountName string, input StorageServiceProperties) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"restype": "service",
-		"comp": "properties",
+		"comp":    "properties",
 	}
 
 	headers := map[string]interface{}{
@@ -49,7 +48,6 @@ func (client Client) SetServicePropertiesResponder(resp *http.Response) (result 
 	return
 }
 
-
 func (client Client) SetServiceProperties(ctx context.Context, accountName string, input StorageServiceProperties) (result SetServicePropertiesResult, err error) {
 	if accountName == "" {
 		return result, validation.NewError("accounts.Client", "SetServiceProperties", "`accountName` cannot be an empty string.")
@@ -76,4 +74,3 @@ func (client Client) SetServiceProperties(ctx context.Context, accountName strin
 
 	return
 }
-

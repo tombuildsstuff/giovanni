@@ -41,8 +41,8 @@ func TestContainerLifecycle(t *testing.T) {
 
 	input = StorageServiceProperties{
 		StaticWebsite: &StaticWebsite{
-			Enabled: true,
-			IndexDocument: index,
+			Enabled:              true,
+			IndexDocument:        index,
 			ErrorDocument404Path: errorDocument,
 		},
 	}

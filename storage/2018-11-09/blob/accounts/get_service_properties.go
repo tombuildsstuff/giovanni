@@ -12,17 +12,15 @@ import (
 type GetServicePropertiesResult struct {
 	autorest.Response
 
-	ContentType string
+	ContentType              string
 	StorageServiceProperties *StorageServiceProperties
 }
-
-
 
 // SetPropertiesPreparer prepares the SetProperties request.
 func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountName string) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"restype": "service",
-		"comp": "properties",
+		"comp":    "properties",
 	}
 
 	headers := map[string]interface{}{
@@ -57,7 +55,6 @@ func (client Client) GetServicePropertiesResponder(resp *http.Response) (result 
 	return
 }
 
-
 func (client Client) GetServiceProperties(ctx context.Context, accountName string) (result GetServicePropertiesResult, err error) {
 	if accountName == "" {
 		return result, validation.NewError("accounts.Client", "GetServiceProperties", "`accountName` cannot be an empty string.")
@@ -84,4 +81,3 @@ func (client Client) GetServiceProperties(ctx context.Context, accountName strin
 
 	return
 }
-
