@@ -9,14 +9,14 @@ import (
 	"net/http"
 )
 
-// SetPropertiesSender sends the SetProperties request. The method will close the
+// SetServicePropertiesSender sends the SetServiceProperties request. The method will close the
 // http.Response Body if it receives an error.
 func (client Client) SetServicePropertiesSender(req *http.Request) (*http.Response, error) {
 	return autorest.SendWithSender(client, req,
 		azure.DoRetryWithRegistration(client.Client))
 }
 
-// SetPropertiesPreparer prepares the SetProperties request.
+// SetServicePropertiesPreparer prepares the SetServiceProperties request.
 func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountName string, input StorageServiceProperties) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"restype": "service",
@@ -36,7 +36,7 @@ func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountNa
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))
 }
 
-// SetPropertiesResponder handles the response to the SetProperties request. The method always
+// SetServicePropertiesResponder handles the response to the SetServiceProperties request. The method always
 // closes the http.Response Body.
 func (client Client) SetServicePropertiesResponder(resp *http.Response) (result SetServicePropertiesResult, err error) {
 	err = autorest.Respond(

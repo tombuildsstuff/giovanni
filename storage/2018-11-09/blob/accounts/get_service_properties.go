@@ -16,7 +16,7 @@ type GetServicePropertiesResult struct {
 	StorageServiceProperties *StorageServiceProperties
 }
 
-// SetPropertiesPreparer prepares the SetProperties request.
+// GetServicePropertiesPreparer prepares the GetServiceProperties request.
 func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountName string) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"restype": "service",
