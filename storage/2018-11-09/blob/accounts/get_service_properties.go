@@ -62,20 +62,20 @@ func (client Client) GetServiceProperties(ctx context.Context, accountName strin
 
 	req, err := client.GetServicePropertiesPreparer(ctx, accountName)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "accounts.Client", "SetProperties", nil, "Failure preparing request")
+		err = autorest.NewErrorWithError(err, "accounts.Client", "GetServiceProperties", nil, "Failure preparing request")
 		return
 	}
 
 	resp, err := client.GetServicePropertiesSender(req)
 	if err != nil {
 		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "accounts.Client", "SetProperties", resp, "Failure sending request")
+		err = autorest.NewErrorWithError(err, "accounts.Client", "GetServiceProperties", resp, "Failure sending request")
 		return
 	}
 
 	result, err = client.GetServicePropertiesResponder(resp)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "accounts.Client", "SetProperties", resp, "Failure responding to request")
+		err = autorest.NewErrorWithError(err, "accounts.Client", "GetServiceProperties", resp, "Failure responding to request")
 		return
 	}
 
