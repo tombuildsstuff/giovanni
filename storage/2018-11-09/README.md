@@ -6,6 +6,7 @@ The following API's are supported by this SDK - more information about each SDK 
 
 - [Blobs API](blob/blobs)
 - [Containers API](blob/containers)
+- [Accounts API](blob/accounts)
 
 ## DataLakeStore Gen2
 
