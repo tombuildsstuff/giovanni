@@ -19,6 +19,9 @@ type QueryEntitiesInput struct {
 	// An optional comma-separated
 	PropertyNamesToSelect *[]string
 
+	// An optional OData top
+	Limit *int
+
 	PartitionKey string
 	RowKey       string
 
@@ -101,6 +104,10 @@ func (client Client) QueryPreparer(ctx context.Context, accountName, tableName s
 
 	if input.PropertyNamesToSelect != nil {
 		queryParameters["$select"] = autorest.Encode("query", strings.Join(*input.PropertyNamesToSelect, ","))
+	}
+
+	if input.Limit != nil {
+		queryParameters["$top"] = autorest.Encode("query", *input.Limit)
 	}
 
 	if input.NextPartitionKey != nil {
