@@ -96,7 +96,7 @@ func (client Client) QueryPreparer(ctx context.Context, accountName, tableName s
 	queryParameters := map[string]interface{}{}
 
 	if input.Filter != nil {
-		queryParameters["filter"] = autorest.Encode("query", input.Filter)
+		queryParameters["$filter"] = autorest.Encode("query", *input.Filter)
 	}
 
 	if input.PropertyNamesToSelect != nil {
