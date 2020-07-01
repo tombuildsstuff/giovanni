@@ -2,8 +2,8 @@ package paths
 
 import (
 	"context"
-	"log"
 	"net/http"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -14,7 +14,12 @@ import (
 type GetPropertiesResponse struct {
 	autorest.Response
 
+	ETag         string
+	LastModified time.Time
 	ResourceType PathResource
+	Owner        string
+	Group        string
+	ACL          string
 }
 
 // GetProperties gets the properties for a Data Lake Store Gen2 Path in a FileSystem within a Storage Account
@@ -55,8 +60,7 @@ func (client Client) GetPropertiesPreparer(ctx context.Context, accountName stri
 	}
 
 	queryParameters := map[string]interface{}{
-		// "action": autorest.Encode("query", "getAccessControl"),
-		"action": autorest.Encode("query", "getStatus"),
+		"action": autorest.Encode("query", "getAccessControl"), // can use getStatus or getAccessControl. The latter includes the ACLs
 	}
 
 	headers := map[string]interface{}{
@@ -83,24 +87,37 @@ func (client Client) GetPropertiesSender(req *http.Request) (*http.Response, err
 // GetPropertiesResponder handles the response to the GetProperties request. The method always
 // closes the http.Response Body.
 func (client Client) GetPropertiesResponder(resp *http.Response) (result GetPropertiesResponse, err error) {
+	result = GetPropertiesResponse{}
 	if resp != nil && resp.Header != nil {
 		resourceTypeRaw := resp.Header.Get("x-ms-resource-type")
 		var resourceType PathResource
 		if resourceTypeRaw != "" {
 			resourceType, err = parsePathResource(resourceTypeRaw)
 			if err != nil {
-				return
+				return GetPropertiesResponse{}, err
 			}
 			result.ResourceType = resourceType
 		}
+		result.ETag = resp.Header.Get("ETag")
+
+		lastModifiedRaw := resp.Header.Get("Last-Modified")
+		lastModified, err := time.Parse(time.RFC1123, lastModifiedRaw)
+		if err != nil {
+			return GetPropertiesResponse{}, err
+		}
+		result.LastModified = lastModified
+
+		result.Owner = resp.Header.Get("x-ms-owner")
+		result.Group = resp.Header.Get("x-ms-group")
+		result.ACL = resp.Header.Get("x-ms-acl")
 	}
-	log.Printf("*****: %v\n", resp)
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
+
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 
-	return
+	return result, nil
 }
