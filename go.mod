@@ -10,7 +10,9 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-azure-helpers v0.4.1
+	github.com/stretchr/testify v1.3.0
 )
 
 replace github.com/Azure/go-autorest => github.com/tombuildsstuff/go-autorest v14.0.1-0.20200416184303-d4e299a3c04a+incompatible
