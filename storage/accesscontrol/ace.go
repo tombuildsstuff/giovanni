@@ -33,6 +33,14 @@ func init() {
 	permissionsRegex = regexp.MustCompile("[r-][w-][x-]")
 }
 
+// ValidateACEPermissions checks the format of the ACE permission string. Returns nil on success.
+func ValidateACEPermissions(permissions string) error {
+	if !permissionsRegex.MatchString(permissions) {
+		return fmt.Errorf("Permissions must be of the form [r-][w-][x-]")
+	}
+	return nil
+}
+
 // Validate checks the formatting and combination of values in the ACE. Returns nil on success
 func (ace *ACE) Validate() error {
 	switch ace.TagType {
@@ -42,8 +50,8 @@ func (ace *ACE) Validate() error {
 		}
 	}
 
-	if !permissionsRegex.MatchString(ace.Permissions) {
-		return fmt.Errorf("Permissions must be of the form [r-][w-][x-]")
+	if err := ValidateACEPermissions(ace.Permissions); err != nil {
+		return err
 	}
 
 	if err := validateTagType(ace.TagType); err != nil {
