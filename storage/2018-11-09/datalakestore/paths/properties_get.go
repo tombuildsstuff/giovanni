@@ -2,8 +2,8 @@ package paths
 
 import (
 	"context"
-	"log"
 	"net/http"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -14,11 +14,25 @@ import (
 type GetPropertiesResponse struct {
 	autorest.Response
 
+	ETag         string
+	LastModified time.Time
+	// ResourceType is only returned for GetPropertiesActionGetStatus requests
 	ResourceType PathResource
+	Owner        string
+	Group        string
+	// ACL is only returned for GetPropertiesActionGetAccessControl requests
+	ACL string
 }
 
+type GetPropertiesAction string
+
+const (
+	GetPropertiesActionGetStatus        GetPropertiesAction = "getStatus"
+	GetPropertiesActionGetAccessControl GetPropertiesAction = "getAccessControl"
+)
+
 // GetProperties gets the properties for a Data Lake Store Gen2 Path in a FileSystem within a Storage Account
-func (client Client) GetProperties(ctx context.Context, accountName string, fileSystemName string, path string) (result GetPropertiesResponse, err error) {
+func (client Client) GetProperties(ctx context.Context, accountName string, fileSystemName string, path string, action GetPropertiesAction) (result GetPropertiesResponse, err error) {
 	if accountName == "" {
 		return result, validation.NewError("datalakestore.Client", "GetProperties", "`accountName` cannot be an empty string.")
 	}
@@ -26,7 +40,7 @@ func (client Client) GetProperties(ctx context.Context, accountName string, file
 		return result, validation.NewError("datalakestore.Client", "GetProperties", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.GetPropertiesPreparer(ctx, accountName, fileSystemName, path)
+	req, err := client.GetPropertiesPreparer(ctx, accountName, fileSystemName, path, action)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "GetProperties", nil, "Failure preparing request")
 		return
@@ -48,15 +62,14 @@ func (client Client) GetProperties(ctx context.Context, accountName string, file
 }
 
 // GetPropertiesPreparer prepares the GetProperties request.
-func (client Client) GetPropertiesPreparer(ctx context.Context, accountName string, fileSystemName string, path string) (*http.Request, error) {
+func (client Client) GetPropertiesPreparer(ctx context.Context, accountName string, fileSystemName string, path string, action GetPropertiesAction) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 		"path":           autorest.Encode("path", path),
 	}
 
 	queryParameters := map[string]interface{}{
-		// "action": autorest.Encode("query", "getAccessControl"),
-		"action": autorest.Encode("query", "getStatus"),
+		"action": autorest.Encode("query", string(action)),
 	}
 
 	headers := map[string]interface{}{
@@ -83,24 +96,39 @@ func (client Client) GetPropertiesSender(req *http.Request) (*http.Response, err
 // GetPropertiesResponder handles the response to the GetProperties request. The method always
 // closes the http.Response Body.
 func (client Client) GetPropertiesResponder(resp *http.Response) (result GetPropertiesResponse, err error) {
+	result = GetPropertiesResponse{}
 	if resp != nil && resp.Header != nil {
+
 		resourceTypeRaw := resp.Header.Get("x-ms-resource-type")
 		var resourceType PathResource
 		if resourceTypeRaw != "" {
 			resourceType, err = parsePathResource(resourceTypeRaw)
 			if err != nil {
-				return
+				return GetPropertiesResponse{}, err
 			}
 			result.ResourceType = resourceType
 		}
+		result.ETag = resp.Header.Get("ETag")
+
+		if lastModifiedRaw := resp.Header.Get("Last-Modified"); lastModifiedRaw != "" {
+			lastModified, err := time.Parse(time.RFC1123, lastModifiedRaw)
+			if err != nil {
+				return GetPropertiesResponse{}, err
+			}
+			result.LastModified = lastModified
+		}
+
+		result.Owner = resp.Header.Get("x-ms-owner")
+		result.Group = resp.Header.Get("x-ms-group")
+		result.ACL = resp.Header.Get("x-ms-acl")
 	}
-	log.Printf("*****: %v\n", resp)
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
+
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 
-	return
+	return result, nil
 }

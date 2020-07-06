@@ -11,6 +11,9 @@ import (
 )
 
 func TestLifecycle(t *testing.T) {
+
+	const defaultACLString = "user::rwx,group::r-x,other::---"
+
 	client, err := testhelpers.Build()
 	if err != nil {
 		t.Fatal(err)
@@ -43,6 +46,38 @@ func TestLifecycle(t *testing.T) {
 	}
 	if _, err = pathsClient.Create(ctx, accountName, fileSystemName, path, input); err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
+	}
+
+	t.Logf("[DEBUG] Getting properties for folder 'test' ..")
+	props, err := pathsClient.GetProperties(ctx, accountName, fileSystemName, path)
+	if err != nil {
+		t.Fatal(fmt.Errorf("Error getting properties: %s", err))
+	}
+	t.Logf("[DEBUG] Props.Owner: %q", props.Owner)
+	t.Logf("[DEBUG] Props.Group: %q", props.Group)
+	t.Logf("[DEBUG] Props.ACL: %q", props.ACL)
+	t.Logf("[DEBUG] Props.ETag: %q", props.ETag)
+	t.Logf("[DEBUG] Props.LastModified: %q", props.LastModified)
+	if props.ACL != defaultACLString {
+		t.Fatal(fmt.Errorf("Expected Default ACL %q, got %q", defaultACLString, props.ACL))
+	}
+
+	newACL := "user::rwx,group::r-x,other::r-x,default:user::rwx,default:group::r-x,default:other::---"
+	accessControlInput := SetAccessControlInput{
+		ACL: &newACL,
+	}
+	t.Logf("[DEBUG] Setting Access Control for folder 'test' ..")
+	if _, err = pathsClient.SetAccessControl(ctx, accountName, fileSystemName, path, accessControlInput); err != nil {
+		t.Fatal(fmt.Errorf("Error setting Access Control %s", err))
+	}
+
+	t.Logf("[DEBUG] Getting properties for folder 'test' (2) ..")
+	props, err = pathsClient.GetProperties(ctx, accountName, fileSystemName, path)
+	if err != nil {
+		t.Fatal(fmt.Errorf("Error getting properties (2): %s", err))
+	}
+	if props.ACL != newACL {
+		t.Fatal(fmt.Errorf("Expected new ACL %q, got %q", newACL, props.ACL))
 	}
 
 	t.Logf("[DEBUG] Deleting File System..")
