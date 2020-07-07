@@ -38,4 +38,4 @@ jobs:
     - name: go env
       run: |
         echo "::set-env name=GOCACHE::$(go env GOCACHE)"
-    - run: go test -v ./... -timeout=300s
+        go test -v ./... -timeout=300s
