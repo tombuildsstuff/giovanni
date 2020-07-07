@@ -74,17 +74,18 @@ To run those, the following Environment Variables need to be set:
 * `ARM_CLIENT_SECRET` - The Client Secret/Password for a Service Principal where tests should be run.
 * `ARM_ENVIRONMENT` - The name of the Azure Environment where the tests should be run, such as `Public` or `Germany`.
 * `ARM_TEST_LOCATION` - The name of the Azure Region where resources provisioned by the tests should be created, such as `West Europe`.
+* `ACCTEST` - confirms that you want the tests to be run, set this to any value.
 
 Once those Environment Variables are set - you should be able to run:
 
 ```bash
-$ go test -v ./storage/...
+$ ACCTEST=1 go test -v ./storage/...
 ```
 
 You can also run them for a specific API version by running:
 
 ```bash
-$ go test -v ./storage/2018-11-09/...
+$ ACCTEST=1 go test -v ./storage/2018-11-09/...
 ```
 
 ## Debugging
