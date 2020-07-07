@@ -11,6 +11,8 @@ import (
 	"github.com/tombuildsstuff/giovanni/testhelpers"
 )
 
+var _ StorageQueueMessage = Client{}
+
 func TestLifeCycle(t *testing.T) {
 	client, err := testhelpers.Build()
 	if err != nil {

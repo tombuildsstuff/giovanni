@@ -12,6 +12,8 @@ import (
 	"github.com/tombuildsstuff/giovanni/testhelpers"
 )
 
+var StorageFile = Client{}
+
 func TestDirectoriesLifeCycle(t *testing.T) {
 	client, err := testhelpers.Build()
 	if err != nil {
