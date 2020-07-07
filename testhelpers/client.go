@@ -33,6 +33,12 @@ type TestResources struct {
 }
 
 func (client Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+	return client.buildTestResources(ctx, resourceGroup, name, kind, false)
+}
+func (client Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+	return client.buildTestResources(ctx, resourceGroup, name, kind, true)
+}
+func (client Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool) (*TestResources, error) {
 	location := toPointeredString(os.Getenv("ARM_TEST_LOCATION"))
 	_, err := client.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
 		Location: location,
@@ -45,6 +51,10 @@ func (client Client) BuildTestResources(ctx context.Context, resourceGroup, name
 	if kind == storage.BlobStorage {
 		props.AccessTier = storage.Hot
 	}
+	if enableHns {
+		props.IsHnsEnabled = &enableHns
+	}
+
 	future, err := client.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
 		Location: location,
 		Sku: &storage.Sku{
