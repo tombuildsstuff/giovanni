@@ -49,7 +49,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' ..")
-	props, err := pathsClient.GetProperties(ctx, accountName, fileSystemName, path)
+	props, err := pathsClient.GetProperties(ctx, accountName, fileSystemName, path, GetPropertiesActionGetAccessControl)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties: %s", err))
 	}
@@ -72,7 +72,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' (2) ..")
-	props, err = pathsClient.GetProperties(ctx, accountName, fileSystemName, path)
+	props, err = pathsClient.GetProperties(ctx, accountName, fileSystemName, path, GetPropertiesActionGetAccessControl)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties (2): %s", err))
 	}
