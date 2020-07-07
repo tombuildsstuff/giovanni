@@ -26,16 +26,3 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
       run: go mod download
 
-  go_test:
-    name: go test
-    needs: [go_mod_download]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: ${{ env.GO_VERSION }}
-    - name: go env
-      run: |
-        echo "::set-env name=GOCACHE::$(go env GOCACHE)"
-        go test -v ./... -timeout=300s
