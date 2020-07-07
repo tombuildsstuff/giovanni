@@ -5,7 +5,12 @@ on:
     branches:
       - master
   pull_request:
-    - *
+    paths:
+      - go.mod
+      - go.sum
+      - storage/**
+      - testhelpers/**
+      - version/**
 
 env:
   GO_VERSION: "1.14.4"
