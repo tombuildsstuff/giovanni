@@ -12,6 +12,8 @@ import (
 	"github.com/tombuildsstuff/giovanni/testhelpers"
 )
 
+var _ StorageBlob = Client{}
+
 func TestLifecycle(t *testing.T) {
 	client, err := testhelpers.Build()
 	if err != nil {

@@ -10,6 +10,8 @@ import (
 	"github.com/tombuildsstuff/giovanni/testhelpers"
 )
 
+var _ StorageShare = Client{}
+
 func TestSharesLifecycle(t *testing.T) {
 	client, err := testhelpers.Build()
 	if err != nil {
