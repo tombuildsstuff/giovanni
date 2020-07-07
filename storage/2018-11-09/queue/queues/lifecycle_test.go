@@ -13,7 +13,7 @@ import (
 var _ StorageQueue = Client{}
 
 func TestQueuesLifecycle(t *testing.T) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}

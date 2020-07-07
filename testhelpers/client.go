@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"testing"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
@@ -108,7 +109,11 @@ func (client Client) DestroyTestResources(ctx context.Context, resourceGroup, na
 	return nil
 }
 
-func Build() (*Client, error) {
+func Build(t *testing.T) (*Client, error) {
+	if os.Getenv("ACCTEST") == "" {
+		t.Skip("Skipping as `ACCTEST` hasn't been set")
+	}
+
 	authClient, env, err := buildAuthClient()
 	if err != nil {
 		return nil, fmt.Errorf("Error building Auth Client: %s", err)

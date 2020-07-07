@@ -14,7 +14,7 @@ import (
 )
 
 func TestFilesCopyAndWaitFromURL(t *testing.T) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 }
 
 func TestFilesCopyAndWaitFromBlob(t *testing.T) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}

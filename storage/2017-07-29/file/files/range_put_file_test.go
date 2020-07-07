@@ -23,7 +23,7 @@ func TestPutLargeFile(t *testing.T) {
 }
 
 func testPutFile(t *testing.T, fileName string, contentType string) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}
