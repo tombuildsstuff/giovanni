@@ -14,7 +14,7 @@ import (
 )
 
 func TestCopyFromExistingFile(t *testing.T) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestCopyFromExistingFile(t *testing.T) {
 }
 
 func TestCopyFromURL(t *testing.T) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -14,7 +14,7 @@ func TestLifecycle(t *testing.T) {
 
 	const defaultACLString = "user::rwx,group::r-x,other::---"
 
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}

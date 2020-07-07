@@ -14,7 +14,7 @@ import (
 var _ StorageContainer = Client{}
 
 func TestContainerLifecycle(t *testing.T) {
-	client, err := testhelpers.Build()
+	client, err := testhelpers.Build(t)
 	if err != nil {
 		t.Fatal(err)
 	}
