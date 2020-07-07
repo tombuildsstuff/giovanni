@@ -56,8 +56,12 @@ func buildClient(accountName, accountKey string) (*Client, error) {
 		return nil, err
 	}
 
-	storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, accountKey)
-	containersClient := containers.New()
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, accountKey, autorest.SharedKeyLite)
+	if err != nil {
+		return nil, err
+	}
+
+	containersClient := containers.NewWithEnvironment(*env)
 	containersClient.Client.Authorizer = storageAuth
 
 	result := &Client{
