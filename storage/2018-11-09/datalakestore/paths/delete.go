@@ -44,7 +44,7 @@ func (client Client) Delete(ctx context.Context, accountName string, fileSystemN
 func (client Client) DeletePreparer(ctx context.Context, accountName string, fileSystemName string, path string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
-		"path":           autorest.Encode("path", fileSystemName),
+		"path":           autorest.Encode("path", path),
 	}
 
 	headers := map[string]interface{}{
