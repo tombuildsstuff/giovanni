@@ -80,8 +80,13 @@ func TestLifecycle(t *testing.T) {
 		t.Fatal(fmt.Errorf("Expected new ACL %q, got %q", newACL, props.ACL))
 	}
 
+	t.Logf("[DEBUG] Deleting path 'test' ..")
+	if _, err = pathsClient.Delete(ctx, accountName, fileSystemName, path); err != nil {
+		t.Fatal(fmt.Errorf("Error deleting path: %s", err))
+	}
+
 	t.Logf("[DEBUG] Deleting File System..")
 	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
-		t.Fatalf("Error deleting: %s", err)
+		t.Fatalf("Error deleting filesystem: %s", err)
 	}
 }
