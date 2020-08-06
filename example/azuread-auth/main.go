@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/tombuildsstuff/giovanni/storage/2018-11-09/blob/containers"
 )
@@ -76,7 +75,7 @@ func buildClient() (*Client, error) {
 		return nil, err
 	}
 
-	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, config.TenantID)
+	oauthConfig, err := config.BuildOAuthConfig(env.ActiveDirectoryEndpoint)
 	if err != nil {
 		return nil, err
 	}
