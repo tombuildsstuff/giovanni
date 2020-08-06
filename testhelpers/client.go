@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 )
@@ -19,7 +18,7 @@ type Client struct {
 	ResourceGroupsClient resources.GroupsClient
 	StorageClient        storage.AccountsClient
 
-	auth        *autorest.BearerAuthorizer
+	auth        *autorest.Authorizer
 	Environment azure.Environment
 }
 
@@ -74,7 +73,7 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 		return nil, fmt.Errorf("Error waiting for the creation of Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
-	keys, err := client.StorageClient.ListKeys(ctx, resourceGroup, name)
+	keys, err := client.StorageClient.ListKeys(ctx, resourceGroup, name, "")
 	if err != nil {
 		return nil, fmt.Errorf("Error listing keys for Storage Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
@@ -132,7 +131,7 @@ func Build(t *testing.T) (*Client, error) {
 }
 
 func buildAPIClient(config *authentication.Config, env azure.Environment) (*Client, error) {
-	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, config.TenantID)
+	oauthConfig, err := config.BuildOAuthConfig(env.ActiveDirectoryEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +142,6 @@ func buildAPIClient(config *authentication.Config, env azure.Environment) (*Clie
 	}
 
 	sender := buildSender()
-
 	armAuth, err := config.GetAuthorizationToken(sender, oauthConfig, env.ResourceManagerEndpoint)
 	if err != nil {
 		return nil, err
@@ -156,7 +154,7 @@ func buildAPIClient(config *authentication.Config, env azure.Environment) (*Clie
 
 	client := Client{
 		Environment: env,
-		auth:        storageAuth,
+		auth:        &storageAuth,
 	}
 
 	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(env.ResourceManagerEndpoint, config.SubscriptionID)
@@ -173,7 +171,7 @@ func buildAPIClient(config *authentication.Config, env azure.Environment) (*Clie
 }
 
 func (client Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
-	return client.PrepareWithAuthorizer(input, client.auth)
+	return client.PrepareWithAuthorizer(input, *client.auth)
 }
 
 func (client Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest.Authorizer) autorest.Client {
