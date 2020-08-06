@@ -130,5 +130,5 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 		autorest.ByClosing())
 	result.Response = autorest.Response{Response: resp}
 
-	return result, nil
+	return result, err
 }
