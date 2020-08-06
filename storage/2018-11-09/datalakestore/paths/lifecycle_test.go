@@ -85,6 +85,12 @@ func TestLifecycle(t *testing.T) {
 		t.Fatal(fmt.Errorf("Error deleting path: %s", err))
 	}
 
+	t.Logf("[DEBUG] Getting properties for folder 'test' (3) ..")
+	props, err = pathsClient.GetProperties(ctx, accountName, fileSystemName, path, GetPropertiesActionGetAccessControl)
+	if err == nil {
+		t.Fatal(fmt.Errorf("Didn't get error getting properties after deleting path (3)"))
+	}
+
 	t.Logf("[DEBUG] Deleting File System..")
 	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
 		t.Fatalf("Error deleting filesystem: %s", err)
