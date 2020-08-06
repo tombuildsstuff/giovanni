@@ -69,6 +69,7 @@ Each package contains both Unit and Acceptance Tests which provision a real Stor
 
 To run those, the following Environment Variables need to be set:
 
+* `ARM_TENANT_ID` - The ID of the Tenant where tests should be run, such as `00000000-0000-0000-0000-000000000000`.
 * `ARM_SUBSCRIPTION_ID` - The ID of the Subscription where tests should be run, such as `00000000-0000-0000-0000-000000000000`.
 * `ARM_CLIENT_ID` - The ID of the AzureAD Application (also known as a Client ID), such as `00000000-0000-0000-0000-000000000000`.
 * `ARM_CLIENT_SECRET` - The Client Secret/Password for a Service Principal where tests should be run.
