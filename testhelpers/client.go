@@ -33,12 +33,15 @@ type TestResources struct {
 }
 
 func (client Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, false)
+	return client.buildTestResources(ctx, resourceGroup, name, kind, false, "")
 }
 func (client Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, true)
+	return client.buildTestResources(ctx, resourceGroup, name, kind, true, "")
 }
-func (client Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool) (*TestResources, error) {
+func (client Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind storage.Kind, sku storage.SkuName) (*TestResources, error) {
+	return client.buildTestResources(ctx, resourceGroup, name, kind, false, sku)
+}
+func (client Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool, sku storage.SkuName) (*TestResources, error) {
 	location := toPointeredString(os.Getenv("ARM_TEST_LOCATION"))
 	_, err := client.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
 		Location: location,
@@ -54,11 +57,14 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 	if enableHns {
 		props.IsHnsEnabled = &enableHns
 	}
+	if sku == "" {
+		sku = storage.StandardLRS
+	}
 
 	future, err := client.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
 		Location: location,
 		Sku: &storage.Sku{
-			Name: storage.StandardLRS,
+			Name: sku,
 		},
 		Kind:                              kind,
 		AccountPropertiesCreateParameters: &props,
