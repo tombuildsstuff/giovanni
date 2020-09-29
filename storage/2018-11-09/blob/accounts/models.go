@@ -13,10 +13,13 @@ type StorageServiceProperties struct {
 	DefaultServiceVersion *string `xml:"DefaultServiceVersion,omitempty"`
 	// DeleteRetentionPolicy - The blob service properties for soft delete.
 	DeleteRetentionPolicy *DeleteRetentionPolicy `xml:"DeleteRetentionPolicy,omitempty"`
+	// Logging - The blob service properties for logging access
+	Logging *Logging `xml:"Logging,omitempty"`
 	// StaticWebsite - Optional
 	StaticWebsite *StaticWebsite `xml:"StaticWebsite,omitempty"`
 }
 
+// StaticWebsite sets the static website support properties on the Blob service.
 type StaticWebsite struct {
 	// Enabled - Required. Indicates whether static website support is enabled for the given account.
 	Enabled bool `xml:"Enabled"`
@@ -52,4 +55,13 @@ type CorsRule struct {
 	ExposedHeaders []string `xml:"ExposedHeaders,omitempty"`
 	// AllowedHeaders - Required if CorsRule element is present. A list of headers allowed to be part of the cross-origin request.
 	AllowedHeaders []string `xml:"AllowedHeaders,omitempty"`
+}
+
+// Logging specifies the access logging options for the Blob service.
+type Logging struct {
+	Version          string                 `xml:"Version,omitempty"`
+	Delete           bool                   `xml:"Delete,omitempty"`
+	Read             bool                   `xml:"Read,omitempty"`
+	Write            bool                   `xml:"Write,omitempty"`
+	RententionPolicy *DeleteRetentionPolicy `xml:"RententionPolicy,omitempty"`
 }
