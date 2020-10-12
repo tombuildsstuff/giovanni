@@ -15,6 +15,10 @@ type StorageServiceProperties struct {
 	DeleteRetentionPolicy *DeleteRetentionPolicy `xml:"DeleteRetentionPolicy,omitempty"`
 	// Logging - The blob service properties for logging access
 	Logging *Logging `xml:"Logging,omitempty"`
+	// HourMetrics - The blob service properties for hour metrics
+	HourMetrics *MetricsConfig `xml:"HourMetrics,omitempty"`
+	// HourMetrics - The blob service properties for minute metrics
+	MinuteMetrics *MetricsConfig `xml:"MinuteMetrics,omitempty"`
 	// StaticWebsite - Optional
 	StaticWebsite *StaticWebsite `xml:"StaticWebsite,omitempty"`
 }
@@ -59,9 +63,18 @@ type CorsRule struct {
 
 // Logging specifies the access logging options for the Blob service.
 type Logging struct {
-	Version         string                 `xml:"Version,omitempty"`
-	Delete          bool                   `xml:"Delete,omitempty"`
-	Read            bool                   `xml:"Read,omitempty"`
-	Write           bool                   `xml:"Write,omitempty"`
-	RetentionPolicy *DeleteRetentionPolicy `xml:"RetentionPolicy,omitempty"`
+	Version         string                `xml:"Version"`
+	Delete          bool                  `xml:"Delete"`
+	Read            bool                  `xml:"Read"`
+	Write           bool                  `xml:"Write"`
+	RetentionPolicy DeleteRetentionPolicy `xml:"RetentionPolicy"`
+}
+
+// MetricsConfig specifies the hour and/or minute metrics options for the Blob service.
+// Elements are all expected
+type MetricsConfig struct {
+	Version         string                `xml:"Version"`
+	Enabled         bool                  `xml:"Enabled"`
+	RetentionPolicy DeleteRetentionPolicy `xml:"RetentionPolicy"`
+	IncludeAPIs     bool                  `xml:"IncludeAPIs"`
 }
