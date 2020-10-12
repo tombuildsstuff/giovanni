@@ -59,9 +59,9 @@ type CorsRule struct {
 
 // Logging specifies the access logging options for the Blob service.
 type Logging struct {
-	Version          string                 `xml:"Version,omitempty"`
-	Delete           bool                   `xml:"Delete,omitempty"`
-	Read             bool                   `xml:"Read,omitempty"`
-	Write            bool                   `xml:"Write,omitempty"`
-	RententionPolicy *DeleteRetentionPolicy `xml:"RententionPolicy,omitempty"`
+	Version         string                 `xml:"Version,omitempty"`
+	Delete          bool                   `xml:"Delete,omitempty"`
+	Read            bool                   `xml:"Read,omitempty"`
+	Write           bool                   `xml:"Write,omitempty"`
+	RetentionPolicy *DeleteRetentionPolicy `xml:"RetentionPolicy,omitempty"`
 }
