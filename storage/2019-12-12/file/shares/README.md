@@ -1,4 +1,4 @@
-## File Storage Shares SDK for API version 2018-11-09
+## File Storage Shares SDK for API version 2019-12-12
 
 This package allows you to interact with the Shares File Storage API
 
@@ -18,7 +18,7 @@ import (
 	"time"
 	
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2018-11-09/file/shares"
+	"github.com/tombuildsstuff/giovanni/storage/2019-12-12/file/shares"
 )
 
 func Example() error {

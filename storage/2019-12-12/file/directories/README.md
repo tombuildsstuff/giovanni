@@ -1,4 +1,4 @@
-## File Storage Directories SDK for API version 2018-11-09
+## File Storage Directories SDK for API version 2019-12-12
 
 This package allows you to interact with the Directories File Storage API
 
@@ -18,7 +18,7 @@ import (
 	"time"
 	
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2018-11-09/file/directories"
+	"github.com/tombuildsstuff/giovanni/storage/2019-12-12/file/directories"
 )
 
 func Example() error {

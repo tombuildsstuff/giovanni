@@ -1,4 +1,4 @@
-## Queue Storage Messages SDK for API version 2018-11-09
+## Queue Storage Messages SDK for API version 2019-12-12
 
 This package allows you to interact with the Messages Queue Storage API
 
@@ -18,7 +18,7 @@ import (
 	"time"
 	
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2018-11-09/queue/messages"
+	"github.com/tombuildsstuff/giovanni/storage/2019-12-12/queue/messages"
 )
 
 func Example() error {

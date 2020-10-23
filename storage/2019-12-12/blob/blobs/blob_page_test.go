@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/tombuildsstuff/giovanni/storage/2018-11-09/blob/containers"
+	"github.com/tombuildsstuff/giovanni/storage/2019-12-12/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
 	"github.com/tombuildsstuff/giovanni/testhelpers"
 )
