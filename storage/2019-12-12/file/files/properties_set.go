@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -53,6 +54,14 @@ type SetPropertiesInput struct {
 	// Subsequent calls to Get File Properties will not return this property,
 	// unless it is explicitly set on the file again.
 	ContentType *string
+
+	// The time at which this file was created at - if omitted, this'll be set to "now"
+	// This maps to the `x-ms-file-creation-time` field.
+	CreatedAt *time.Time
+
+	// The time at which this file was last modified - if omitted, this'll be set to "now"
+	// This maps to the `x-ms-file-last-write-time` field.
+	LastModified *time.Time
 }
 
 // SetProperties sets the specified properties on the specified File
@@ -103,9 +112,22 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, sha
 		"fileName":  autorest.Encode("path", fileName),
 	}
 
+	var coalesceDate = func(input *time.Time, defaultVal string) string {
+		if input == nil {
+			return defaultVal
+		}
+
+		return input.Format(time.RFC1123)
+	}
+
 	headers := map[string]interface{}{
 		"x-ms-version": APIVersion,
 		"x-ms-type":    "file",
+
+		"x-ms-file-permission": "inherit", // TODO: expose this in future
+		"x-ms-file-attributes": "None", // TODO: expose this in future
+		"x-ms-file-creation-time": coalesceDate(input.CreatedAt, "now"),
+		"x-ms-file-last-write-time": coalesceDate(input.LastModified, "now"),
 	}
 
 	if input.ContentControl != nil {

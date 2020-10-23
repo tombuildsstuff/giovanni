@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -38,6 +39,15 @@ type CreateInput struct {
 	// Sets the file’s Content-Disposition header.
 	ContentDisposition *string
 
+	// The time at which this file was created at - if omitted, this'll be set to "now"
+	// This maps to the `x-ms-file-creation-time` field.
+	CreatedAt *time.Time
+
+	// The time at which this file was last modified - if omitted, this'll be set to "now"
+	// This maps to the `x-ms-file-last-write-time` field.
+	LastModified *time.Time
+
+	// MetaData is a mapping of key value pairs which should be assigned to this file
 	MetaData map[string]string
 }
 
@@ -92,10 +102,23 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName,
 		"fileName":  autorest.Encode("path", fileName),
 	}
 
+	var coalesceDate = func(input *time.Time, defaultVal string) string {
+		if input == nil {
+			return defaultVal
+		}
+
+		return input.Format(time.RFC1123)
+	}
+
 	headers := map[string]interface{}{
 		"x-ms-version":        APIVersion,
 		"x-ms-content-length": input.ContentLength,
 		"x-ms-type":           "file",
+
+		"x-ms-file-permission": "inherit", // TODO: expose this in future
+		"x-ms-file-attributes": "None", // TODO: expose this in future
+		"x-ms-file-creation-time": coalesceDate(input.CreatedAt, "now"),
+		"x-ms-file-last-write-time": coalesceDate(input.LastModified, "now"),
 	}
 
 	if input.ContentDisposition != nil {
