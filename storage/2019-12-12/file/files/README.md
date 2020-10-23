@@ -7,6 +7,10 @@ This package allows you to interact with the Files File Storage API
 * Azure Active Directory (for the Resource Endpoint `https://storage.azure.com`)
 * SharedKeyLite (Blob, File & Queue)
 
+### Limitations
+
+* At this time the headers `x-ms-file-permission` and `x-ms-file-attributes` are hard-coded (to `inherit` and `None`, respectively).
+
 ### Example Usage
 
 ```go
