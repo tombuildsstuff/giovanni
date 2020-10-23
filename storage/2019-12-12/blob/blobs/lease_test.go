@@ -45,7 +45,7 @@ func TestLeaseLifecycle(t *testing.T) {
 
 	t.Logf("[DEBUG] Copying file to Blob Storage..")
 	copyInput := CopyInput{
-		CopySource: "http://releases.ubuntu.com/18.04.2/ubuntu-18.04.2-desktop-amd64.iso",
+		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 
 	refreshInterval := 5 * time.Second

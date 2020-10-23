@@ -47,7 +47,7 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 
 	copiedFileName := "ubuntu.iso"
 	copyInput := CopyInput{
-		CopySource: "http://releases.ubuntu.com/18.04.2/ubuntu-18.04.2-desktop-amd64.iso",
+		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 
 	t.Logf("[DEBUG] Copy And Waiting..")
@@ -102,7 +102,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	originalFileName := "ubuntu.iso"
 	copiedFileName := "ubuntu-copied.iso"
 	copyInput := CopyInput{
-		CopySource: "http://releases.ubuntu.com/18.04.2/ubuntu-18.04.2-desktop-amd64.iso",
+		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 	t.Logf("[DEBUG] Copy And Waiting the original file..")
 	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", originalFileName, copyInput, DefaultCopyPollDuration); err != nil {
