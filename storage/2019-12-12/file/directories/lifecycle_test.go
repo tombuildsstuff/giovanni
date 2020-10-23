@@ -51,12 +51,15 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 	}
 
 	log.Printf("[DEBUG] Creating Top Level..")
-	if _, err := directoriesClient.Create(ctx, accountName, shareName, "hello", metaData); err != nil {
+	createInput := CreateDirectoryInput{
+		MetaData: metaData,
+	}
+	if _, err := directoriesClient.Create(ctx, accountName, shareName, "hello", createInput); err != nil {
 		t.Fatalf("Error creating Top Level Directory: %s", err)
 	}
 
 	log.Printf("[DEBUG] Creating Inner..")
-	if _, err := directoriesClient.Create(ctx, accountName, shareName, "hello/there", metaData); err != nil {
+	if _, err := directoriesClient.Create(ctx, accountName, shareName, "hello/there", createInput); err != nil {
 		t.Fatalf("Error creating Inner Directory: %s", err)
 	}
 
