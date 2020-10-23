@@ -77,6 +77,7 @@ func TestFilesLifeCycle(t *testing.T) {
 		ContentEncoding: &updatedEncoding,
 		ContentLength:   &updatedSize,
 	}
+	t.Logf("[DEBUG] Setting Properties for the Top-Level File..")
 	if _, err := filesClient.SetProperties(ctx, accountName, shareName, "", fileName, updatedInput); err != nil {
 		t.Fatalf("Error setting properties: %s", err)
 	}

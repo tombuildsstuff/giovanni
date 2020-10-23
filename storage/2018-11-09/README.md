@@ -11,6 +11,7 @@ The following API's are supported by this SDK - more information about each SDK 
 ## DataLakeStore Gen2
 
 - [FileSystems API](datalakestore/filesystems)
+- [Paths API](datalakestore/paths)
 
 ## File Storage
 
