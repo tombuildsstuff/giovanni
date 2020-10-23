@@ -13,6 +13,7 @@ This repository is an alternative Azure Storage SDK for Go; which supports for:
 
 At this time we support the following API Versions:
 
+* `2019-12-12` (`./storage/2019-12-12`)
 * `2018-11-09` (`./storage/2018-11-09`)
 * `2018-03-28` (`./storage/2018-03-28`)
 * `2017-07-29` (`./storage/2017-07-29`)
