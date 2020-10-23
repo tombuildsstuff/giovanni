@@ -115,9 +115,9 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName,
 		"x-ms-content-length": input.ContentLength,
 		"x-ms-type":           "file",
 
-		"x-ms-file-permission": "inherit", // TODO: expose this in future
-		"x-ms-file-attributes": "None", // TODO: expose this in future
-		"x-ms-file-creation-time": coalesceDate(input.CreatedAt, "now"),
+		"x-ms-file-permission":      "inherit", // TODO: expose this in future
+		"x-ms-file-attributes":      "None",    // TODO: expose this in future
+		"x-ms-file-creation-time":   coalesceDate(input.CreatedAt, "now"),
 		"x-ms-file-last-write-time": coalesceDate(input.LastModified, "now"),
 	}
 

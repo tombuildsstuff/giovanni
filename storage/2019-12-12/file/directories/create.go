@@ -92,9 +92,9 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName,
 		"x-ms-version": APIVersion,
 
 		// ... Yes I know these say File not Directory, I didn't design the API.
-		"x-ms-file-permission": "inherit", // TODO: expose this in future
-		"x-ms-file-attributes": "None", // TODO: expose this in future
-		"x-ms-file-creation-time": coalesceDate(input.CreatedAt, "now"),
+		"x-ms-file-permission":      "inherit", // TODO: expose this in future
+		"x-ms-file-attributes":      "None",    // TODO: expose this in future
+		"x-ms-file-creation-time":   coalesceDate(input.CreatedAt, "now"),
 		"x-ms-file-last-write-time": coalesceDate(input.LastModified, "now"),
 	}
 
