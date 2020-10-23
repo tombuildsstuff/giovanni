@@ -45,6 +45,16 @@ func TestContainerLifecycle(t *testing.T) {
 			IndexDocument:        index,
 			ErrorDocument404Path: errorDocument,
 		},
+		Logging: &Logging{
+			Version: "2.0",
+			Delete:  true,
+			Read:    true,
+			Write:   true,
+			RetentionPolicy: DeleteRetentionPolicy{
+				Enabled: true,
+				Days:    7,
+			},
+		},
 	}
 
 	_, err = accountsClient.SetServiceProperties(ctx, accountName, input)
@@ -63,5 +73,25 @@ func TestContainerLifecycle(t *testing.T) {
 	website := result.StorageServiceProperties.StaticWebsite
 	if website.Enabled != true {
 		t.Fatalf("Expected the StaticWebsite %t but got %t", true, website.Enabled)
+	}
+
+	logging := result.StorageServiceProperties.Logging
+	if logging.Version != "2.0" {
+		t.Fatalf("Expected the Logging Version %s but got %s", "2.0", logging.Version)
+	}
+	if !logging.Read {
+		t.Fatalf("Expected the Logging Read %t but got %t", true, logging.Read)
+	}
+	if !logging.Write {
+		t.Fatalf("Expected the Logging Write %t but got %t", true, logging.Write)
+	}
+	if !logging.Delete {
+		t.Fatalf("Expected the Logging Delete %t but got %t", true, logging.Delete)
+	}
+	if !logging.RetentionPolicy.Enabled {
+		t.Fatalf("Expected the Logging RetentionPolicy.Enabled %t but got %t", true, logging.RetentionPolicy.Enabled)
+	}
+	if logging.RetentionPolicy.Days != 7 {
+		t.Fatalf("Expected the Logging RetentionPolicy.Enabled %d but got %d", 7, logging.RetentionPolicy.Days)
 	}
 }
