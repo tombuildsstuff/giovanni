@@ -38,6 +38,38 @@ func TestGetResourceID(t *testing.T) {
 	}
 }
 
+func TestGetResourceManagerResourceID(t *testing.T) {
+	testData := []struct {
+		Environment azure.Environment
+		Expected    string
+	}{
+		{
+			Environment: azure.ChinaCloud,
+			Expected:    "/subscriptions/11112222-3333-4444-5555-666677778888/resourceGroups/group1/providers/Microsoft.Storage/storageAccounts/account1/blobServices/default/containers/container1",
+		},
+		{
+			Environment: azure.GermanCloud,
+			Expected:    "/subscriptions/11112222-3333-4444-5555-666677778888/resourceGroups/group1/providers/Microsoft.Storage/storageAccounts/account1/blobServices/default/containers/container1",
+		},
+		{
+			Environment: azure.PublicCloud,
+			Expected:    "/subscriptions/11112222-3333-4444-5555-666677778888/resourceGroups/group1/providers/Microsoft.Storage/storageAccounts/account1/blobServices/default/containers/container1",
+		},
+		{
+			Environment: azure.USGovernmentCloud,
+			Expected:    "/subscriptions/11112222-3333-4444-5555-666677778888/resourceGroups/group1/providers/Microsoft.Storage/storageAccounts/account1/blobServices/default/containers/container1",
+		},
+	}
+	for _, v := range testData {
+		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
+		c := NewWithEnvironment(v.Environment)
+		actual := c.GetResourceManagerResourceID("11112222-3333-4444-5555-666677778888", "group1", "account1", "container1")
+		if actual != v.Expected {
+			t.Fatalf("Expected the Resource Manager Resource ID to be %q but got %q", v.Expected, actual)
+		}
+	}
+}
+
 func TestParseResourceID(t *testing.T) {
 	testData := []struct {
 		Environment azure.Environment
