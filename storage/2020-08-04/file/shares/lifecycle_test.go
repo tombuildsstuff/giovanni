@@ -22,7 +22,7 @@ func TestSharesLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.Storage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +163,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResourcesWithSku(ctx, resourceGroup, accountName, storage.FileStorage, storage.PremiumLRS)
+	testData, err := client.BuildTestResourcesWithSku(ctx, resourceGroup, accountName, storage.KindFileStorage, storage.SkuNamePremiumLRS)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -51,14 +51,14 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 	}
 
 	props := storage.AccountPropertiesCreateParameters{}
-	if kind == storage.BlobStorage {
-		props.AccessTier = storage.Hot
+	if kind == storage.KindBlobStorage {
+		props.AccessTier = storage.AccessTierHot
 	}
 	if enableHns {
 		props.IsHnsEnabled = &enableHns
 	}
 	if sku == "" {
-		sku = storage.StandardLRS
+		sku = storage.SkuNameStandardLRS
 	}
 
 	future, err := client.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{

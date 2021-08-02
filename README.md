@@ -13,6 +13,7 @@ This repository is an alternative Azure Storage SDK for Go; which supports for:
 
 At this time we support the following API Versions:
 
+* `2020-08-04` (`./storage/2020-08-04`)
 * `2019-12-12` (`./storage/2019-12-12`)
 * `2018-11-09` (`./storage/2018-11-09`)
 * `2018-03-28` (`./storage/2018-03-28`)
@@ -20,7 +21,7 @@ At this time we support the following API Versions:
 
 We're also open to supporting other versions of the Azure Storage SDK as necessary.
 
-Documentation for how to use each SDK can be found within the README for that SDK version - for example [here's the README for 2018-11-09](storage/2018-11-09/README.md).
+Documentation for how to use each SDK can be found within the README for that SDK version - for example [here's the README for 2020-08-04](storage/2020-08-04/README.md).
 
 Each Package also contains Unit and Acceptance tests to ensure that the functionality works; instructions on how to run the tests can be found below.
 
@@ -87,7 +88,7 @@ $ ACCTEST=1 go test -v ./storage/...
 You can also run them for a specific API version by running:
 
 ```bash
-$ ACCTEST=1 go test -v ./storage/2018-11-09/...
+$ ACCTEST=1 go test -v ./storage/2020-08-04/...
 ```
 
 ## Debugging
