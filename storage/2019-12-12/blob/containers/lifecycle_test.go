@@ -24,7 +24,7 @@ func TestContainerLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	containerName := fmt.Sprintf("cont-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.BlobStorage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

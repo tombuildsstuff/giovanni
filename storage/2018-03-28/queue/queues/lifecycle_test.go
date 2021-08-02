@@ -20,7 +20,7 @@ func TestQueuesLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	queueName := fmt.Sprintf("queue-%d", testhelpers.RandomInt())
 
-	_, err = client.BuildTestResources(ctx, resourceGroup, accountName, storage.Storage)
+	_, err = client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

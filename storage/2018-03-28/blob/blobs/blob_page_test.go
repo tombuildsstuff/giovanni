@@ -23,7 +23,7 @@ func TestPageBlobLifecycle(t *testing.T) {
 	containerName := fmt.Sprintf("cont-%d", testhelpers.RandomInt())
 	fileName := "append-blob.txt"
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.StorageV2)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorageV2)
 	if err != nil {
 		t.Fatal(err)
 	}
