@@ -293,3 +293,46 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Error deleting Share: %s", err)
 	}
 }
+
+func TestSharesLifecycleNFSProtocol(t *testing.T) {
+	client, err := testhelpers.Build(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.TODO()
+	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
+	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
+	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
+
+	testData, err := client.BuildTestResourcesWithSku(ctx, resourceGroup, accountName, storage.KindFileStorage, storage.SkuNamePremiumLRS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
+
+	storageAuth := auth.NewSharedKeyLiteAuthorizer(accountName, testData.StorageAccountKey)
+	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+
+	input := CreateInput{
+		QuotaInGB:       1000,
+		EnabledProtocol: NFS,
+	}
+	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	if err != nil {
+		t.Fatalf("Error creating fileshare: %s", err)
+	}
+
+	share, err := sharesClient.GetProperties(ctx, accountName, shareName)
+	if err != nil {
+		t.Fatalf("Error retrieving share: %s", err)
+	}
+	if share.EnabledProtocol != NFS {
+		t.Fatalf(`Expected enabled protocol to be "NFS" but got: %q`, share.EnabledProtocol)
+	}
+
+	_, err = sharesClient.Delete(ctx, accountName, shareName, false)
+	if err != nil {
+		t.Fatalf("Error deleting Share: %s", err)
+	}
+}

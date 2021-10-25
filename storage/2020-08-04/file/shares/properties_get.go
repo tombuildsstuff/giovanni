@@ -17,8 +17,9 @@ import (
 type GetPropertiesResult struct {
 	autorest.Response
 
-	MetaData   map[string]string
-	ShareQuota int
+	MetaData        map[string]string
+	ShareQuota      int
+	EnabledProtocol ShareProtocol
 }
 
 // GetProperties returns the properties about the specified Storage Share
@@ -99,6 +100,11 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 				return result, fmt.Errorf("Error converting %q to an integer: %s", quotaRaw, err)
 			}
 			result.ShareQuota = quota
+		}
+
+		protocolRaw := resp.Header.Get("x-ms-enabled-protocols")
+		if protocolRaw != "" {
+			result.EnabledProtocol = ShareProtocol(protocolRaw)
 		}
 	}
 
