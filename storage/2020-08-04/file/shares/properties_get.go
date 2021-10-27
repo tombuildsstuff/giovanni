@@ -102,10 +102,11 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 			result.ShareQuota = quota
 		}
 
-		protocolRaw := resp.Header.Get("x-ms-enabled-protocols")
-		if protocolRaw != "" {
-			result.EnabledProtocol = ShareProtocol(protocolRaw)
+		protocol := SMB
+		if protocolRaw := resp.Header.Get("x-ms-enabled-protocols"); protocolRaw != "" {
+			protocol = ShareProtocol(protocolRaw)
 		}
+		result.EnabledProtocol = protocol
 	}
 
 	err = autorest.Respond(

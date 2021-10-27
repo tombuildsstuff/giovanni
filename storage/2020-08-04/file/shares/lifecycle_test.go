@@ -74,6 +74,9 @@ func TestSharesLifecycle(t *testing.T) {
 	if share.ShareQuota != 1 {
 		t.Fatalf("Expected Quota to be 1 but got: %d", share.ShareQuota)
 	}
+	if share.EnabledProtocol != SMB {
+		t.Fatalf("Expected EnabledProtocol to SMB but got: %s", share.EnabledProtocol)
+	}
 
 	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 5)
 	if err != nil {

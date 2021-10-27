@@ -79,9 +79,11 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName 
 		"x-ms-share-quota": input.QuotaInGB,
 	}
 
+	protocol := SMB
 	if input.EnabledProtocol != "" {
-		headers["x-ms-enabled-protocols"] = input.EnabledProtocol
+		protocol = input.EnabledProtocol
 	}
+	headers["x-ms-enabled-protocols"] = protocol
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)
 
