@@ -226,11 +226,11 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
 	if share.ShareQuota != 1001 {
-		t.Fatalf("Expected Quota to be 1 but got: %d", share.ShareQuota)
+		t.Fatalf("Expected Quota to be 1001 but got: %d", share.ShareQuota)
 	}
 
-	newTier := HotAccessTier
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 6000, &newTier)
+	//accessTier is nil since access tiers can only be set in V2 storage types.
+	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 6000, nil)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
@@ -240,7 +240,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
 	if share.ShareQuota != 6000 {
-		t.Fatalf("Expected Quota to be 5 but got: %d", share.ShareQuota)
+		t.Fatalf("Expected Quota to be 6000 but got: %d", share.ShareQuota)
 	}
 
 	updatedMetaData := map[string]string{
