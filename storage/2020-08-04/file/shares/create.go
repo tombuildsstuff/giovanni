@@ -33,7 +33,7 @@ type CreateInput struct {
 	MetaData map[string]string
 
 	// Specifies the access tier of the share.
-	AccessTier AccessTier
+	AccessTier *AccessTier
 }
 
 // Create creates the specified Storage Share within the specified Storage Account
@@ -97,8 +97,8 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName 
 	}
 	headers["x-ms-enabled-protocols"] = protocol
 
-	if input.AccessTier != "" {
-		headers["x-ms-access-tier"] = string(input.AccessTier)
+	if input.AccessTier != nil {
+		headers["x-ms-access-tier"] = string(*input.AccessTier)
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)

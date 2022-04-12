@@ -20,7 +20,7 @@ type GetPropertiesResult struct {
 	MetaData        map[string]string
 	ShareQuota      int
 	EnabledProtocol ShareProtocol
-	AccessTier      AccessTier
+	AccessTier      *AccessTier
 }
 
 // GetProperties returns the properties about the specified Storage Share
@@ -109,7 +109,8 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 		}
 
 		if accessTierRaw := resp.Header.Get("x-ms-access-tier"); accessTierRaw != "" {
-			result.AccessTier = AccessTier(accessTierRaw)
+			tier := AccessTier(accessTierRaw)
+			result.AccessTier = &tier
 		}
 		result.EnabledProtocol = protocol
 	}
