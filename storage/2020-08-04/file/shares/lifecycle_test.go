@@ -22,7 +22,7 @@ func TestSharesLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorageV2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,8 @@ func TestSharesLifecycle(t *testing.T) {
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := CreateInput{
-		QuotaInGB: 1,
+		QuotaInGB:  1,
+		AccessTier: CoolAccessTier,
 	}
 	_, err = sharesClient.Create(ctx, accountName, shareName, input)
 	if err != nil {
@@ -77,8 +78,10 @@ func TestSharesLifecycle(t *testing.T) {
 	if share.EnabledProtocol != SMB {
 		t.Fatalf("Expected EnabledProtocol to SMB but got: %s", share.EnabledProtocol)
 	}
-
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 5)
+	if share.AccessTier != CoolAccessTier {
+		t.Fatalf("Expected AccessTier to be Cold but got: %s", share.AccessTier)
+	}
+	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 5, HotAccessTier)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
@@ -89,6 +92,9 @@ func TestSharesLifecycle(t *testing.T) {
 	}
 	if share.ShareQuota != 5 {
 		t.Fatalf("Expected Quota to be 5 but got: %d", share.ShareQuota)
+	}
+	if share.AccessTier != HotAccessTier {
+		t.Fatalf("Expected AccessTier to be Hot but got: %s", share.AccessTier)
 	}
 
 	updatedMetaData := map[string]string{
@@ -219,7 +225,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Expected Quota to be 1 but got: %d", share.ShareQuota)
 	}
 
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 6000)
+	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 6000, HotAccessTier)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
