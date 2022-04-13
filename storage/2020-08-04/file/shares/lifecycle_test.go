@@ -80,7 +80,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("Expected EnabledProtocol to SMB but got: %s", share.EnabledProtocol)
 	}
 	if share.AccessTier == nil || *share.AccessTier != CoolAccessTier {
-		t.Fatalf("Expected AccessTier to be Cold but got: %v", share.AccessTier)
+		t.Fatalf("Expected AccessTier to be Cool but got: %v", share.AccessTier)
 	}
 
 	newTier := HotAccessTier
