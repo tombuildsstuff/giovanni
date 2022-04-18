@@ -18,7 +18,7 @@ type GetPropertiesResult struct {
 	autorest.Response
 
 	MetaData        map[string]string
-	ShareQuota      int
+	QuotaInGB       int
 	EnabledProtocol ShareProtocol
 	AccessTier      *AccessTier
 }
@@ -100,7 +100,7 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 			if e != nil {
 				return result, fmt.Errorf("Error converting %q to an integer: %s", quotaRaw, err)
 			}
-			result.ShareQuota = quota
+			result.QuotaInGB = quota
 		}
 
 		protocol := SMB
