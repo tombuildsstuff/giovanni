@@ -12,7 +12,7 @@ import (
 )
 
 // SetProperties lets you update the Quota for the specified Storage Share
-func (client Client) SetProperties(ctx context.Context, accountName, shareName string, newQuotaGB int) (result autorest.Response, err error) {
+func (client Client) SetProperties(ctx context.Context, accountName, shareName string, newQuotaGB int, accessTier *AccessTier) (result autorest.Response, err error) {
 	if accountName == "" {
 		return result, validation.NewError("shares.Client", "SetProperties", "`accountName` cannot be an empty string.")
 	}
@@ -26,7 +26,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, shareName s
 		return result, validation.NewError("shares.Client", "SetProperties", "`newQuotaGB` must be greater than 0, and less than/equal to 100TB (102400 GB)")
 	}
 
-	req, err := client.SetPropertiesPreparer(ctx, accountName, shareName, newQuotaGB)
+	req, err := client.SetPropertiesPreparer(ctx, accountName, shareName, newQuotaGB, accessTier)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "SetProperties", nil, "Failure preparing request")
 		return
@@ -49,7 +49,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, shareName s
 }
 
 // SetPropertiesPreparer prepares the SetProperties request.
-func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, shareName string, quotaGB int) (*http.Request, error) {
+func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, shareName string, quotaGB int, accessTier *AccessTier) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -62,6 +62,10 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, sha
 	headers := map[string]interface{}{
 		"x-ms-version":     APIVersion,
 		"x-ms-share-quota": quotaGB,
+	}
+
+	if accessTier != nil {
+		headers["x-ms-access-tier"] = string(*accessTier)
 	}
 
 	preparer := autorest.CreatePreparer(
