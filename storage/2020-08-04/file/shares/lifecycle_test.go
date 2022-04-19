@@ -73,8 +73,8 @@ func TestSharesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
-	if share.ShareQuota != 1 {
-		t.Fatalf("Expected Quota to be 1 but got: %d", share.ShareQuota)
+	if share.QuotaInGB != 1 {
+		t.Fatalf("Expected Quota to be 1 but got: %d", share.QuotaInGB)
 	}
 	if share.EnabledProtocol != SMB {
 		t.Fatalf("Expected EnabledProtocol to SMB but got: %s", share.EnabledProtocol)
@@ -84,7 +84,12 @@ func TestSharesLifecycle(t *testing.T) {
 	}
 
 	newTier := HotAccessTier
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 5, &newTier)
+	quota := 5
+	props := ShareProperties{
+		AccessTier: &newTier,
+		QuotaInGb:  &quota,
+	}
+	_, err = sharesClient.SetProperties(ctx, accountName, shareName, props)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
@@ -93,8 +98,8 @@ func TestSharesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
-	if share.ShareQuota != 5 {
-		t.Fatalf("Expected Quota to be 5 but got: %d", share.ShareQuota)
+	if share.QuotaInGB != 5 {
+		t.Fatalf("Expected Quota to be 5 but got: %d", share.QuotaInGB)
 	}
 
 	if share.AccessTier == nil || *share.AccessTier != HotAccessTier {
@@ -225,12 +230,15 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
-	if share.ShareQuota != 1001 {
-		t.Fatalf("Expected Quota to be 1001 but got: %d", share.ShareQuota)
+	if share.QuotaInGB != 1001 {
+		t.Fatalf("Expected Quota to be 1001 but got: %d", share.QuotaInGB)
 	}
 
-	//accessTier is nil since access tiers can only be set in V2 storage types.
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, 6000, nil)
+	newQuota := 6000
+	props := ShareProperties{
+		QuotaInGb: &newQuota,
+	}
+	_, err = sharesClient.SetProperties(ctx, accountName, shareName, props)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
@@ -239,8 +247,8 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
-	if share.ShareQuota != 6000 {
-		t.Fatalf("Expected Quota to be 6000 but got: %d", share.ShareQuota)
+	if share.QuotaInGB != 6000 {
+		t.Fatalf("Expected Quota to be 6000 but got: %d", share.QuotaInGB)
 	}
 
 	updatedMetaData := map[string]string{
