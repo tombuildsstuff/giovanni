@@ -18,6 +18,12 @@ type CreateInput struct {
 
 	// A name-value pair to associate with the container as metadata.
 	MetaData map[string]string
+
+	// The encryption scope to set as the default on the container.
+	DefaultEncryptionScope string
+
+	// Setting this to ture indicates that every blob that's uploaded to this container uses the default encryption scope.
+	EncryptionScopeOverrideDisabled bool
 }
 
 type CreateResponse struct {
@@ -76,6 +82,12 @@ func (client Client) CreatePreparer(ctx context.Context, accountName string, con
 
 	headers = client.setAccessLevelIntoHeaders(headers, input.AccessLevel)
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)
+
+	if input.DefaultEncryptionScope != "" {
+		// These two headers must be used together.
+		headers["x-ms-default-encryption-scope"] = input.DefaultEncryptionScope
+		headers["x-ms-deny-encryption-scope-override"] = input.EncryptionScopeOverrideDisabled
+	}
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),

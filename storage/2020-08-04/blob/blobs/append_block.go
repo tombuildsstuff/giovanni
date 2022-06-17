@@ -43,6 +43,9 @@ type AppendBlockInput struct {
 	// Required if the blob has an active lease.
 	// To perform this operation on a blob with an active lease, specify the valid lease ID for this header.
 	LeaseID *string
+
+	// The encryption scope to set for the request content.
+	EncryptionScope *string
 }
 
 type AppendBlockResult struct {
@@ -124,6 +127,9 @@ func (client Client) AppendBlockPreparer(ctx context.Context, accountName, conta
 	}
 	if input.Content != nil {
 		headers["Content-Length"] = int(len(*input.Content))
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	decorators := []autorest.PrepareDecorator{

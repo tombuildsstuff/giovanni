@@ -28,7 +28,10 @@ func Example() error {
     storageAccountKey := "ABC123...."
     containerName := "mycontainer"
     
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
+    storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, storageAccountKey, autorest.SharedKey)
+    if err != nil {
+        return err
+    }
     containersClient := containers.New()
     containersClient.Client.Authorizer = storageAuth
     

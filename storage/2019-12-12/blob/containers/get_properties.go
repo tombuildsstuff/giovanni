@@ -111,6 +111,16 @@ func (client Client) GetPropertiesWithLeaseIDResponder(resp *http.Response) (res
 		result.HasLegalHold = strings.EqualFold(resp.Header.Get("x-ms-has-legal-hold"), "true")
 
 		result.MetaData = metadata.ParseFromHeaders(resp.Header)
+
+		defaultEncryptionScope := resp.Header.Get("x-ms-default-encryption-scope")
+		if defaultEncryptionScope != "" {
+			result.DefaultEncryptionScope = defaultEncryptionScope
+		}
+
+		defaultEncryptionScopeDisabled := resp.Header.Get("x-ms-deny-encryption-scope-override")
+		if defaultEncryptionScopeDisabled != "" {
+			result.EncryptionScopeOverrideDisabled = strings.EqualFold(defaultEncryptionScopeDisabled, "true")
+		}
 	}
 
 	err = autorest.Respond(

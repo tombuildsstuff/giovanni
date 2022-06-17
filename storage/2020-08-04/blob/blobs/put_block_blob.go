@@ -23,6 +23,7 @@ type PutBlockBlobInput struct {
 	ContentType        *string
 	LeaseID            *string
 	MetaData           map[string]string
+	EncryptionScope    *string
 }
 
 // PutBlockBlob is a wrapper around the Put API call (with a stricter input object)
@@ -104,6 +105,9 @@ func (client Client) PutBlockBlobPreparer(ctx context.Context, accountName, cont
 	}
 	if input.Content != nil {
 		headers["Content-Length"] = int(len(*input.Content))
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)

@@ -25,6 +25,7 @@ type PutPageUpdateInput struct {
 	IfMatch            *string
 	IfNoneMatch        *string
 	LeaseID            *string
+	EncryptionScope    *string
 }
 
 type PutPageUpdateResult struct {
@@ -125,6 +126,9 @@ func (client Client) PutPageUpdatePreparer(ctx context.Context, accountName, con
 	}
 	if input.IfNoneMatch != nil {
 		headers["If-None-Match"] = *input.IfNoneMatch
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	preparer := autorest.CreatePreparer(

@@ -16,7 +16,8 @@ type PutPageClearInput struct {
 	StartByte int64
 	EndByte   int64
 
-	LeaseID *string
+	LeaseID         *string
+	EncryptionScope *string
 }
 
 // PutPageClear clears a range of pages within a page blob.
@@ -81,6 +82,9 @@ func (client Client) PutPageClearPreparer(ctx context.Context, accountName, cont
 
 	if input.LeaseID != nil {
 		headers["x-ms-lease-id"] = *input.LeaseID
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	preparer := autorest.CreatePreparer(

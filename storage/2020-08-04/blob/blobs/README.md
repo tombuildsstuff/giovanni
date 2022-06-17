@@ -27,7 +27,10 @@ func Example() error {
     containerName := "mycontainer"
     fileName := "example-large-file.iso"
     
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
+    storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, storageAccountKey, autorest.SharedKey)
+    if err != nil {
+        return err
+    }
     blobClient := blobs.New()
     blobClient.Client.Authorizer = storageAuth
     

@@ -12,10 +12,11 @@ import (
 )
 
 type PutBlockInput struct {
-	BlockID    string
-	Content    []byte
-	ContentMD5 *string
-	LeaseID    *string
+	BlockID         string
+	Content         []byte
+	ContentMD5      *string
+	LeaseID         *string
+	EncryptionScope *string
 }
 
 type PutBlockResult struct {
@@ -89,6 +90,9 @@ func (client Client) PutBlockPreparer(ctx context.Context, accountName, containe
 	}
 	if input.LeaseID != nil {
 		headers["x-ms-lease-id"] = *input.LeaseID
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	preparer := autorest.CreatePreparer(

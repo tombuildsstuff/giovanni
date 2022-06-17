@@ -22,6 +22,7 @@ type PutAppendBlobInput struct {
 	ContentType        *string
 	LeaseID            *string
 	MetaData           map[string]string
+	EncryptionScope    *string
 }
 
 // PutAppendBlob is a wrapper around the Put API call (with a stricter input object)
@@ -101,6 +102,9 @@ func (client Client) PutAppendBlobPreparer(ctx context.Context, accountName, con
 	}
 	if input.LeaseID != nil {
 		headers["x-ms-lease-id"] = *input.LeaseID
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)

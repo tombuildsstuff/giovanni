@@ -32,6 +32,7 @@ type PutBlockListInput struct {
 	ContentType        *string
 	MetaData           map[string]string
 	LeaseID            *string
+	EncryptionScope    *string
 }
 
 type PutBlockListResult struct {
@@ -116,6 +117,9 @@ func (client Client) PutBlockListPreparer(ctx context.Context, accountName, cont
 	}
 	if input.LeaseID != nil {
 		headers["x-ms-lease-id"] = *input.LeaseID
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)

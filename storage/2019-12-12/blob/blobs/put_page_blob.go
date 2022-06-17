@@ -25,6 +25,7 @@ type PutPageBlobInput struct {
 	BlobContentLengthBytes int64
 	BlobSequenceNumber     *int64
 	AccessTier             *AccessTier
+	EncryptionScope        *string
 }
 
 // PutPageBlob is a wrapper around the Put API call (with a stricter input object)
@@ -115,6 +116,9 @@ func (client Client) PutPageBlobPreparer(ctx context.Context, accountName, conta
 	}
 	if input.LeaseID != nil {
 		headers["x-ms-lease-id"] = *input.LeaseID
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)

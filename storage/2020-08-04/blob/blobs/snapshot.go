@@ -40,6 +40,8 @@ type SnapshotInput struct {
 	// does not match the value specified.
 	// If the values are identical, the Blob service returns status code 412 (Precondition Failed).
 	IfNoneMatch *string
+
+	EncryptionScope *string
 }
 
 type SnapshotResult struct {
@@ -124,6 +126,9 @@ func (client Client) SnapshotPreparer(ctx context.Context, accountName, containe
 	}
 	if input.IfNoneMatch != nil {
 		headers["If-None-Match"] = *input.IfNoneMatch
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)

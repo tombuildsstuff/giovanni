@@ -15,9 +15,10 @@ type PutBlockFromURLInput struct {
 	BlockID    string
 	CopySource string
 
-	ContentMD5 *string
-	LeaseID    *string
-	Range      *string
+	ContentMD5      *string
+	LeaseID         *string
+	Range           *string
+	EncryptionScope *string
 }
 
 type PutBlockFromURLResult struct {
@@ -93,6 +94,9 @@ func (client Client) PutBlockFromURLPreparer(ctx context.Context, accountName, c
 	}
 	if input.Range != nil {
 		headers["x-ms-source-range"] = *input.Range
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	preparer := autorest.CreatePreparer(

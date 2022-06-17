@@ -23,13 +23,15 @@ var (
 type ContainerProperties struct {
 	autorest.Response
 
-	AccessLevel           AccessLevel
-	LeaseStatus           LeaseStatus
-	LeaseState            LeaseState
-	LeaseDuration         *LeaseDuration
-	MetaData              map[string]string
-	HasImmutabilityPolicy bool
-	HasLegalHold          bool
+	AccessLevel                     AccessLevel
+	LeaseStatus                     LeaseStatus
+	LeaseState                      LeaseState
+	LeaseDuration                   *LeaseDuration
+	MetaData                        map[string]string
+	HasImmutabilityPolicy           bool
+	HasLegalHold                    bool
+	DefaultEncryptionScope          string
+	EncryptionScopeOverrideDisabled bool
 }
 
 type Dataset string

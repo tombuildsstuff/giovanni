@@ -104,6 +104,9 @@ type CopyInput struct {
 	// If the source blob has been modified, the Blob service returns status code 412 (Precondition Failed).
 	// This header cannot be specified if the source is an Azure File.
 	SourceIfUnmodifiedSince *string
+
+	// The encryption scope to set for the request content.
+	EncryptionScope *string
 }
 
 type CopyResult struct {
@@ -199,6 +202,9 @@ func (client Client) CopyPreparer(ctx context.Context, accountName, containerNam
 	}
 	if input.SourceIfUnmodifiedSince != nil {
 		headers["x-ms-source-if-unmodified-since"] = *input.SourceIfUnmodifiedSince
+	}
+	if input.EncryptionScope != nil {
+		headers["x-ms-encryption-scope"] = *input.EncryptionScope
 	}
 
 	headers = metadata.SetIntoHeaders(headers, input.MetaData)
