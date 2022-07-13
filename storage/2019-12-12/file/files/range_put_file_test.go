@@ -22,6 +22,11 @@ func TestPutLargeFile(t *testing.T) {
 	testPutFile(t, "blank-large-file.dmg", "application/x-apple-diskimage")
 }
 
+func TestPutVerySmallFile(t *testing.T) {
+	// the purpose of this test is to ensure that a very small file (< 4KB) is a single chunk
+	testPutFile(t, "very-small.json", "application/json")
+}
+
 func testPutFile(t *testing.T, fileName string, contentType string) {
 	client, err := testhelpers.Build(t)
 	if err != nil {
@@ -32,7 +37,7 @@ func testPutFile(t *testing.T, fileName string, contentType string) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.Storage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

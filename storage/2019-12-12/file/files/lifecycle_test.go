@@ -23,7 +23,7 @@ func TestFilesLifeCycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.Storage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,10 @@ func TestFilesLifeCycle(t *testing.T) {
 	updatedEncoding := "application/vnd+pandas2"
 	updatedInput := SetPropertiesInput{
 		ContentEncoding: &updatedEncoding,
-		ContentLength:   &updatedSize,
+		ContentLength:   updatedSize,
+		MetaData: map[string]string{
+			"bingo": "bango",
+		},
 	}
 	t.Logf("[DEBUG] Setting Properties for the Top-Level File..")
 	if _, err := filesClient.SetProperties(ctx, accountName, shareName, "", fileName, updatedInput); err != nil {
@@ -94,6 +97,13 @@ func TestFilesLifeCycle(t *testing.T) {
 
 	if file.ContentEncoding != updatedEncoding {
 		t.Fatalf("Expected the Content-Encoding to be %q but got %q", updatedEncoding, file.ContentEncoding)
+	}
+
+	if len(file.MetaData) != 1 {
+		t.Fatalf("Expected 1 item but got %d", len(file.MetaData))
+	}
+	if file.MetaData["bingo"] != "bango" {
+		t.Fatalf("Expected `bingo` to be `bango` but got %q", file.MetaData["bingo"])
 	}
 
 	t.Logf("[DEBUG] Setting MetaData..")

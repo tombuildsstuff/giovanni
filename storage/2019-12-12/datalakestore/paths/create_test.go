@@ -22,7 +22,7 @@ func TestCreateDirectory(t *testing.T) {
 	fileSystemName := fmt.Sprintf("acctestfs-%s", testhelpers.RandomString())
 	path := "test"
 
-	if _, err = client.BuildTestResourcesWithHns(ctx, resourceGroup, accountName, storage.BlobStorage); err != nil {
+	if _, err = client.BuildTestResourcesWithHns(ctx, resourceGroup, accountName, storage.KindBlobStorage); err != nil {
 		t.Fatal(err)
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)

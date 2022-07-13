@@ -23,7 +23,7 @@ func TestTablesLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	tableName := fmt.Sprintf("table%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.Storage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

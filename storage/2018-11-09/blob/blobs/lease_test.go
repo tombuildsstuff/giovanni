@@ -24,7 +24,7 @@ func TestLeaseLifecycle(t *testing.T) {
 	containerName := fmt.Sprintf("cont-%d", testhelpers.RandomInt())
 	fileName := "ubuntu.iso"
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.BlobStorage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

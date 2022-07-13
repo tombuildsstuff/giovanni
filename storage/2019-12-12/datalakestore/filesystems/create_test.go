@@ -20,7 +20,7 @@ func TestCreateHasNoTagsByDefault(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	fileSystemName := fmt.Sprintf("acctestfs-%s", testhelpers.RandomString())
 
-	if _, err = client.BuildTestResources(ctx, resourceGroup, accountName, storage.BlobStorage); err != nil {
+	if _, err = client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage); err != nil {
 		t.Fatal(err)
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
