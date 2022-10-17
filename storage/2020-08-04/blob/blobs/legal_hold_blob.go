@@ -64,12 +64,7 @@ func (client Client) SetLegalHoldBlobPreparer(ctx context.Context, accountName, 
 
 	headers := map[string]interface{}{
 		"x-ms-version": APIVersion,
-	}
-
-	if input.HasLegalHold {
-		headers["x-ms-legal-hold"] = true
-	} else {
-		headers["x-ms-legal-hold"] = false
+		"x-ms-legal-hold": input.HasLegalHold,
 	}
 
 	preparer := autorest.CreatePreparer(
