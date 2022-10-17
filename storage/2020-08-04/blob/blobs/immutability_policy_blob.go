@@ -29,7 +29,7 @@ func (client Client) SetImmutabilityPolicyBlob(ctx context.Context, accountName,
 	if blobName == "" {
 		return result, validation.NewError("blobs.Client", "ImmutabilityPolicyBlob", "`blobName` cannot be an empty string.")
 	}
-	if *input.UntilDate == "" {
+	if input.UntilDate == nil || *input.UntilDate == "" {
 		return result, validation.NewError("blobs.Client", "ImmutabilityPolicyBlob", "`input.UntilDate` cannot be an empty string.")
 	}
 
