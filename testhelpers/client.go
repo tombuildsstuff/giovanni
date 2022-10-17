@@ -68,7 +68,8 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 
 	props := storage.AccountPropertiesCreateParameters{}
 
-	props.AllowBlobPublicAccess = toPointeredBool(false)
+	// @favoretti: our subs prohibit public access SAs to be created
+	// props.AllowBlobPublicAccess = toPointeredBool(false)
 	if kind == storage.KindBlobStorage {
 		props.AccessTier = storage.AccessTierHot
 	}

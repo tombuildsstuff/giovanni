@@ -95,9 +95,9 @@ func TestBlobPolicyLifecycle(t *testing.T) {
 		t.Fatalf("Expected immutability policy mode to be `unlocked`, but got %q", details.ImmutabilityPolicyMode)
 	}
 
-	// if details.ImmutabilityPolicyUntilDate != untilDate {
-	//		t.Fatalf("Expected immutability policy untilDate to be `%s`, but got %q", untilDate, details.ImmutabilityPolicyUntilDate)
-	//	}
+	if details.ImmutabilityPolicyUntilDate != untilDate {
+		t.Fatalf("Expected immutability policy untilDate to be `%s`, but got %q", untilDate, details.ImmutabilityPolicyUntilDate)
+	}
 
 	t.Logf("[DEBUG] Deleting immutability policy")
 	_, err = blobClient.DeleteImmutabilityPolicyBlob(ctx, accountName, containerName, fileName)
