@@ -12,8 +12,8 @@ import (
 )
 
 type ImmutabilityPolicyBlobInput struct {
-	UntilDate  *string
-	PolicyMode *string
+	UntilDate  string
+	PolicyMode ImmutabilityPolicyMode
 }
 
 func (client Client) SetImmutabilityPolicyBlob(ctx context.Context, accountName, containerName, blobName string, input ImmutabilityPolicyBlobInput) (result autorest.Response, err error) {
