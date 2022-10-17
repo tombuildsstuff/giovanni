@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/validation"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 )
 
@@ -26,6 +27,15 @@ func toPointeredString(input string) *string {
 	return &input
 }
 
+func toPointeredBool(input bool) *bool {
+	return &input
+}
+
+func toPointeredInt32(input int) *int32 {
+	intthreetwo := int32(input)
+	return &intthreetwo
+}
+
 type TestResources struct {
 	ResourceGroup      string
 	StorageAccountName string
@@ -33,15 +43,19 @@ type TestResources struct {
 }
 
 func (client Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, false, "")
+	return client.buildTestResources(ctx, resourceGroup, name, kind, false, "", false)
 }
 func (client Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, true, "")
+	return client.buildTestResources(ctx, resourceGroup, name, kind, true, "", false)
 }
 func (client Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind storage.Kind, sku storage.SkuName) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, false, sku)
+	return client.buildTestResources(ctx, resourceGroup, name, kind, false, sku, false)
 }
-func (client Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool, sku storage.SkuName) (*TestResources, error) {
+func (client Client) BuildTestResourcesWithImmutability(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+	return client.buildTestResources(ctx, resourceGroup, name, kind, false, "", true)
+}
+
+func (client Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool, sku storage.SkuName, immutability bool) (*TestResources, error) {
 	location := toPointeredString(os.Getenv("ARM_TEST_LOCATION"))
 	_, err := client.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
 		Location: location,
@@ -50,7 +64,11 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 		return nil, fmt.Errorf("Error creating Resource Group %q: %s", resourceGroup, err)
 	}
 
+	validation.Disabled = true
+
 	props := storage.AccountPropertiesCreateParameters{}
+
+	props.AllowBlobPublicAccess = toPointeredBool(false)
 	if kind == storage.KindBlobStorage {
 		props.AccessTier = storage.AccessTierHot
 	}
@@ -61,6 +79,17 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 		sku = storage.SkuNameStandardLRS
 	}
 
+	if immutability {
+		immutableStorageAccount := &storage.ImmutableStorageAccount{
+			Enabled: toPointeredBool(true),
+			ImmutabilityPolicy: &storage.AccountImmutabilityPolicyProperties{
+				AllowProtectedAppendWrites:            toPointeredBool(true),
+				State:                                 storage.AccountImmutabilityPolicyStateUnlocked,
+				ImmutabilityPeriodSinceCreationInDays: toPointeredInt32(1),
+			},
+		}
+		props.ImmutableStorageWithVersioning = immutableStorageAccount
+	}
 	future, err := client.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
 		Location: location,
 		Sku: &storage.Sku{

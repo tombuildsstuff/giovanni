@@ -71,12 +71,13 @@ func (client Client) SetImmutabilityPolicyBlobPreparer(ctx context.Context, acco
 
 	queryParameters := map[string]interface{}{
 		"comp": autorest.Encode("query", "immutabilityPolicies"),
+		"v":    autorest.Encode("query", "2021-06-01"),
 	}
 
 	headers := map[string]interface{}{
-		"x-ms-version":                  APIVersion,
-		"x-ms-immutability-until-date":  input.UntilDate,
-		"x-ms-immutability-policy-mode": string(ImmutabilityPolicyModeUnlocked),
+		"x-ms-version":                        "2021-06-08",
+		"x-ms-immutability-policy-until-date": input.UntilDate,
+		"x-ms-immutability-policy-mode":       string(ImmutabilityPolicyModeUnlocked),
 	}
 
 	if input.PolicyMode != "" {
@@ -105,7 +106,7 @@ func (client Client) SetImmutabilityPolicyBlobResponder(resp *http.Response) (re
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted),
+		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result = autorest.Response{Response: resp}
 	return

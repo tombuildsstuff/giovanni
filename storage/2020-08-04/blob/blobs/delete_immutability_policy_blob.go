@@ -56,10 +56,11 @@ func (client Client) DeleteImmutabilityPolicyBlobPreparer(ctx context.Context, a
 
 	queryParameters := map[string]interface{}{
 		"comp": autorest.Encode("query", "immutabilityPolicies"),
+		"v":    autorest.Encode("query", "2021-06-01"),
 	}
 
 	headers := map[string]interface{}{
-		"x-ms-version": APIVersion,
+		"x-ms-version": "2021-06-08",
 	}
 
 	preparer := autorest.CreatePreparer(
@@ -84,7 +85,7 @@ func (client Client) DeleteImmutabilityPolicyBlobResponder(resp *http.Response) 
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusAccepted),
+		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result = autorest.Response{Response: resp}
 	return
