@@ -153,6 +153,35 @@ func TestLifecycle(t *testing.T) {
 		}
 	}
 
+	t.Logf("[DEBUG]: Setting immutability policy")
+	immutabilityPolicy := ImmutabilityPolicyBlobInput{
+		PolicyMode: ImmutabilityPolicyModeLocked,
+		UntilDate:  "Tue, 1 Jan 2030 00:00:00 GMT",
+	}
+	_, err = blobClient.SetImmutabilityPolicyBlob(ctx, accountName, containerName, fileName, immutabilityPolicy)
+	if err != nil {
+		t.Fatalf("Error setting immutability policy: %s", err)
+	}
+
+	t.Logf("[DEBUG] Re-retrieving Blob Properties..")
+	details, err = blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	if err != nil {
+		t.Fatalf("Error re-retrieving properties: %s", err)
+	}
+
+	if details.ImmutabilityPolicyMode != "Locked" {
+		t.Fatalf("Expected immutability policy mode to be `Locked`, but got %q", details.ImmutabilityPolicyMode)
+	}
+
+	if details.ImmutabilityPolicyUntilDate != "Tue, 1 Jan 2030 00:00:00 GMT" {
+		t.Fatalf("Expected immutability policy untilDate to be `Tue, 1 Jan 2030 00:00:00 GMT`, but got %q", details.ImmutabilityPolicyUntilDate)
+	}
+
+	_, err = blobClient.DeleteImmutabilityPolicyBlob(ctx, accountName, containerName, fileName)
+	if err != nil {
+		t.Fatalf("Error deleting immutability policy: %s", err)
+	}
+
 	t.Logf("[DEBUG] Deleting Blob")
 	if _, err := blobClient.Delete(ctx, accountName, containerName, fileName, DeleteInput{}); err != nil {
 		t.Fatalf("Error deleting Blob: %s", err)
