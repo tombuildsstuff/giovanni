@@ -141,8 +141,13 @@ type GetPropertiesResult struct {
 	// The ETag contains a value that you can use to perform operations conditionally
 	ETag string
 
+	HasLegalHold bool
+
 	// Included if the blob is incremental copy blob.
 	IncrementalCopy bool
+
+	ImmutabilityPolicyUntilDate string
+	ImmutabilityPolicyMode      string
 
 	// The date/time that the blob was last modified. The date format follows RFC 1123.
 	LastModified string
@@ -258,6 +263,7 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 		result.LeaseDuration = LeaseDuration(resp.Header.Get("x-ms-lease-duration"))
 		result.LeaseState = LeaseState(resp.Header.Get("x-ms-lease-state"))
 		result.LeaseStatus = LeaseStatus(resp.Header.Get("x-ms-lease-status"))
+		result.ImmutabilityPolicyUntilDate = resp.Header.Get("x-ms-immutability-policy-until-date")
 		result.MetaData = metadata.ParseFromHeaders(resp.Header)
 
 		if v := resp.Header.Get("x-ms-access-tier-inferred"); v != "" {
@@ -297,6 +303,19 @@ func (client Client) GetPropertiesResponder(resp *http.Response) (result GetProp
 			}
 
 			result.IncrementalCopy = b
+		}
+
+		if v := resp.Header.Get("x-ms-immutability-policy-mode"); v != "" {
+			result.ImmutabilityPolicyMode = v
+		}
+
+		if v := resp.Header.Get("x-ms-legal-hold"); v != "" {
+			b, innerErr := strconv.ParseBool(v)
+			if innerErr != nil {
+				err = fmt.Errorf("Error parsing %q as a bool: %s", v, innerErr)
+				return
+			}
+			result.HasLegalHold = b
 		}
 	}
 
