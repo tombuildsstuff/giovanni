@@ -8,7 +8,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-azure-helpers/authentication"
-	"github.com/tombuildsstuff/giovanni/storage/2018-11-09/blob/containers"
+	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 )
 
 func main() {
