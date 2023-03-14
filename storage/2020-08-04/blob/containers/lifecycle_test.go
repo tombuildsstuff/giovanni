@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -30,7 +30,10 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth := auth.NewSharedKeyLiteAuthorizer(accountName, testData.StorageAccountKey)
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
+	if err != nil {
+		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	}
 	containersClient := NewWithEnvironment(client.Environment)
 	containersClient.Client = client.PrepareWithAuthorizer(containersClient.Client, storageAuth)
 

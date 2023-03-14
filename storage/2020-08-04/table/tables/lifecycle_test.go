@@ -3,11 +3,11 @@ package tables
 import (
 	"context"
 	"fmt"
+	"github.com/Azure/go-autorest/autorest"
 	"log"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -29,7 +29,10 @@ func TestTablesLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth := auth.NewSharedKeyLiteTableAuthorizer(accountName, testData.StorageAccountKey)
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLiteForTable)
+	if err != nil {
+		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	}
 	tablesClient := NewWithEnvironment(client.Environment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
