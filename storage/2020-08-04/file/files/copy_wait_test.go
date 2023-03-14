@@ -10,7 +10,7 @@ import (
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
 	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 func TestFilesCopyAndWaitFromURL(t *testing.T) {

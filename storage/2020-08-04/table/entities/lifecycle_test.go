@@ -8,7 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/table/tables"
 	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 var _ StorageTableEntity = Client{}

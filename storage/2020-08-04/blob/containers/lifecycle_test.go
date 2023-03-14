@@ -8,7 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 var _ StorageContainer = Client{}

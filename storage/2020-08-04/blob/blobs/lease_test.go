@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 func TestLeaseLifecycle(t *testing.T) {
