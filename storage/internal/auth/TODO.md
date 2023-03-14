@@ -1,1 +1,0 @@
-TODO: this can be removed once https://github.com/Azure/go-autorest/pull/416 has been merged
