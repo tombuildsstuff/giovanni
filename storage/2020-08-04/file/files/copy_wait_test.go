@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
-	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 func TestFilesCopyAndWaitFromURL(t *testing.T) {
@@ -29,7 +29,10 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth := auth.NewSharedKeyLiteAuthorizer(accountName, testData.StorageAccountKey)
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
+	if err != nil {
+		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	}
 	sharesClient := shares.NewWithEnvironment(client.Environment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
@@ -83,7 +86,10 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth := auth.NewSharedKeyLiteAuthorizer(accountName, testData.StorageAccountKey)
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
+	if err != nil {
+		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	}
 	sharesClient := shares.NewWithEnvironment(client.Environment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/queue/queues"
-	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 var _ StorageQueueMessage = Client{}
@@ -32,7 +32,10 @@ func TestLifeCycle(t *testing.T) {
 	queuesClient := queues.NewWithEnvironment(client.Environment)
 	queuesClient.Client = client.PrepareWithStorageResourceManagerAuth(queuesClient.Client)
 
-	storageAuth := auth.NewSharedKeyLiteAuthorizer(accountName, testData.StorageAccountKey)
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
+	if err != nil {
+		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	}
 	messagesClient := NewWithEnvironment(client.Environment)
 	messagesClient.Client = client.PrepareWithAuthorizer(messagesClient.Client, storageAuth)
 

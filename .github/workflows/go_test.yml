@@ -14,7 +14,7 @@ on:
       - version/**
 
 env:
-  GO_VERSION: "1.14.4"
+  GO_VERSION: "1.19.x"
 
 jobs:
   go_test:
