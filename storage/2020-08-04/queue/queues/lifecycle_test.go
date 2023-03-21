@@ -28,7 +28,7 @@ func TestQueuesLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	queuesClient := NewWithEnvironment(client.Environment)
+	queuesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	queuesClient.Client = client.PrepareWithStorageResourceManagerAuth(queuesClient.Client)
 
 	// first let's test an empty container

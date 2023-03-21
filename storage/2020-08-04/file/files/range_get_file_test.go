@@ -42,7 +42,7 @@ func testGetFile(t *testing.T, fileName string, contentType string) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.Environment)
+	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
@@ -54,7 +54,7 @@ func testGetFile(t *testing.T, fileName string, contentType string) {
 	}
 	defer sharesClient.Delete(ctx, accountName, shareName, false)
 
-	filesClient := NewWithEnvironment(client.Environment)
+	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	// store files outside of this directory, since they're reused

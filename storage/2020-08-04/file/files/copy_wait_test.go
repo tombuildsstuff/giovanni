@@ -33,7 +33,7 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.Environment)
+	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
@@ -45,7 +45,7 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	}
 	defer sharesClient.Delete(ctx, accountName, shareName, false)
 
-	filesClient := NewWithEnvironment(client.Environment)
+	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	copiedFileName := "ubuntu.iso"
@@ -90,7 +90,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.Environment)
+	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
@@ -102,7 +102,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	}
 	defer sharesClient.Delete(ctx, accountName, shareName, false)
 
-	filesClient := NewWithEnvironment(client.Environment)
+	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	originalFileName := "ubuntu.iso"

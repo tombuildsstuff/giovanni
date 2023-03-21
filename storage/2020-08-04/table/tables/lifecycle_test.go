@@ -33,7 +33,7 @@ func TestTablesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	tablesClient := NewWithEnvironment(client.Environment)
+	tablesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Creating Table..")

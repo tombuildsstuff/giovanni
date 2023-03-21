@@ -30,7 +30,7 @@ func TestLeaseLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	containersClient := containers.NewWithEnvironment(client.Environment)
+	containersClient := containers.NewWithEnvironment(client.AutoRestEnvironment)
 	containersClient.Client = client.PrepareWithStorageResourceManagerAuth(containersClient.Client)
 
 	_, err = containersClient.Create(ctx, accountName, containerName, containers.CreateInput{})
@@ -43,7 +43,7 @@ func TestLeaseLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	blobClient := NewWithEnvironment(client.Environment)
+	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
 	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Copying file to Blob Storage..")

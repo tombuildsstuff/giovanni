@@ -34,10 +34,10 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.Environment)
+	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
-	directoriesClient := NewWithEnvironment(client.Environment)
+	directoriesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	directoriesClient.Client = client.PrepareWithAuthorizer(directoriesClient.Client, storageAuth)
 
 	input := shares.CreateInput{

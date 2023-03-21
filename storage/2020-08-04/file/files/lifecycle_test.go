@@ -33,7 +33,7 @@ func TestFilesLifeCycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.Environment)
+	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
@@ -45,7 +45,7 @@ func TestFilesLifeCycle(t *testing.T) {
 	}
 	defer sharesClient.Delete(ctx, accountName, shareName, false)
 
-	filesClient := NewWithEnvironment(client.Environment)
+	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	fileName := "bled5.png"

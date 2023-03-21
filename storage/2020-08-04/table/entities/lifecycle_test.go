@@ -33,7 +33,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	tablesClient := tables.NewWithEnvironment(client.Environment)
+	tablesClient := tables.NewWithEnvironment(client.AutoRestEnvironment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Creating Table..")
@@ -42,7 +42,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 	}
 	defer tablesClient.Delete(ctx, accountName, tableName)
 
-	entitiesClient := NewWithEnvironment(client.Environment)
+	entitiesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	entitiesClient.Client = client.PrepareWithAuthorizer(entitiesClient.Client, storageAuth)
 
 	partitionKey := "hello"

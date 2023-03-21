@@ -25,7 +25,7 @@ func TestCreateHasNoTagsByDefault(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	fileSystemsClient := NewWithEnvironment(client.Environment)
+	fileSystemsClient := NewWithEnvironment(client.AutoRestEnvironment)
 	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
 
 	t.Logf("[DEBUG] Creating an empty File System..")

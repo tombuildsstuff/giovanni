@@ -26,7 +26,7 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	accountsClient := NewWithEnvironment(client.Environment)
+	accountsClient := NewWithEnvironment(client.AutoRestEnvironment)
 	accountsClient.Client = client.PrepareWithStorageResourceManagerAuth(accountsClient.Client)
 
 	input := StorageServiceProperties{}

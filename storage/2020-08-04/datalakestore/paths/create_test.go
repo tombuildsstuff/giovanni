@@ -27,7 +27,7 @@ func TestCreateDirectory(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	fileSystemsClient := filesystems.NewWithEnvironment(client.Environment)
+	fileSystemsClient := filesystems.NewWithEnvironment(client.AutoRestEnvironment)
 	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
 
 	t.Logf("[DEBUG] Creating an empty File System..")
@@ -39,7 +39,7 @@ func TestCreateDirectory(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Creating path..")
-	pathsClient := NewWithEnvironment(client.Environment)
+	pathsClient := NewWithEnvironment(client.AutoRestEnvironment)
 	pathsClient.Client = client.PrepareWithStorageResourceManagerAuth(pathsClient.Client)
 
 	input := CreateInput{

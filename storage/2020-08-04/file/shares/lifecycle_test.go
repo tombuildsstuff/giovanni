@@ -32,7 +32,7 @@ func TestSharesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	tier := CoolAccessTier
@@ -194,7 +194,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := CreateInput{
@@ -342,7 +342,7 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := CreateInput{

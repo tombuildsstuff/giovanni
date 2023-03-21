@@ -34,7 +34,7 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	containersClient := NewWithEnvironment(client.Environment)
+	containersClient := NewWithEnvironment(client.AutoRestEnvironment)
 	containersClient.Client = client.PrepareWithAuthorizer(containersClient.Client, storageAuth)
 
 	// first let's test an empty container

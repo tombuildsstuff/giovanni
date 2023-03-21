@@ -29,14 +29,14 @@ func TestLifeCycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	queuesClient := queues.NewWithEnvironment(client.Environment)
+	queuesClient := queues.NewWithEnvironment(client.AutoRestEnvironment)
 	queuesClient.Client = client.PrepareWithStorageResourceManagerAuth(queuesClient.Client)
 
 	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	messagesClient := NewWithEnvironment(client.Environment)
+	messagesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	messagesClient.Client = client.PrepareWithAuthorizer(messagesClient.Client, storageAuth)
 
 	_, err = queuesClient.Create(ctx, accountName, queueName, map[string]string{})
