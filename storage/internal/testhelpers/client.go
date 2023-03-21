@@ -137,7 +137,7 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("determing autorest environment %q: %+v", environmentName, err)
 	}
-	if env == nil {
+	if autorestEnv == nil {
 		return nil, fmt.Errorf("Autorest Environment was nil: %s", err)
 	}
 
