@@ -15,11 +15,13 @@ import (
 var _ StorageBlob = Client{}
 
 func TestLifecycle(t *testing.T) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
 
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
@@ -36,7 +38,7 @@ func TestLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	containersClient := containers.NewWithEnvironment(client.Environment)
+	containersClient := containers.NewWithEnvironment(client.AutoRestEnvironment)
 	containersClient.Client = client.PrepareWithAuthorizer(containersClient.Client, storageAuth)
 
 	_, err = containersClient.Create(ctx, accountName, containerName, containers.CreateInput{})
@@ -45,7 +47,7 @@ func TestLifecycle(t *testing.T) {
 	}
 	defer containersClient.Delete(ctx, accountName, containerName)
 
-	blobClient := NewWithEnvironment(client.Environment)
+	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
 	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Copying file to Blob Storage..")

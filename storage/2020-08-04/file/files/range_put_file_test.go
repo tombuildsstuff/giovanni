@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
@@ -28,11 +29,14 @@ func TestPutVerySmallFile(t *testing.T) {
 }
 
 func testPutFile(t *testing.T, fileName string, contentType string) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
@@ -47,7 +51,7 @@ func testPutFile(t *testing.T, fileName string, contentType string) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.Environment)
+	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
@@ -59,7 +63,7 @@ func testPutFile(t *testing.T, fileName string, contentType string) {
 	}
 	defer sharesClient.Delete(ctx, accountName, shareName, false)
 
-	filesClient := NewWithEnvironment(client.Environment)
+	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	// store files outside of this directory, since they're reused

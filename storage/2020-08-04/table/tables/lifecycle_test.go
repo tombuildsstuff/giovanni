@@ -6,6 +6,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -14,11 +15,14 @@ import (
 var _ StorageTable = Client{}
 
 func TestTablesLifecycle(t *testing.T) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
+	
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	tableName := fmt.Sprintf("table%d", testhelpers.RandomInt())
@@ -33,7 +37,7 @@ func TestTablesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	tablesClient := NewWithEnvironment(client.Environment)
+	tablesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Creating Table..")

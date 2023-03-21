@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
@@ -13,11 +14,14 @@ import (
 var _ StorageShare = Client{}
 
 func TestSharesLifecycle(t *testing.T) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
@@ -32,7 +36,7 @@ func TestSharesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	tier := CoolAccessTier
@@ -175,11 +179,14 @@ func TestSharesLifecycle(t *testing.T) {
 }
 
 func TestSharesLifecycleLargeQuota(t *testing.T) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
@@ -194,7 +201,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := CreateInput{
@@ -323,11 +330,14 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 }
 
 func TestSharesLifecycleNFSProtocol(t *testing.T) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
+	
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
@@ -342,7 +352,7 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := NewWithEnvironment(client.Environment)
+	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := CreateInput{

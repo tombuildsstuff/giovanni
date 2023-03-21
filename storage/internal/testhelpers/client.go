@@ -12,18 +12,23 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	authWrapper "github.com/hashicorp/go-azure-sdk/sdk/auth/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 )
 
 type Client struct {
+	Environment          environments.Environment
 	ResourceGroupsClient resources.GroupsClient
 	StorageClient        storage.AccountsClient
+	SubscriptionId       string
 
-	auth        *autorest.Authorizer
-	Environment azure.Environment
-}
+	resourceManagerAuthorizer autorest.Authorizer
+	storageAuthorizer         autorest.Authorizer
 
-func toPointeredString(input string) *string {
-	return &input
+	AutoRestEnvironment azure.Environment
 }
 
 type TestResources struct {
@@ -32,18 +37,18 @@ type TestResources struct {
 	StorageAccountKey  string
 }
 
-func (client Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, false, "")
+func (c Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+	return c.buildTestResources(ctx, resourceGroup, name, kind, false, "")
 }
-func (client Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, true, "")
+func (c Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+	return c.buildTestResources(ctx, resourceGroup, name, kind, true, "")
 }
-func (client Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind storage.Kind, sku storage.SkuName) (*TestResources, error) {
-	return client.buildTestResources(ctx, resourceGroup, name, kind, false, sku)
+func (c Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind storage.Kind, sku storage.SkuName) (*TestResources, error) {
+	return c.buildTestResources(ctx, resourceGroup, name, kind, false, sku)
 }
-func (client Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool, sku storage.SkuName) (*TestResources, error) {
-	location := toPointeredString(os.Getenv("ARM_TEST_LOCATION"))
-	_, err := client.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
+func (c Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool, sku storage.SkuName) (*TestResources, error) {
+	location := pointer.To(os.Getenv("ARM_TEST_LOCATION"))
+	_, err := c.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
 		Location: location,
 	})
 	if err != nil {
@@ -61,7 +66,7 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 		sku = storage.SkuNameStandardLRS
 	}
 
-	future, err := client.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
+	future, err := c.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
 		Location: location,
 		Sku: &storage.Sku{
 			Name: sku,
@@ -74,12 +79,12 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 		return nil, fmt.Errorf("Error creating Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
-	err = future.WaitForCompletionRef(ctx, client.StorageClient.Client)
+	err = future.WaitForCompletionRef(ctx, c.StorageClient.Client)
 	if err != nil {
 		return nil, fmt.Errorf("Error waiting for the creation of Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
-	keys, err := client.StorageClient.ListKeys(ctx, resourceGroup, name, "")
+	keys, err := c.StorageClient.ListKeys(ctx, resourceGroup, name, "")
 	if err != nil {
 		return nil, fmt.Errorf("Error listing keys for Storage Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
@@ -95,18 +100,18 @@ func (client Client) buildTestResources(ctx context.Context, resourceGroup, name
 	}, nil
 }
 
-func (client Client) DestroyTestResources(ctx context.Context, resourceGroup, name string) error {
-	_, err := client.StorageClient.Delete(ctx, resourceGroup, name)
+func (c Client) DestroyTestResources(ctx context.Context, resourceGroup, name string) error {
+	_, err := c.StorageClient.Delete(ctx, resourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("Error deleting Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
-	future, err := client.ResourceGroupsClient.Delete(ctx, resourceGroup)
+	future, err := c.ResourceGroupsClient.Delete(ctx, resourceGroup)
 	if err != nil {
 		return fmt.Errorf("Error deleting Resource Group %q: %s", resourceGroup, err)
 	}
 
-	err = future.WaitForCompletionRef(ctx, client.ResourceGroupsClient.Client)
+	err = future.WaitForCompletionRef(ctx, c.ResourceGroupsClient.Client)
 	if err != nil {
 		return fmt.Errorf("Error waiting for deletion of Resource Group %q: %s", resourceGroup, err)
 	}
@@ -114,100 +119,92 @@ func (client Client) DestroyTestResources(ctx context.Context, resourceGroup, na
 	return nil
 }
 
-func Build(t *testing.T) (*Client, error) {
+func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	if os.Getenv("ACCTEST") == "" {
 		t.Skip("Skipping as `ACCTEST` hasn't been set")
 	}
 
-	authClient, env, err := buildAuthClient()
+	environmentName := os.Getenv("ARM_ENVIRONMENT")
+	env, err := environments.FromName(environmentName)
 	if err != nil {
-		return nil, fmt.Errorf("Error building Auth Client: %s", err)
+		return nil, fmt.Errorf("determing environment %q: %+v", environmentName, err)
 	}
-
 	if env == nil {
 		return nil, fmt.Errorf("Environment was nil: %s", err)
 	}
 
-	apiClient, err := buildAPIClient(authClient, *env)
+	autorestEnv, err := authentication.DetermineEnvironment(environmentName)
 	if err != nil {
-		return nil, fmt.Errorf("Error building API Client: %s", err)
+		return nil, fmt.Errorf("determing autorest environment %q: %+v", environmentName, err)
+	}
+	if autorestEnv == nil {
+		return nil, fmt.Errorf("Autorest Environment was nil: %s", err)
 	}
 
-	return apiClient, nil
-}
+	authConfig := auth.Credentials{
+		Environment:  *env,
+		ClientID:     os.Getenv("ARM_CLIENT_ID"),
+		TenantID:     os.Getenv("ARM_TENANT_ID"),
+		ClientSecret: os.Getenv("ARM_CLIENT_SECRET"),
 
-func buildAPIClient(config *authentication.Config, env azure.Environment) (*Client, error) {
-	oauthConfig, err := config.BuildOAuthConfig(env.ActiveDirectoryEndpoint)
-	if err != nil {
-		return nil, err
+		EnableAuthenticatingUsingClientCertificate: true,
+		EnableAuthenticatingUsingClientSecret:      true,
+		EnableAuthenticatingUsingAzureCLI:          false,
+		EnableAuthenticatingUsingManagedIdentity:   false,
+		EnableAuthenticationUsingOIDC:              false,
+		EnableAuthenticationUsingGitHubOIDC:        false,
 	}
 
-	// OAuthConfigForTenant returns a pointer, which can be nil.
-	if oauthConfig == nil {
-		return nil, fmt.Errorf("Unable to configure OAuthConfig for tenant %s", config.TenantID)
+	resourceManagerAuth, err := auth.NewAuthorizerFromCredentials(ctx, authConfig, authConfig.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build authorizer for Resource Manager API: %+v", err)
 	}
 
-	sender := buildSender()
-	armAuth, err := config.GetAuthorizationToken(sender, oauthConfig, env.ResourceManagerEndpoint)
+	storageAuthorizer, err := auth.NewAuthorizerFromCredentials(ctx, authConfig, authConfig.Environment.Storage)
 	if err != nil {
-		return nil, err
-	}
-
-	storageAuth, err := config.GetAuthorizationToken(sender, oauthConfig, "https://storage.azure.com/")
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to build authorizer for Storage API: %+v", err)
 	}
 
 	client := Client{
-		Environment: env,
-		auth:        &storageAuth,
+		Environment:    *env,
+		SubscriptionId: os.Getenv("ARM_SUBSCRIPTION_ID"),
+
+		// internal
+		resourceManagerAuthorizer: authWrapper.AutorestAuthorizer(resourceManagerAuth),
+		storageAuthorizer:         authWrapper.AutorestAuthorizer(storageAuthorizer),
+
+		// Legacy / to be removed
+		AutoRestEnvironment: *autorestEnv,
 	}
 
-	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(env.ResourceManagerEndpoint, config.SubscriptionID)
-	resourceGroupsClient.Client = client.PrepareWithStorageResourceManagerAuth(resourceGroupsClient.Client)
-	resourceGroupsClient.Authorizer = armAuth
+	resourceManagerEndpoint, ok := authConfig.Environment.ResourceManager.Endpoint()
+	if !ok {
+		return nil, fmt.Errorf("Resource Manager Endpoint is not configured for this environment")
+	}
+
+	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
+	resourceGroupsClient.Client = client.PrepareWithAuthorizer(resourceGroupsClient.Client, client.resourceManagerAuthorizer)
 	client.ResourceGroupsClient = resourceGroupsClient
 
-	storageClient := storage.NewAccountsClientWithBaseURI(env.ResourceManagerEndpoint, config.SubscriptionID)
-	storageClient.Client = client.PrepareWithStorageResourceManagerAuth(storageClient.Client)
-	storageClient.Authorizer = armAuth
+	storageClient := storage.NewAccountsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
+	storageClient.Client = client.PrepareWithAuthorizer(storageClient.Client, client.resourceManagerAuthorizer)
 	client.StorageClient = storageClient
 
 	return &client, nil
 }
 
-func (client Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
-	return client.PrepareWithAuthorizer(input, *client.auth)
+func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
+	client.Authorizer = authorizer
+	// TODO: add logging
 }
 
-func (client Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest.Authorizer) autorest.Client {
+func (c Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
+	return c.PrepareWithAuthorizer(input, c.storageAuthorizer)
+}
+
+func (c Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest.Authorizer) autorest.Client {
 	input.Authorizer = authorizer
 	input.Sender = buildSender()
 	input.SkipResourceProviderRegistration = true
 	return input
-}
-
-func buildAuthClient() (*authentication.Config, *azure.Environment, error) {
-	builder := &authentication.Builder{
-		SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
-		ClientID:       os.Getenv("ARM_CLIENT_ID"),
-		ClientSecret:   os.Getenv("ARM_CLIENT_SECRET"),
-		TenantID:       os.Getenv("ARM_TENANT_ID"),
-		Environment:    os.Getenv("ARM_ENVIRONMENT"),
-
-		// Feature Toggles
-		SupportsClientSecretAuth: true,
-	}
-
-	c, err := builder.Build()
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error building AzureRM Client: %s", err)
-	}
-
-	env, err := authentication.DetermineEnvironment(c.Environment)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return c, env, nil
 }
