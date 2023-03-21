@@ -119,7 +119,7 @@ func (c Client) DestroyTestResources(ctx context.Context, resourceGroup, name st
 	return nil
 }
 
-func Build(t *testing.T) (*Client, error) {
+func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	if os.Getenv("ACCTEST") == "" {
 		t.Skip("Skipping as `ACCTEST` hasn't been set")
 	}
@@ -154,9 +154,6 @@ func Build(t *testing.T) (*Client, error) {
 		EnableAuthenticationUsingOIDC:              false,
 		EnableAuthenticationUsingGitHubOIDC:        false,
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
-	defer cancel()
 
 	resourceManagerAuth, err := auth.NewAuthorizerFromCredentials(ctx, authConfig, authConfig.Environment.ResourceManager)
 	if err != nil {
