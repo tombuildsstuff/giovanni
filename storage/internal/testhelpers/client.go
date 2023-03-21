@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	authWrapper "github.com/hashicorp/go-azure-sdk/sdk/auth/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 )
 
@@ -193,6 +194,11 @@ func Build(t *testing.T) (*Client, error) {
 	client.StorageClient = storageClient
 
 	return &client, nil
+}
+
+func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
+	client.Authorizer = authorizer
+	// TODO: add logging
 }
 
 func (c Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
