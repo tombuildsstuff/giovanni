@@ -1,25 +1,23 @@
 package accounts
 
 import (
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
+	"fmt"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/client/dataplane/storage"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 )
 
 // Client is the base client for Blob Storage Blobs.
 type Client struct {
-	autorest.Client
-	BaseURI string
+	Client *storage.BaseClient
 }
 
-// New creates an instance of the Client client.
-func New() Client {
-	return NewWithEnvironment(azure.PublicCloud)
-}
-
-// NewWithBaseURI creates an instance of the Client client.
-func NewWithEnvironment(environment azure.Environment) Client {
-	return Client{
-		Client:  autorest.NewClientWithUserAgent(UserAgent()),
-		BaseURI: environment.StorageEndpointSuffix,
+func NewWithEnvironment(accountName string, environment environments.Environment) (*Client, error) {
+	baseClient, err := storage.NewBaseClient(accountName, "blob", environment.Storage, serviceName, apiVersion)
+	if err != nil {
+		return nil, fmt.Errorf("building base client: %+v", err)
 	}
+	return &Client{
+		Client: baseClient,
+	}, nil
 }

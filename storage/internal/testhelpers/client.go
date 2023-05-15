@@ -3,12 +3,13 @@ package testhelpers
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/client/dataplane/storage"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	track1storage "github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
@@ -22,8 +23,11 @@ import (
 type Client struct {
 	Environment          environments.Environment
 	ResourceGroupsClient resources.GroupsClient
-	StorageClient        storage.AccountsClient
+	StorageClient        track1storage.AccountsClient
 	SubscriptionId       string
+
+	resourceManagerAuth auth.Authorizer
+	storageAuth         auth.Authorizer
 
 	resourceManagerAuthorizer autorest.Authorizer
 	storageAuthorizer         autorest.Authorizer
@@ -37,16 +41,16 @@ type TestResources struct {
 	StorageAccountKey  string
 }
 
-func (c Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+func (c Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind track1storage.Kind) (*TestResources, error) {
 	return c.buildTestResources(ctx, resourceGroup, name, kind, false, "")
 }
-func (c Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storage.Kind) (*TestResources, error) {
+func (c Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind track1storage.Kind) (*TestResources, error) {
 	return c.buildTestResources(ctx, resourceGroup, name, kind, true, "")
 }
-func (c Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind storage.Kind, sku storage.SkuName) (*TestResources, error) {
+func (c Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind track1storage.Kind, sku track1storage.SkuName) (*TestResources, error) {
 	return c.buildTestResources(ctx, resourceGroup, name, kind, false, sku)
 }
-func (c Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storage.Kind, enableHns bool, sku storage.SkuName) (*TestResources, error) {
+func (c Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind track1storage.Kind, enableHns bool, sku track1storage.SkuName) (*TestResources, error) {
 	location := pointer.To(os.Getenv("ARM_TEST_LOCATION"))
 	_, err := c.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
 		Location: location,
@@ -55,20 +59,20 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 		return nil, fmt.Errorf("Error creating Resource Group %q: %s", resourceGroup, err)
 	}
 
-	props := storage.AccountPropertiesCreateParameters{}
-	if kind == storage.KindBlobStorage {
-		props.AccessTier = storage.AccessTierHot
+	props := track1storage.AccountPropertiesCreateParameters{}
+	if kind == track1storage.KindBlobStorage {
+		props.AccessTier = track1storage.AccessTierHot
 	}
 	if enableHns {
 		props.IsHnsEnabled = &enableHns
 	}
 	if sku == "" {
-		sku = storage.SkuNameStandardLRS
+		sku = track1storage.SkuNameStandardLRS
 	}
 
-	future, err := c.StorageClient.Create(ctx, resourceGroup, name, storage.AccountCreateParameters{
+	future, err := c.StorageClient.Create(ctx, resourceGroup, name, track1storage.AccountCreateParameters{
 		Location: location,
-		Sku: &storage.Sku{
+		Sku: &track1storage.Sku{
 			Name: sku,
 		},
 		Kind:                              kind,
@@ -170,11 +174,13 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 		SubscriptionId: os.Getenv("ARM_SUBSCRIPTION_ID"),
 
 		// internal
-		resourceManagerAuthorizer: authWrapper.AutorestAuthorizer(resourceManagerAuth),
-		storageAuthorizer:         authWrapper.AutorestAuthorizer(storageAuthorizer),
+		resourceManagerAuth: resourceManagerAuth,
+		storageAuth:         storageAuthorizer,
 
 		// Legacy / to be removed
-		AutoRestEnvironment: *autorestEnv,
+		AutoRestEnvironment:       *autorestEnv,
+		resourceManagerAuthorizer: authWrapper.AutorestAuthorizer(resourceManagerAuth),
+		storageAuthorizer:         authWrapper.AutorestAuthorizer(storageAuthorizer),
 	}
 
 	resourceManagerEndpoint, ok := authConfig.Environment.ResourceManager.Endpoint()
@@ -186,7 +192,7 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	resourceGroupsClient.Client = client.PrepareWithAuthorizer(resourceGroupsClient.Client, client.resourceManagerAuthorizer)
 	client.ResourceGroupsClient = resourceGroupsClient
 
-	storageClient := storage.NewAccountsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
+	storageClient := track1storage.NewAccountsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
 	storageClient.Client = client.PrepareWithAuthorizer(storageClient.Client, client.resourceManagerAuthorizer)
 	client.StorageClient = storageClient
 
@@ -196,6 +202,10 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
 	client.Authorizer = authorizer
 	// TODO: add logging
+}
+
+func (c Client) PrepareWithResourceManagerAuth(input *storage.BaseClient) {
+	input.WithAuthorizer(c.storageAuth)
 }
 
 func (c Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
