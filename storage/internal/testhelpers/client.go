@@ -3,7 +3,6 @@ package testhelpers
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-azure-sdk/sdk/client/dataplane/storage"
 	"os"
 	"testing"
 	"time"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	authWrapper "github.com/hashicorp/go-azure-sdk/sdk/auth/autorest"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/client/dataplane/storage"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 )
 
