@@ -1,4 +1,5 @@
 # Giovanni
+
 An alternative Azure Storage SDK for Go
 
 ---
@@ -14,12 +15,8 @@ This repository is an alternative Azure Storage SDK for Go; which supports for:
 At this time we support the following API Versions:
 
 * `2020-08-04` (`./storage/2020-08-04`)
-* `2019-12-12` (`./storage/2019-12-12`)
-* `2018-11-09` (`./storage/2018-11-09`)
-* `2018-03-28` (`./storage/2018-03-28`)
-* `2017-07-29` (`./storage/2017-07-29`)
 
-We're also open to supporting other versions of the Azure Storage SDK as necessary.
+We're also open to supporting other versions of the Azure Storage APIs as necessary.
 
 Documentation for how to use each SDK can be found within the README for that SDK version - for example [here's the README for 2020-08-04](storage/2020-08-04/README.md).
 
@@ -53,9 +50,11 @@ Apache 2.0
 
 ## Technical Implementation
 
-This SDK makes use of the standard Preparer-Sender-Responder pattern found in [Azure/go-autorest](https://github.com/Azure/go-autorest) - which means that this SDK should be familiar and compatible with [the Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go).
+This SDK currently makes use of the standard Preparer-Sender-Responder pattern found in [Azure/go-autorest](https://github.com/Azure/go-autorest) - which means that this SDK should be familiar and compatible with [the Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go).
 
-Depending on the API Version / API being used - different authentication mechanisms are possible (see the README within the specific SDK for more info ([example](XXX)). In all cases one of the following Authorizers will be required:
+> Note: A future release of this repository will switch to using `hashicorp/go-azure-sdk` as a base layer, rather than `Azure/go-autorest` - [see this issue for more information](https://github.com/tombuildsstuff/giovanni/issues/68).
+
+Depending on the API Version / API being used - different authentication mechanisms are possible (see the README within the specific SDK for more info ([example](storage/2020-08-04/blob/accounts/README.md)). In all cases one of the following Authorizers will be required:
 
 * An Authorizer for Azure Active Directory
 * A SharedKeyLite Authorizer (for Blob, Queue and Table Storage)
@@ -63,7 +62,11 @@ Depending on the API Version / API being used - different authentication mechani
 
 Examples for all of these can be found below in [the Examples Directory](examples/).
 
-There's a [Pull Request open adding both a SharedKey and a SharedKeyLite authorizer to Azure/go-autorest](http://github.com/Azure/go-autorest/pull/416)  
+A [SharedKey and SharedKeyLite Authorizer can be found in `Azure/go-autorest`](https://github.com/Azure/go-autorest/blob/ee71315119d4d7088d74ca9fcbc7301ce2ed2bc1/autorest/authorization_storage.go#L30-L48).
+
+---
+
+> Note: A future release of this repository will switch to using `hashicorp/go-azure-sdk` as a base layer, rather than `Azure/go-autorest` - [see this issue for more information](https://github.com/tombuildsstuff/giovanni/issues/68).
 
 ## Running the Tests
 

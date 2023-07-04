@@ -4,21 +4,25 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/table/tables"
-	"github.com/tombuildsstuff/giovanni/storage/internal/auth"
-	"github.com/tombuildsstuff/giovanni/testhelpers"
+	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
 var _ StorageTableEntity = Client{}
 
 func TestEntitiesLifecycle(t *testing.T) {
-	client, err := testhelpers.Build(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	client, err := testhelpers.Build(ctx, t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.TODO()
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	tableName := fmt.Sprintf("table%d", testhelpers.RandomInt())
@@ -29,8 +33,11 @@ func TestEntitiesLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth := auth.NewSharedKeyLiteTableAuthorizer(accountName, testData.StorageAccountKey)
-	tablesClient := tables.NewWithEnvironment(client.Environment)
+	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLiteForTable)
+	if err != nil {
+		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	}
+	tablesClient := tables.NewWithEnvironment(client.AutoRestEnvironment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Creating Table..")
@@ -39,7 +46,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 	}
 	defer tablesClient.Delete(ctx, accountName, tableName)
 
-	entitiesClient := NewWithEnvironment(client.Environment)
+	entitiesClient := NewWithEnvironment(client.AutoRestEnvironment)
 	entitiesClient.Client = client.PrepareWithAuthorizer(entitiesClient.Client, storageAuth)
 
 	partitionKey := "hello"
