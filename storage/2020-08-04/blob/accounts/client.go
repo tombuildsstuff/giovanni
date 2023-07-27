@@ -25,6 +25,7 @@ func NewWithEnvironment(environment azure.Environment) Client {
 	}
 }
 
+// NewWithEndpoint creates an instance of the Client client with the endpoint specified.
 func NewWithEndpoint(endpoint string) Client {
 	return Client{
 		Client:   autorest.NewClientWithUserAgent(UserAgent()),
