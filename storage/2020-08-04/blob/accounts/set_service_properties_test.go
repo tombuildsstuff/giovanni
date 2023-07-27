@@ -28,7 +28,11 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	accountsClient, err := NewWithEnvironment(accountName, client.Environment)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
+	accountsClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", accountName, *domainSuffix))
 	if err != nil {
 		t.Fatal(fmt.Errorf("building client for environment: %+v", err))
 	}
