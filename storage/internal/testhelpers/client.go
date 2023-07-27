@@ -208,6 +208,15 @@ func (c Client) PrepareWithResourceManagerAuth(input *storage.BaseClient) {
 	input.WithAuthorizer(c.storageAuth)
 }
 
+func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources) error {
+	auth, err := auth.NewSharedKeyAuthorizer(data.StorageAccountName, data.StorageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
+	input.WithAuthorizer(auth)
+	return nil
+}
+
 func (c Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
 	return c.PrepareWithAuthorizer(input, c.storageAuthorizer)
 }
