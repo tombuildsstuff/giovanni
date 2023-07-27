@@ -79,7 +79,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, containerN
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

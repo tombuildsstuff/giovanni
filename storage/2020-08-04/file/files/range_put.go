@@ -98,7 +98,7 @@ func (client Client) PutByteRangePreparer(ctx context.Context, accountName, shar
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetFileEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters),

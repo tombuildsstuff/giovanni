@@ -93,7 +93,7 @@ func (client Client) PutBlockPreparer(ctx context.Context, accountName, containe
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers),

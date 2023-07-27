@@ -58,7 +58,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName string, que
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{queueName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

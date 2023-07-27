@@ -84,7 +84,7 @@ func (client Client) InsertPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/json"),
 		autorest.AsPost(),
-		autorest.WithBaseURL(endpoints.GetTableEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{tableName}", pathParameters),
 		autorest.WithJSON(input.Entity),
 		autorest.WithHeaders(headers))

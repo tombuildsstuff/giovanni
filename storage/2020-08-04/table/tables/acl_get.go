@@ -64,7 +64,7 @@ func (client Client) GetACLPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetTableEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{tableName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

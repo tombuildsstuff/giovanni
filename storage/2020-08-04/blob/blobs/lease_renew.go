@@ -69,7 +69,7 @@ func (client Client) RenewLeasePreparer(ctx context.Context, accountName, contai
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

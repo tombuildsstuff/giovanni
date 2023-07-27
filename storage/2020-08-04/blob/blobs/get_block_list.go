@@ -96,7 +96,7 @@ func (client Client) GetBlockListPreparer(ctx context.Context, accountName, cont
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

@@ -82,7 +82,7 @@ func (client Client) GetSnapshotPropertiesPreparer(ctx context.Context, accountN
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

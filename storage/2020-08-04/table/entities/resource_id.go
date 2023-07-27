@@ -11,7 +11,7 @@ import (
 // GetResourceID returns the Resource ID for the given Entity
 // This can be useful when, for example, you're using this as a unique identifier
 func (client Client) GetResourceID(accountName, tableName, partitionKey, rowKey string) string {
-	domain := endpoints.GetTableEndpoint(client.BaseURI, accountName)
+	domain := endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)
 	return fmt.Sprintf("%s/%s(PartitionKey='%s',RowKey='%s')", domain, tableName, partitionKey, rowKey)
 }
 

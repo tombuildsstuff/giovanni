@@ -91,7 +91,7 @@ func (client Client) GetByteRangePreparer(ctx context.Context, accountName, shar
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetFileEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

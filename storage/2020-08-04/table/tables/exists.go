@@ -59,7 +59,7 @@ func (client Client) ExistsPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.AsContentType("application/json"),
-		autorest.WithBaseURL(endpoints.GetTableEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/Tables('{tableName}')", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

@@ -159,7 +159,7 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, sha
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetFileEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

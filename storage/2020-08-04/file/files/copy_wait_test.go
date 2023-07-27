@@ -22,7 +22,7 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
@@ -124,7 +124,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 
 	t.Logf("[DEBUG] Now copying that blob..")
 	duplicateInput := CopyInput{
-		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetFileEndpoint(filesClient.BaseURI, accountName), shareName, originalFileName),
+		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetOrBuildFileEndpoint(client.endpoint, filesClient.BaseURI, accountName), shareName, originalFileName),
 	}
 	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", copiedFileName, duplicateInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copying duplicate: %s", err)

@@ -59,7 +59,7 @@ func (client Client) QueryPreparer(ctx context.Context, accountName string, meta
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetTableEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPath("/Tables"),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

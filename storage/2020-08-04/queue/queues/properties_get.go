@@ -57,7 +57,7 @@ func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountNa
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPath("/"),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

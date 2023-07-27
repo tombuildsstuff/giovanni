@@ -13,27 +13,42 @@ func GetAccountNameFromEndpoint(endpoint string) (*string, error) {
 	return &segments[0], nil
 }
 
-// GetBlobEndpoint returns the endpoint for Blob API Operations on this storage account
-func GetBlobEndpoint(baseUri string, accountName string) string {
+// GetOrBuildBlobEndpoint returns the endpoint for Blob API Operations on this storage account
+func GetOrBuildBlobEndpoint(endpoint, baseUri string, accountName string) string {
+	if endpoint != "" {
+		return endpoint
+	}
 	return fmt.Sprintf("https://%s.blob.%s", accountName, baseUri)
 }
 
-// GetDataLakeStoreEndpoint returns the endpoint for Data Lake Store API Operations on this storage account
-func GetDataLakeStoreEndpoint(baseUri string, accountName string) string {
+// GetOrBuildDataLakeStoreEndpoint returns the endpoint for Data Lake Store API Operations on this storage account
+func GetOrBuildDataLakeStoreEndpoint(endpoint, baseUri string, accountName string) string {
+	if endpoint != "" {
+		return endpoint
+	}
 	return fmt.Sprintf("https://%s.dfs.%s", accountName, baseUri)
 }
 
-// GetFileEndpoint returns the endpoint for File Share API Operations on this storage account
-func GetFileEndpoint(baseUri string, accountName string) string {
+// GetOrBuildFileEndpoint returns the endpoint for File Share API Operations on this storage account
+func GetOrBuildFileEndpoint(endpoint, baseUri string, accountName string) string {
+	if endpoint != "" {
+		return endpoint
+	}
 	return fmt.Sprintf("https://%s.file.%s", accountName, baseUri)
 }
 
-// GetQueueEndpoint returns the endpoint for Queue API Operations on this storage account
-func GetQueueEndpoint(baseUri string, accountName string) string {
+// GetOrBuildQueueEndpoint returns the endpoint for Queue API Operations on this storage account
+func GetOrBuildQueueEndpoint(endpoint, baseUri string, accountName string) string {
+	if endpoint != "" {
+		return endpoint
+	}
 	return fmt.Sprintf("https://%s.queue.%s", accountName, baseUri)
 }
 
-// GetTableEndpoint returns the endpoint for Table API Operations on this storage account
-func GetTableEndpoint(baseUri string, accountName string) string {
+// GetOrBuildTableEndpoint returns the endpoint for Table API Operations on this storage account
+func GetOrBuildTableEndpoint(endpoint, baseUri string, accountName string) string {
+	if endpoint != "" {
+		return endpoint
+	}
 	return fmt.Sprintf("https://%s.table.%s", accountName, baseUri)
 }

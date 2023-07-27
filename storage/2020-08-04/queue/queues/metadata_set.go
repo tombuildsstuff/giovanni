@@ -69,7 +69,7 @@ func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, queue
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{queueName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

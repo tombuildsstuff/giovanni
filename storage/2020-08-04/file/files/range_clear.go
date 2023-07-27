@@ -84,7 +84,7 @@ func (client Client) ClearByteRangePreparer(ctx context.Context, accountName, sh
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetFileEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

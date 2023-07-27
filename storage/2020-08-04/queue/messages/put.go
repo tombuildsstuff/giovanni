@@ -90,7 +90,7 @@ func (client Client) PutPreparer(ctx context.Context, accountName, queueName str
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPost(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{queueName}/messages", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithXML(body),

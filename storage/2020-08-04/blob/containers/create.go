@@ -80,7 +80,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName string, con
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

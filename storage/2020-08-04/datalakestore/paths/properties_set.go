@@ -88,7 +88,7 @@ func (client Client) SetAccessControlPreparer(ctx context.Context, accountName s
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPatch(),
-		autorest.WithBaseURL(endpoints.GetDataLakeStoreEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{fileSystemName}/{path}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

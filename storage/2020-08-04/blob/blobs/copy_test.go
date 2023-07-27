@@ -62,7 +62,7 @@ func TestCopyFromExistingFile(t *testing.T) {
 
 	t.Logf("[DEBUG] Duplicating that file..")
 	copiedInput := CopyInput{
-		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetBlobEndpoint(blobClient.BaseURI, accountName), containerName, fileName),
+		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetOrBuildBlobEndpoint(client.endpoint, blobClient.BaseURI, accountName), containerName, fileName),
 	}
 	if err := blobClient.CopyAndWait(ctx, accountName, containerName, copiedFileName, copiedInput, refreshInterval); err != nil {
 		t.Fatalf("Error duplicating file: %s", err)

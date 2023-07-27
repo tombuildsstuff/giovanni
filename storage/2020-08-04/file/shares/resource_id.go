@@ -11,7 +11,7 @@ import (
 // GetResourceID returns the Resource ID for the given File Share
 // This can be useful when, for example, you're using this as a unique identifier
 func (client Client) GetResourceID(accountName, shareName string) string {
-	domain := endpoints.GetFileEndpoint(client.BaseURI, accountName)
+	domain := endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)
 	return fmt.Sprintf("%s/%s", domain, shareName)
 }
 

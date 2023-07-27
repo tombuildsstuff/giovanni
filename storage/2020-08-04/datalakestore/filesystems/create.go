@@ -65,7 +65,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName string, fil
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetDataLakeStoreEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{fileSystemName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

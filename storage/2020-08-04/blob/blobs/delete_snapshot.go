@@ -81,7 +81,7 @@ func (client Client) DeleteSnapshotPreparer(ctx context.Context, accountName, co
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

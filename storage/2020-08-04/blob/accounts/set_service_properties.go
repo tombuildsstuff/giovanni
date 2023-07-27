@@ -30,7 +30,7 @@ func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountNa
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetBlobEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithHeaders(headers),
 		autorest.WithXML(input),
 		autorest.WithQueryParameters(queryParameters))

@@ -53,7 +53,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, tableName 
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetTableEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/Tables('{tableName}')", pathParameters))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))
 }

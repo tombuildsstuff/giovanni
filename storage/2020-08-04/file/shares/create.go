@@ -106,7 +106,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetFileEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

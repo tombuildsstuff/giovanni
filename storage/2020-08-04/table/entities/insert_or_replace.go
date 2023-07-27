@@ -80,7 +80,7 @@ func (client Client) InsertOrReplacePreparer(ctx context.Context, accountName, t
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/json"),
 		autorest.AsMerge(),
-		autorest.WithBaseURL(endpoints.GetTableEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{tableName}(PartitionKey='{partitionKey}', RowKey='{rowKey}')", pathParameters),
 		autorest.WithJSON(input.Entity),
 		autorest.WithHeaders(headers))

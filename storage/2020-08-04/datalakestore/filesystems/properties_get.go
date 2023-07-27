@@ -70,7 +70,7 @@ func (client Client) GetPropertiesPreparer(ctx context.Context, accountName stri
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetDataLakeStoreEndpoint(client.BaseURI, accountName)),
+		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
 		autorest.WithPathParameters("/{fileSystemName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))
