@@ -3,10 +3,11 @@ package tables
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/go-autorest/autorest"
 	"log"
 	"testing"
 	"time"
+
+	"github.com/Azure/go-autorest/autorest"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -22,7 +23,7 @@ func TestTablesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	tableName := fmt.Sprintf("table%d", testhelpers.RandomInt())
@@ -37,23 +38,23 @@ func TestTablesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	tablesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	tablesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Creating Table..")
-	if _, err := tablesClient.Create(ctx, accountName, tableName); err != nil {
+	if _, err := tablesClient.Create(ctx, tableName); err != nil {
 		t.Fatalf("Error creating Table %q: %s", tableName, err)
 	}
 
 	// first look it up directly and confirm it's there
 	t.Logf("[DEBUG] Checking if Table exists..")
-	if _, err := tablesClient.Exists(ctx, accountName, tableName); err != nil {
+	if _, err := tablesClient.Exists(ctx, tableName); err != nil {
 		t.Fatalf("Error checking if Table %q exists: %s", tableName, err)
 	}
 
 	// then confirm it exists in the Query too
 	t.Logf("[DEBUG] Querying for Tables..")
-	result, err := tablesClient.Query(ctx, accountName, NoMetaData)
+	result, err := tablesClient.Query(ctx, NoMetaData)
 	if err != nil {
 		t.Fatalf("Error retrieving Tables: %s", err)
 	}
@@ -80,12 +81,12 @@ func TestTablesLifecycle(t *testing.T) {
 			},
 		},
 	}
-	if _, err := tablesClient.SetACL(ctx, accountName, tableName, acls); err != nil {
+	if _, err := tablesClient.SetACL(ctx, tableName, acls); err != nil {
 		t.Fatalf("Error setting ACLs: %s", err)
 	}
 
 	t.Logf("[DEBUG] Retrieving ACL's for Table %q..", tableName)
-	retrievedACLs, err := tablesClient.GetACL(ctx, accountName, tableName)
+	retrievedACLs, err := tablesClient.GetACL(ctx, tableName)
 	if err != nil {
 		t.Fatalf("Error retrieving ACLs: %s", err)
 	}
@@ -115,7 +116,7 @@ func TestTablesLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting Table %q..", tableName)
-	if _, err := tablesClient.Delete(ctx, accountName, tableName); err != nil {
+	if _, err := tablesClient.Delete(ctx, tableName); err != nil {
 		t.Fatalf("Error deleting %q: %s", tableName, err)
 	}
 }

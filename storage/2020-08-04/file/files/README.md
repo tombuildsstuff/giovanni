@@ -38,7 +38,7 @@ func Example() error {
     
     ctx := context.TODO()
     input := files.CreateInput{}
-    if _, err := filesClient.Create(ctx, accountName, shareName, directoryName, fileName, input); err != nil {
+    if _, err := filesClient.Create(ctx, shareName, directoryName, fileName, input); err != nil {
         return fmt.Errorf("Error creating File: %s", err)
     }
     

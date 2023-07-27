@@ -9,15 +9,11 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 // Create creates the specified Queue within the specified Storage Account
-func (client Client) Create(ctx context.Context, accountName, queueName string, metaData map[string]string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("queues.Client", "Create", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Create(ctx context.Context, queueName string, metaData map[string]string) (result autorest.Response, err error) {
 	if queueName == "" {
 		return result, validation.NewError("queues.Client", "Create", "`queueName` cannot be an empty string.")
 	}
@@ -28,7 +24,7 @@ func (client Client) Create(ctx context.Context, accountName, queueName string, 
 		return result, validation.NewError("queues.Client", "Create", fmt.Sprintf("`metadata` is not valid: %s.", err))
 	}
 
-	req, err := client.CreatePreparer(ctx, accountName, queueName, metaData)
+	req, err := client.CreatePreparer(ctx, queueName, metaData)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "queues.Client", "Create", nil, "Failure preparing request")
 		return
@@ -51,7 +47,7 @@ func (client Client) Create(ctx context.Context, accountName, queueName string, 
 }
 
 // CreatePreparer prepares the Create request.
-func (client Client) CreatePreparer(ctx context.Context, accountName string, queueName string, metaData map[string]string) (*http.Request, error) {
+func (client Client) CreatePreparer(ctx context.Context, queueName string, metaData map[string]string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 	}
@@ -65,7 +61,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName string, que
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

@@ -7,19 +7,15 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete deletes the specified table and any data it contains.
-func (client Client) Delete(ctx context.Context, accountName, tableName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("tables.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, tableName string) (result autorest.Response, err error) {
 	if tableName == "" {
 		return result, validation.NewError("tables.Client", "Delete", "`tableName` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, tableName)
+	req, err := client.DeletePreparer(ctx, tableName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "tables.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -42,7 +38,7 @@ func (client Client) Delete(ctx context.Context, accountName, tableName string) 
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName, tableName string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, tableName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"tableName": autorest.Encode("path", tableName),
 	}
@@ -53,7 +49,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, tableName 
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/Tables('{tableName}')", pathParameters))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type SetPropertiesInput struct {
@@ -27,15 +26,12 @@ type SetPropertiesInput struct {
 }
 
 // SetProperties sets the Properties for a Data Lake Store Gen2 FileSystem within a Storage Account
-func (client Client) SetProperties(ctx context.Context, accountName string, fileSystemName string, input SetPropertiesInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("datalakestore.Client", "SetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetProperties(ctx context.Context, fileSystemName string, input SetPropertiesInput) (result autorest.Response, err error) {
 	if fileSystemName == "" {
 		return result, validation.NewError("datalakestore.Client", "SetProperties", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.SetPropertiesPreparer(ctx, accountName, fileSystemName, input)
+	req, err := client.SetPropertiesPreparer(ctx, fileSystemName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "SetProperties", nil, "Failure preparing request")
 		return
@@ -57,7 +53,7 @@ func (client Client) SetProperties(ctx context.Context, accountName string, file
 }
 
 // SetPropertiesPreparer prepares the SetProperties request.
-func (client Client) SetPropertiesPreparer(ctx context.Context, accountName string, fileSystemName string, input SetPropertiesInput) (*http.Request, error) {
+func (client Client) SetPropertiesPreparer(ctx context.Context, fileSystemName string, input SetPropertiesInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 	}
@@ -80,7 +76,7 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName stri
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPatch(),
-		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{fileSystemName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

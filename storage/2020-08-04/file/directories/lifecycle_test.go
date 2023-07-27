@@ -38,20 +38,20 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
+	sharesClient := shares.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
-	directoriesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	directoriesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	directoriesClient.Client = client.PrepareWithAuthorizer(directoriesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
 		QuotaInGB: 1,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, true)
+	defer sharesClient.Delete(ctx, shareName, true)
 
 	metaData := map[string]string{
 		"hello": "world",
@@ -61,17 +61,17 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 	createInput := CreateDirectoryInput{
 		MetaData: metaData,
 	}
-	if _, err := directoriesClient.Create(ctx, accountName, shareName, "hello", createInput); err != nil {
+	if _, err := directoriesClient.Create(ctx, shareName, "hello", createInput); err != nil {
 		t.Fatalf("Error creating Top Level Directory: %s", err)
 	}
 
 	log.Printf("[DEBUG] Creating Inner..")
-	if _, err := directoriesClient.Create(ctx, accountName, shareName, "hello/there", createInput); err != nil {
+	if _, err := directoriesClient.Create(ctx, shareName, "hello/there", createInput); err != nil {
 		t.Fatalf("Error creating Inner Directory: %s", err)
 	}
 
 	log.Printf("[DEBUG] Retrieving share")
-	innerDir, err := directoriesClient.Get(ctx, accountName, shareName, "hello/there")
+	innerDir, err := directoriesClient.Get(ctx, shareName, "hello/there")
 	if err != nil {
 		t.Fatalf("Error retrieving Inner Directory: %s", err)
 	}
@@ -91,12 +91,12 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 	updatedMetaData := map[string]string{
 		"panda": "pops",
 	}
-	if _, err := directoriesClient.SetMetaData(ctx, accountName, shareName, "hello/there", updatedMetaData); err != nil {
+	if _, err := directoriesClient.SetMetaData(ctx, shareName, "hello/there", updatedMetaData); err != nil {
 		t.Fatalf("Error updating MetaData: %s", err)
 	}
 
 	log.Printf("[DEBUG] Retrieving MetaData")
-	retrievedMetaData, err := directoriesClient.GetMetaData(ctx, accountName, shareName, "hello/there")
+	retrievedMetaData, err := directoriesClient.GetMetaData(ctx, shareName, "hello/there")
 	if err != nil {
 		t.Fatalf("Error retrieving the updated metadata: %s", err)
 	}
@@ -108,12 +108,12 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting Inner..")
-	if _, err := directoriesClient.Delete(ctx, accountName, shareName, "hello/there"); err != nil {
+	if _, err := directoriesClient.Delete(ctx, shareName, "hello/there"); err != nil {
 		t.Fatalf("Error deleting Inner Directory: %s", err)
 	}
 
 	t.Logf("[DEBUG] Deleting Top Level..")
-	if _, err := directoriesClient.Delete(ctx, accountName, shareName, "hello"); err != nil {
+	if _, err := directoriesClient.Delete(ctx, shareName, "hello"); err != nil {
 		t.Fatalf("Error deleting Top Level Directory: %s", err)
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetPropertiesResponse struct {
@@ -25,15 +24,12 @@ type GetPropertiesResponse struct {
 }
 
 // GetProperties gets the properties for a Data Lake Store Gen2 FileSystem within a Storage Account
-func (client Client) GetProperties(ctx context.Context, accountName string, fileSystemName string) (result GetPropertiesResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("datalakestore.Client", "GetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetProperties(ctx context.Context, fileSystemName string) (result GetPropertiesResponse, err error) {
 	if fileSystemName == "" {
 		return result, validation.NewError("datalakestore.Client", "GetProperties", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.GetPropertiesPreparer(ctx, accountName, fileSystemName)
+	req, err := client.GetPropertiesPreparer(ctx, fileSystemName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "GetProperties", nil, "Failure preparing request")
 		return
@@ -55,7 +51,7 @@ func (client Client) GetProperties(ctx context.Context, accountName string, file
 }
 
 // GetPropertiesPreparer prepares the GetProperties request.
-func (client Client) GetPropertiesPreparer(ctx context.Context, accountName string, fileSystemName string) (*http.Request, error) {
+func (client Client) GetPropertiesPreparer(ctx context.Context, fileSystemName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 	}
@@ -70,7 +66,7 @@ func (client Client) GetPropertiesPreparer(ctx context.Context, accountName stri
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{fileSystemName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

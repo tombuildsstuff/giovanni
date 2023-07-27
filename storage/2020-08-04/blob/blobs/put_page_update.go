@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type PutPageUpdateInput struct {
@@ -36,10 +35,7 @@ type PutPageUpdateResult struct {
 }
 
 // PutPageUpdate writes a range of pages to a page blob.
-func (client Client) PutPageUpdate(ctx context.Context, accountName, containerName, blobName string, input PutPageUpdateInput) (result PutPageUpdateResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "PutPageUpdate", "`accountName` cannot be an empty string.")
-	}
+func (client Client) PutPageUpdate(ctx context.Context, containerName, blobName string, input PutPageUpdateInput) (result PutPageUpdateResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "PutPageUpdate", "`containerName` cannot be an empty string.")
 	}
@@ -62,7 +58,7 @@ func (client Client) PutPageUpdate(ctx context.Context, accountName, containerNa
 		return result, validation.NewError("blobs.Client", "PutPageUpdate", fmt.Sprintf("Content Size was defined as %d but got %d.", expectedSize, actualSize))
 	}
 
-	req, err := client.PutPageUpdatePreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.PutPageUpdatePreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "PutPageUpdate", nil, "Failure preparing request")
 		return
@@ -85,7 +81,7 @@ func (client Client) PutPageUpdate(ctx context.Context, accountName, containerNa
 }
 
 // PutPageUpdatePreparer prepares the PutPageUpdate request.
-func (client Client) PutPageUpdatePreparer(ctx context.Context, accountName, containerName, blobName string, input PutPageUpdateInput) (*http.Request, error) {
+func (client Client) PutPageUpdatePreparer(ctx context.Context, containerName, blobName string, input PutPageUpdateInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -129,7 +125,7 @@ func (client Client) PutPageUpdatePreparer(ctx context.Context, accountName, con
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers),

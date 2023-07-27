@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -55,10 +54,7 @@ type SnapshotResult struct {
 }
 
 // Snapshot captures a Snapshot of a given Blob
-func (client Client) Snapshot(ctx context.Context, accountName, containerName, blobName string, input SnapshotInput) (result SnapshotResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "Snapshot", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Snapshot(ctx context.Context, containerName, blobName string, input SnapshotInput) (result SnapshotResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "Snapshot", "`containerName` cannot be an empty string.")
 	}
@@ -72,7 +68,7 @@ func (client Client) Snapshot(ctx context.Context, accountName, containerName, b
 		return result, validation.NewError("blobs.Client", "Snapshot", fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
-	req, err := client.SnapshotPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.SnapshotPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "Snapshot", nil, "Failure preparing request")
 		return
@@ -95,7 +91,7 @@ func (client Client) Snapshot(ctx context.Context, accountName, containerName, b
 }
 
 // SnapshotPreparer prepares the Snapshot request.
-func (client Client) SnapshotPreparer(ctx context.Context, accountName, containerName, blobName string, input SnapshotInput) (*http.Request, error) {
+func (client Client) SnapshotPreparer(ctx context.Context, containerName, blobName string, input SnapshotInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -130,7 +126,7 @@ func (client Client) SnapshotPreparer(ctx context.Context, accountName, containe
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

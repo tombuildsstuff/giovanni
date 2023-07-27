@@ -8,27 +8,23 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 // GetProperties returns the properties for this Container without a Lease
-func (client Client) GetProperties(ctx context.Context, accountName, containerName string) (ContainerProperties, error) {
+func (client Client) GetProperties(ctx context.Context, containerName string) (ContainerProperties, error) {
 	// If specified, Get Container Properties only succeeds if the container’s lease is active and matches this ID.
 	// If there is no active lease or the ID does not match, 412 (Precondition Failed) is returned.
-	return client.GetPropertiesWithLeaseID(ctx, accountName, containerName, "")
+	return client.GetPropertiesWithLeaseID(ctx, containerName, "")
 }
 
 // GetPropertiesWithLeaseID returns the properties for this Container using the specified LeaseID
-func (client Client) GetPropertiesWithLeaseID(ctx context.Context, accountName, containerName, leaseID string) (result ContainerProperties, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "GetPropertiesWithLeaseID", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetPropertiesWithLeaseID(ctx context.Context, containerName, leaseID string) (result ContainerProperties, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "GetPropertiesWithLeaseID", "`containerName` cannot be an empty string.")
 	}
 
-	req, err := client.GetPropertiesWithLeaseIDPreparer(ctx, accountName, containerName, leaseID)
+	req, err := client.GetPropertiesWithLeaseIDPreparer(ctx, containerName, leaseID)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "GetProperties", nil, "Failure preparing request")
 		return
@@ -51,7 +47,7 @@ func (client Client) GetPropertiesWithLeaseID(ctx context.Context, accountName, 
 }
 
 // GetPropertiesWithLeaseIDPreparer prepares the GetPropertiesWithLeaseID request.
-func (client Client) GetPropertiesWithLeaseIDPreparer(ctx context.Context, accountName, containerName, leaseID string) (*http.Request, error) {
+func (client Client) GetPropertiesWithLeaseIDPreparer(ctx context.Context, containerName, leaseID string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -73,7 +69,7 @@ func (client Client) GetPropertiesWithLeaseIDPreparer(ctx context.Context, accou
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

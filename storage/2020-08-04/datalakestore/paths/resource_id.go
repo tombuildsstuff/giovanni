@@ -10,9 +10,8 @@ import (
 
 // GetResourceID returns the Resource ID for the given Data Lake Storage FileSystem
 // This can be useful when, for example, you're using this as a unique identifier
-func (client Client) GetResourceID(accountName, fileSystemName, path string) string {
-	domain := endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)
-	return fmt.Sprintf("%s/%s/%s", domain, fileSystemName, path)
+func (client Client) GetResourceID(fileSystemName, path string) string {
+	return fmt.Sprintf("%s/%s/%s", client.endpoint, fileSystemName, path)
 }
 
 type ResourceID struct {

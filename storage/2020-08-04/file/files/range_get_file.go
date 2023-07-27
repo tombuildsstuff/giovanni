@@ -12,10 +12,10 @@ import (
 )
 
 // GetFile is a helper method to download a file by chunking it automatically
-func (client Client) GetFile(ctx context.Context, accountName, shareName, path, fileName string, parallelism int) (result autorest.Response, outputBytes []byte, err error) {
+func (client Client) GetFile(ctx context.Context, shareName, path, fileName string, parallelism int) (result autorest.Response, outputBytes []byte, err error) {
 
 	// first look up the file and check out how many bytes it is
-	file, e := client.GetProperties(ctx, accountName, shareName, path, fileName)
+	file, e := client.GetProperties(ctx, shareName, path, fileName)
 	if err != nil {
 		result = file.Response
 		err = e
@@ -57,7 +57,7 @@ func (client Client) GetFile(ctx context.Context, accountName, shareName, path, 
 				fileSize:  length,
 			}
 
-			result, err := client.downloadFileChunk(ctx, accountName, shareName, path, fileName, dfci)
+			result, err := client.downloadFileChunk(ctx, shareName, path, fileName, dfci)
 			if err != nil {
 				errors <- err
 				waitGroup.Done()
@@ -100,7 +100,7 @@ type downloadFileChunkResult struct {
 	bytes      []byte
 }
 
-func (client Client) downloadFileChunk(ctx context.Context, accountName, shareName, path, fileName string, input downloadFileChunkInput) (*downloadFileChunkResult, error) {
+func (client Client) downloadFileChunk(ctx context.Context, shareName, path, fileName string, input downloadFileChunkInput) (*downloadFileChunkResult, error) {
 	startBytes := input.chunkSize * int64(input.thisChunk)
 	endBytes := startBytes + input.chunkSize
 
@@ -114,7 +114,7 @@ func (client Client) downloadFileChunk(ctx context.Context, accountName, shareNa
 		StartBytes: startBytes,
 		EndBytes:   endBytes,
 	}
-	result, err := client.GetByteRange(ctx, accountName, shareName, path, fileName, getInput)
+	result, err := client.GetByteRange(ctx, shareName, path, fileName, getInput)
 	if err != nil {
 		return nil, fmt.Errorf("Error putting bytes: %s", err)
 	}

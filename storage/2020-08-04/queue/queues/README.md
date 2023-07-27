@@ -34,7 +34,7 @@ func Example() error {
     metadata := map[string]string{
     	"hello": "world",
     }
-    if _, err := queuesClient.Create(ctx, accountName, queueName, metadata); err != nil {
+    if _, err := queuesClient.Create(ctx, queueName, metadata); err != nil {
         return fmt.Errorf("Error creating Queue: %s", err)
     }
     

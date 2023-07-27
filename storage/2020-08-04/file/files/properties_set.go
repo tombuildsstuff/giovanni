@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -69,10 +68,7 @@ type SetPropertiesInput struct {
 }
 
 // SetProperties sets the specified properties on the specified File
-func (client Client) SetProperties(ctx context.Context, accountName, shareName, path, fileName string, input SetPropertiesInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "SetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetProperties(ctx context.Context, shareName, path, fileName string, input SetPropertiesInput) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "SetProperties", "`shareName` cannot be an empty string.")
 	}
@@ -83,7 +79,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, shareName, 
 		return result, validation.NewError("files.Client", "SetProperties", "`fileName` cannot be an empty string.")
 	}
 
-	req, err := client.SetPropertiesPreparer(ctx, accountName, shareName, path, fileName, input)
+	req, err := client.SetPropertiesPreparer(ctx, shareName, path, fileName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "SetProperties", nil, "Failure preparing request")
 		return
@@ -106,7 +102,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, shareName, 
 }
 
 // SetPropertiesPreparer prepares the SetProperties request.
-func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, shareName, path, fileName string, input SetPropertiesInput) (*http.Request, error) {
+func (client Client) SetPropertiesPreparer(ctx context.Context, shareName, path, fileName string, input SetPropertiesInput) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -159,7 +155,7 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, sha
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

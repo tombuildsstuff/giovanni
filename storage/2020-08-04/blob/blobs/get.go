@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetInput struct {
@@ -25,10 +24,7 @@ type GetResult struct {
 }
 
 // Get reads or downloads a blob from the system, including its metadata and properties.
-func (client Client) Get(ctx context.Context, accountName, containerName, blobName string, input GetInput) (result GetResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "Get", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Get(ctx context.Context, containerName, blobName string, input GetInput) (result GetResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "Get", "`containerName` cannot be an empty string.")
 	}
@@ -45,7 +41,7 @@ func (client Client) Get(ctx context.Context, accountName, containerName, blobNa
 		return result, validation.NewError("blobs.Client", "Get", "`input.StartByte` and `input.EndByte` must both be specified, or both be nil.")
 	}
 
-	req, err := client.GetPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.GetPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "Get", nil, "Failure preparing request")
 		return
@@ -68,7 +64,7 @@ func (client Client) Get(ctx context.Context, accountName, containerName, blobNa
 }
 
 // GetPreparer prepares the Get request.
-func (client Client) GetPreparer(ctx context.Context, accountName, containerName, blobName string, input GetInput) (*http.Request, error) {
+func (client Client) GetPreparer(ctx context.Context, containerName, blobName string, input GetInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -84,7 +80,7 @@ func (client Client) GetPreparer(ctx context.Context, accountName, containerName
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetPropertiesResponse struct {
@@ -32,15 +31,12 @@ const (
 )
 
 // GetProperties gets the properties for a Data Lake Store Gen2 Path in a FileSystem within a Storage Account
-func (client Client) GetProperties(ctx context.Context, accountName string, fileSystemName string, path string, action GetPropertiesAction) (result GetPropertiesResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("datalakestore.Client", "GetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetProperties(ctx context.Context, fileSystemName string, path string, action GetPropertiesAction) (result GetPropertiesResponse, err error) {
 	if fileSystemName == "" {
 		return result, validation.NewError("datalakestore.Client", "GetProperties", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.GetPropertiesPreparer(ctx, accountName, fileSystemName, path, action)
+	req, err := client.GetPropertiesPreparer(ctx, fileSystemName, path, action)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "GetProperties", nil, "Failure preparing request")
 		return
@@ -62,7 +58,7 @@ func (client Client) GetProperties(ctx context.Context, accountName string, file
 }
 
 // GetPropertiesPreparer prepares the GetProperties request.
-func (client Client) GetPropertiesPreparer(ctx context.Context, accountName string, fileSystemName string, path string, action GetPropertiesAction) (*http.Request, error) {
+func (client Client) GetPropertiesPreparer(ctx context.Context, fileSystemName string, path string, action GetPropertiesAction) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 		"path":           autorest.Encode("path", path),
@@ -78,7 +74,7 @@ func (client Client) GetPropertiesPreparer(ctx context.Context, accountName stri
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{fileSystemName}/{path}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

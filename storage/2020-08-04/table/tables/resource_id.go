@@ -10,9 +10,8 @@ import (
 
 // GetResourceID returns the Resource ID for the given Table
 // This can be useful when, for example, you're using this as a unique identifier
-func (client Client) GetResourceID(accountName, tableName string) string {
-	domain := endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)
-	return fmt.Sprintf("%s/Tables('%s')", domain, tableName)
+func (client Client) GetResourceID(tableName string) string {
+	return fmt.Sprintf("%s/Tables('%s')", client.endpoint, tableName)
 }
 
 type ResourceID struct {

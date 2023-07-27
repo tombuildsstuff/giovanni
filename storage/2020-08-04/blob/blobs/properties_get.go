@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -163,10 +162,7 @@ type GetPropertiesResult struct {
 }
 
 // GetProperties returns all user-defined metadata, standard HTTP properties, and system properties for the blob
-func (client Client) GetProperties(ctx context.Context, accountName, containerName, blobName string, input GetPropertiesInput) (result GetPropertiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "GetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetProperties(ctx context.Context, containerName, blobName string, input GetPropertiesInput) (result GetPropertiesResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "GetProperties", "`containerName` cannot be an empty string.")
 	}
@@ -177,7 +173,7 @@ func (client Client) GetProperties(ctx context.Context, accountName, containerNa
 		return result, validation.NewError("blobs.Client", "GetProperties", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.GetPropertiesPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.GetPropertiesPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "GetProperties", nil, "Failure preparing request")
 		return
@@ -200,7 +196,7 @@ func (client Client) GetProperties(ctx context.Context, accountName, containerNa
 }
 
 // GetPropertiesPreparer prepares the GetProperties request.
-func (client Client) GetPropertiesPreparer(ctx context.Context, accountName, containerName, blobName string, input GetPropertiesInput) (*http.Request, error) {
+func (client Client) GetPropertiesPreparer(ctx context.Context, containerName, blobName string, input GetPropertiesInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -216,7 +212,7 @@ func (client Client) GetPropertiesPreparer(ctx context.Context, accountName, con
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

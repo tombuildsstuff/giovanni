@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetACLResult struct {
@@ -17,15 +16,12 @@ type GetACLResult struct {
 }
 
 // GetACL returns the Access Control List for the specified Table
-func (client Client) GetACL(ctx context.Context, accountName, tableName string) (result GetACLResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("tables.Client", "GetACL", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetACL(ctx context.Context, tableName string) (result GetACLResult, err error) {
 	if tableName == "" {
 		return result, validation.NewError("tables.Client", "GetACL", "`tableName` cannot be an empty string.")
 	}
 
-	req, err := client.GetACLPreparer(ctx, accountName, tableName)
+	req, err := client.GetACLPreparer(ctx, tableName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "tables.Client", "GetACL", nil, "Failure preparing request")
 		return
@@ -48,7 +44,7 @@ func (client Client) GetACL(ctx context.Context, accountName, tableName string) 
 }
 
 // GetACLPreparer prepares the GetACL request.
-func (client Client) GetACLPreparer(ctx context.Context, accountName, tableName string) (*http.Request, error) {
+func (client Client) GetACLPreparer(ctx context.Context, tableName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"tableName": autorest.Encode("path", tableName),
 	}
@@ -64,7 +60,7 @@ func (client Client) GetACLPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{tableName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

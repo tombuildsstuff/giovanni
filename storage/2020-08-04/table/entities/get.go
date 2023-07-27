@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetEntityInput struct {
@@ -26,10 +25,7 @@ type GetEntityResult struct {
 }
 
 // Get queries entities in a table and includes the $filter and $select options.
-func (client Client) Get(ctx context.Context, accountName, tableName string, input GetEntityInput) (result GetEntityResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("entities.Client", "Get", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Get(ctx context.Context, tableName string, input GetEntityInput) (result GetEntityResult, err error) {
 	if tableName == "" {
 		return result, validation.NewError("entities.Client", "Get", "`tableName` cannot be an empty string.")
 	}
@@ -40,7 +36,7 @@ func (client Client) Get(ctx context.Context, accountName, tableName string, inp
 		return result, validation.NewError("entities.Client", "Get", "`input.RowKey` cannot be an empty string.")
 	}
 
-	req, err := client.GetPreparer(ctx, accountName, tableName, input)
+	req, err := client.GetPreparer(ctx, tableName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "entities.Client", "Get", nil, "Failure preparing request")
 		return
@@ -63,7 +59,7 @@ func (client Client) Get(ctx context.Context, accountName, tableName string, inp
 }
 
 // GetPreparer prepares the Get request.
-func (client Client) GetPreparer(ctx context.Context, accountName, tableName string, input GetEntityInput) (*http.Request, error) {
+func (client Client) GetPreparer(ctx context.Context, tableName string, input GetEntityInput) (*http.Request, error) {
 
 	pathParameters := map[string]interface{}{
 		"tableName":    autorest.Encode("path", tableName),
@@ -80,7 +76,7 @@ func (client Client) GetPreparer(ctx context.Context, accountName, tableName str
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{tableName}(PartitionKey='{partitionKey}',RowKey='{rowKey}')", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

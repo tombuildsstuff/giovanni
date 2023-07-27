@@ -8,14 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // SetTier sets the tier on a blob.
-func (client Client) SetTier(ctx context.Context, accountName, containerName, blobName string, tier AccessTier) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "SetTier", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetTier(ctx context.Context, containerName, blobName string, tier AccessTier) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "SetTier", "`containerName` cannot be an empty string.")
 	}
@@ -26,7 +22,7 @@ func (client Client) SetTier(ctx context.Context, accountName, containerName, bl
 		return result, validation.NewError("blobs.Client", "SetTier", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.SetTierPreparer(ctx, accountName, containerName, blobName, tier)
+	req, err := client.SetTierPreparer(ctx, containerName, blobName, tier)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "SetTier", nil, "Failure preparing request")
 		return
@@ -49,7 +45,7 @@ func (client Client) SetTier(ctx context.Context, accountName, containerName, bl
 }
 
 // SetTierPreparer prepares the SetTier request.
-func (client Client) SetTierPreparer(ctx context.Context, accountName, containerName, blobName string, tier AccessTier) (*http.Request, error) {
+func (client Client) SetTierPreparer(ctx context.Context, containerName, blobName string, tier AccessTier) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -66,7 +62,7 @@ func (client Client) SetTierPreparer(ctx context.Context, accountName, container
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

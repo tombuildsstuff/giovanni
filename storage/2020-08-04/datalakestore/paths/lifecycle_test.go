@@ -31,14 +31,14 @@ func TestLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
-	fileSystemsClient := filesystems.NewWithEnvironment(client.AutoRestEnvironment)
+	fileSystemsClient := filesystems.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
-	pathsClient := NewWithEnvironment(client.AutoRestEnvironment)
+	pathsClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	pathsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
 
 	t.Logf("[DEBUG] Creating an empty File System..")
 	fileSystemInput := filesystems.CreateInput{}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, fileSystemInput); err != nil {
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, fileSystemInput); err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
@@ -46,12 +46,12 @@ func TestLifecycle(t *testing.T) {
 	input := CreateInput{
 		Resource: PathResourceDirectory,
 	}
-	if _, err = pathsClient.Create(ctx, accountName, fileSystemName, path, input); err != nil {
+	if _, err = pathsClient.Create(ctx, fileSystemName, path, input); err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' ..")
-	props, err := pathsClient.GetProperties(ctx, accountName, fileSystemName, path, GetPropertiesActionGetAccessControl)
+	props, err := pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesActionGetAccessControl)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties: %s", err))
 	}
@@ -69,12 +69,12 @@ func TestLifecycle(t *testing.T) {
 		ACL: &newACL,
 	}
 	t.Logf("[DEBUG] Setting Access Control for folder 'test' ..")
-	if _, err = pathsClient.SetAccessControl(ctx, accountName, fileSystemName, path, accessControlInput); err != nil {
+	if _, err = pathsClient.SetAccessControl(ctx, fileSystemName, path, accessControlInput); err != nil {
 		t.Fatal(fmt.Errorf("Error setting Access Control %s", err))
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' (2) ..")
-	props, err = pathsClient.GetProperties(ctx, accountName, fileSystemName, path, GetPropertiesActionGetAccessControl)
+	props, err = pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesActionGetAccessControl)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties (2): %s", err))
 	}
@@ -83,18 +83,18 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting path 'test' ..")
-	if _, err = pathsClient.Delete(ctx, accountName, fileSystemName, path); err != nil {
+	if _, err = pathsClient.Delete(ctx, fileSystemName, path); err != nil {
 		t.Fatal(fmt.Errorf("Error deleting path: %s", err))
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' (3) ..")
-	props, err = pathsClient.GetProperties(ctx, accountName, fileSystemName, path, GetPropertiesActionGetAccessControl)
+	props, err = pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesActionGetAccessControl)
 	if err == nil {
 		t.Fatal(fmt.Errorf("Didn't get error getting properties after deleting path (3)"))
 	}
 
 	t.Logf("[DEBUG] Deleting File System..")
-	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
+	if _, err := fileSystemsClient.Delete(ctx, fileSystemName); err != nil {
 		t.Fatalf("Error deleting filesystem: %s", err)
 	}
 }

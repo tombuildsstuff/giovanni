@@ -7,11 +7,11 @@ import (
 )
 
 type StorageQueue interface {
-	Delete(ctx context.Context, accountName, queueName string) (result autorest.Response, err error)
-	GetMetaData(ctx context.Context, accountName, queueName string) (result GetMetaDataResult, err error)
-	SetMetaData(ctx context.Context, accountName, queueName string, metaData map[string]string) (result autorest.Response, err error)
-	Create(ctx context.Context, accountName, queueName string, metaData map[string]string) (result autorest.Response, err error)
-	GetResourceID(accountName, queueName string) string
-	SetServiceProperties(ctx context.Context, accountName string, properties StorageServiceProperties) (result autorest.Response, err error)
-	GetServiceProperties(ctx context.Context, accountName string) (result StorageServicePropertiesResponse, err error)
+	Delete(ctx context.Context, queueName string) (result autorest.Response, err error)
+	GetMetaData(ctx context.Context, queueName string) (result GetMetaDataResult, err error)
+	SetMetaData(ctx context.Context, queueName string, metaData map[string]string) (result autorest.Response, err error)
+	Create(ctx context.Context, queueName string, metaData map[string]string) (result autorest.Response, err error)
+	GetResourceID(queueName string) string
+	SetServiceProperties(ctx context.Context, properties StorageServiceProperties) (result autorest.Response, err error)
+	GetServiceProperties(ctx context.Context) (result StorageServicePropertiesResponse, err error)
 }

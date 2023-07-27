@@ -34,7 +34,7 @@ func Example() error {
     input := shares.CreateInput{
     	QuotaInGB: 2,
     }
-    if _, err := sharesClient.Create(ctx, accountName, shareName, input); err != nil {
+    if _, err := sharesClient.Create(ctx, shareName, input); err != nil {
         return fmt.Errorf("Error creating Share: %s", err)
     }
     

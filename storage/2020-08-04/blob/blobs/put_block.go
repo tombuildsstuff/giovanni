@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type PutBlockInput struct {
@@ -25,10 +24,7 @@ type PutBlockResult struct {
 }
 
 // PutBlock creates a new block to be committed as part of a blob.
-func (client Client) PutBlock(ctx context.Context, accountName, containerName, blobName string, input PutBlockInput) (result PutBlockResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "PutBlock", "`accountName` cannot be an empty string.")
-	}
+func (client Client) PutBlock(ctx context.Context, containerName, blobName string, input PutBlockInput) (result PutBlockResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "PutBlock", "`containerName` cannot be an empty string.")
 	}
@@ -45,7 +41,7 @@ func (client Client) PutBlock(ctx context.Context, accountName, containerName, b
 		return result, validation.NewError("blobs.Client", "PutBlock", "`input.Content` cannot be empty.")
 	}
 
-	req, err := client.PutBlockPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.PutBlockPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "PutBlock", nil, "Failure preparing request")
 		return
@@ -68,7 +64,7 @@ func (client Client) PutBlock(ctx context.Context, accountName, containerName, b
 }
 
 // PutBlockPreparer prepares the PutBlock request.
-func (client Client) PutBlockPreparer(ctx context.Context, accountName, containerName, blobName string, input PutBlockInput) (*http.Request, error) {
+func (client Client) PutBlockPreparer(ctx context.Context, containerName, blobName string, input PutBlockInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -93,7 +89,7 @@ func (client Client) PutBlockPreparer(ctx context.Context, accountName, containe
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers),

@@ -69,13 +69,13 @@ func Example() error {
 	}
 
    
-    fileSystemsClient := filesystems.NewWithEnvironment(env)
+    fileSystemsClient := filesystems.NewWithEnvironment(accountName, env)
 	fileSystemsClient.Client.Authorizer = storageAuth
 
 	input := filesystems.CreateInput{
 		Properties: map[string]string{},
 	}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, input); err != nil {
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, input); err != nil {
 		return fmt.Errorf("Error creating: %s", err)
 	}
 	

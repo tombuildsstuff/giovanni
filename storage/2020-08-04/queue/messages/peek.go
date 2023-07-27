@@ -8,14 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Peek retrieves one or more messages from the front of the queue, but doesn't alter the visibility of the messages
-func (client Client) Peek(ctx context.Context, accountName, queueName string, numberOfMessages int) (result QueueMessagesListResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Peek", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Peek(ctx context.Context, queueName string, numberOfMessages int) (result QueueMessagesListResult, err error) {
 	if queueName == "" {
 		return result, validation.NewError("messages.Client", "Peek", "`queueName` cannot be an empty string.")
 	}
@@ -26,7 +22,7 @@ func (client Client) Peek(ctx context.Context, accountName, queueName string, nu
 		return result, validation.NewError("messages.Client", "Peek", "`numberOfMessages` must be between 1 and 32.")
 	}
 
-	req, err := client.PeekPreparer(ctx, accountName, queueName, numberOfMessages)
+	req, err := client.PeekPreparer(ctx, queueName, numberOfMessages)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "messages.Client", "Peek", nil, "Failure preparing request")
 		return
@@ -49,7 +45,7 @@ func (client Client) Peek(ctx context.Context, accountName, queueName string, nu
 }
 
 // PeekPreparer prepares the Peek request.
-func (client Client) PeekPreparer(ctx context.Context, accountName, queueName string, numberOfMessages int) (*http.Request, error) {
+func (client Client) PeekPreparer(ctx context.Context, queueName string, numberOfMessages int) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 	}
@@ -66,7 +62,7 @@ func (client Client) PeekPreparer(ctx context.Context, accountName, queueName st
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}/messages", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

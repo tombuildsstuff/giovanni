@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type IncrementalCopyBlobInput struct {
@@ -23,10 +22,7 @@ type IncrementalCopyBlobInput struct {
 // The snapshot is copied such that only the differential changes between the previously copied
 // snapshot are transferred to the destination.
 // The copied snapshots are complete copies of the original snapshot and can be read or copied from as usual.
-func (client Client) IncrementalCopyBlob(ctx context.Context, accountName, containerName, blobName string, input IncrementalCopyBlobInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "IncrementalCopyBlob", "`accountName` cannot be an empty string.")
-	}
+func (client Client) IncrementalCopyBlob(ctx context.Context, containerName, blobName string, input IncrementalCopyBlobInput) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "IncrementalCopyBlob", "`containerName` cannot be an empty string.")
 	}
@@ -40,7 +36,7 @@ func (client Client) IncrementalCopyBlob(ctx context.Context, accountName, conta
 		return result, validation.NewError("blobs.Client", "IncrementalCopyBlob", "`input.CopySource` cannot be an empty string.")
 	}
 
-	req, err := client.IncrementalCopyBlobPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.IncrementalCopyBlobPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "IncrementalCopyBlob", nil, "Failure preparing request")
 		return
@@ -63,7 +59,7 @@ func (client Client) IncrementalCopyBlob(ctx context.Context, accountName, conta
 }
 
 // IncrementalCopyBlobPreparer prepares the IncrementalCopyBlob request.
-func (client Client) IncrementalCopyBlobPreparer(ctx context.Context, accountName, containerName, blobName string, input IncrementalCopyBlobInput) (*http.Request, error) {
+func (client Client) IncrementalCopyBlobPreparer(ctx context.Context, containerName, blobName string, input IncrementalCopyBlobInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -93,7 +89,7 @@ func (client Client) IncrementalCopyBlobPreparer(ctx context.Context, accountNam
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

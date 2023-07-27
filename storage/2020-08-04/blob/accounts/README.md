@@ -24,7 +24,7 @@ func Example() error {
 	accountName := "storageaccount1"
     
     // e.g. https://github.com/tombuildsstuff/giovanni/blob/76f5f686c99ecdcc3fa533a0330d0e1aacb1c327/example/azuread-auth/main.go#L54
-    client, err := buildClient()
+    client, err := buildClient(accountName)
     if err != nil {
     	return fmt.Errorf("error building client: %s", err)
     }
@@ -39,14 +39,14 @@ func Example() error {
         },
     }
     
-    _, err = client.SetServiceProperties(ctx, accountName, input)
+    _, err = client.SetServiceProperties(ctx, input)
     if err != nil {
         return fmt.Errorf("error setting properties: %s", err)
     }
     
     time.Sleep(2 * time.Second)
     
-    _, err = accountsClient.GetServiceProperties(ctx, accountName)
+    _, err = accountsClient.GetServiceProperties(ctx)
     if err != nil {
         return fmt.Errorf("error getting properties: %s", err)
     }

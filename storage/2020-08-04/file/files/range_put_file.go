@@ -13,7 +13,7 @@ import (
 )
 
 // PutFile is a helper method which takes a file, and automatically chunks it up, rather than having to do this yourself
-func (client Client) PutFile(ctx context.Context, accountName, shareName, path, fileName string, file *os.File, parallelism int) error {
+func (client Client) PutFile(ctx context.Context, shareName, path, fileName string, file *os.File, parallelism int) error {
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("Error loading file info: %s", err)
@@ -48,7 +48,7 @@ func (client Client) PutFile(ctx context.Context, accountName, shareName, path, 
 					fileSize:  fileSize,
 				}
 
-				_, err := client.uploadChunk(ctx, accountName, shareName, path, fileName, uci, file)
+				_, err := client.uploadChunk(ctx, shareName, path, fileName, uci, file)
 				if err != nil {
 					errors <- err
 				}
@@ -77,7 +77,7 @@ type uploadChunkInput struct {
 	fileSize  int64
 }
 
-func (client Client) uploadChunk(ctx context.Context, accountName, shareName, path, fileName string, input uploadChunkInput, file *os.File) (result autorest.Response, err error) {
+func (client Client) uploadChunk(ctx context.Context, shareName, path, fileName string, input uploadChunkInput, file *os.File) (result autorest.Response, err error) {
 	startBytes := int64(input.chunkSize * input.thisChunk)
 	endBytes := startBytes + int64(input.chunkSize)
 
@@ -102,7 +102,7 @@ func (client Client) uploadChunk(ctx context.Context, accountName, shareName, pa
 		EndBytes:   endBytes,
 		Content:    bytes,
 	}
-	result, err = client.PutByteRange(ctx, accountName, shareName, path, fileName, putBytesInput)
+	result, err = client.PutByteRange(ctx, shareName, path, fileName, putBytesInput)
 	if err != nil {
 		return result, fmt.Errorf("Error putting bytes: %s", err)
 	}

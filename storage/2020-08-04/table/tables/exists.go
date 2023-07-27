@@ -7,19 +7,15 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Exists checks that the specified table exists
-func (client Client) Exists(ctx context.Context, accountName, tableName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("tables.Client", "Exists", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Exists(ctx context.Context, tableName string) (result autorest.Response, err error) {
 	if tableName == "" {
 		return result, validation.NewError("tables.Client", "Exists", "`tableName` cannot be an empty string.")
 	}
 
-	req, err := client.ExistsPreparer(ctx, accountName, tableName)
+	req, err := client.ExistsPreparer(ctx, tableName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "tables.Client", "Exists", nil, "Failure preparing request")
 		return
@@ -42,7 +38,7 @@ func (client Client) Exists(ctx context.Context, accountName, tableName string) 
 }
 
 // ExistsPreparer prepares the Exists request.
-func (client Client) ExistsPreparer(ctx context.Context, accountName, tableName string) (*http.Request, error) {
+func (client Client) ExistsPreparer(ctx context.Context, tableName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"tableName": autorest.Encode("path", tableName),
 	}
@@ -59,7 +55,7 @@ func (client Client) ExistsPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.AsContentType("application/json"),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/Tables('{tableName}')", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

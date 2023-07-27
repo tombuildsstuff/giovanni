@@ -9,14 +9,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // AbortCopy aborts a pending Copy File operation, and leaves a destination file with zero length and full metadata
-func (client Client) AbortCopy(ctx context.Context, accountName, shareName, path, fileName, copyID string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "AbortCopy", "`accountName` cannot be an empty string.")
-	}
+func (client Client) AbortCopy(ctx context.Context, shareName, path, fileName, copyID string) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "AbortCopy", "`shareName` cannot be an empty string.")
 	}
@@ -30,7 +26,7 @@ func (client Client) AbortCopy(ctx context.Context, accountName, shareName, path
 		return result, validation.NewError("files.Client", "AbortCopy", "`copyID` cannot be an empty string.")
 	}
 
-	req, err := client.AbortCopyPreparer(ctx, accountName, shareName, path, fileName, copyID)
+	req, err := client.AbortCopyPreparer(ctx, shareName, path, fileName, copyID)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "AbortCopy", nil, "Failure preparing request")
 		return
@@ -53,7 +49,7 @@ func (client Client) AbortCopy(ctx context.Context, accountName, shareName, path
 }
 
 // AbortCopyPreparer prepares the AbortCopy request.
-func (client Client) AbortCopyPreparer(ctx context.Context, accountName, shareName, path, fileName, copyID string) (*http.Request, error) {
+func (client Client) AbortCopyPreparer(ctx context.Context, shareName, path, fileName, copyID string) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -76,7 +72,7 @@ func (client Client) AbortCopyPreparer(ctx context.Context, accountName, shareNa
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

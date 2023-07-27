@@ -8,13 +8,9 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
-func (client Client) RenewLease(ctx context.Context, accountName, containerName, blobName, leaseID string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "RenewLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) RenewLease(ctx context.Context, containerName, blobName, leaseID string) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "RenewLease", "`containerName` cannot be an empty string.")
 	}
@@ -28,7 +24,7 @@ func (client Client) RenewLease(ctx context.Context, accountName, containerName,
 		return result, validation.NewError("blobs.Client", "RenewLease", "`leaseID` cannot be an empty string.")
 	}
 
-	req, err := client.RenewLeasePreparer(ctx, accountName, containerName, blobName, leaseID)
+	req, err := client.RenewLeasePreparer(ctx, containerName, blobName, leaseID)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "RenewLease", nil, "Failure preparing request")
 		return
@@ -51,7 +47,7 @@ func (client Client) RenewLease(ctx context.Context, accountName, containerName,
 }
 
 // RenewLeasePreparer prepares the RenewLease request.
-func (client Client) RenewLeasePreparer(ctx context.Context, accountName, containerName, blobName, leaseID string) (*http.Request, error) {
+func (client Client) RenewLeasePreparer(ctx context.Context, containerName, blobName, leaseID string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -69,7 +65,7 @@ func (client Client) RenewLeasePreparer(ctx context.Context, accountName, contai
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

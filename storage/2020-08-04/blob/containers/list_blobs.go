@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type ListBlobsInput struct {
@@ -78,10 +77,7 @@ type BlobPrefix struct {
 }
 
 // ListBlobs lists the blobs matching the specified query within the specified Container
-func (client Client) ListBlobs(ctx context.Context, accountName, containerName string, input ListBlobsInput) (result ListBlobsResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "ListBlobs", "`accountName` cannot be an empty string.")
-	}
+func (client Client) ListBlobs(ctx context.Context, containerName string, input ListBlobsInput) (result ListBlobsResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "ListBlobs", "`containerName` cannot be an empty string.")
 	}
@@ -89,7 +85,7 @@ func (client Client) ListBlobs(ctx context.Context, accountName, containerName s
 		return result, validation.NewError("containers.Client", "ListBlobs", "`input.MaxResults` can either be nil or between 0 and 5000.")
 	}
 
-	req, err := client.ListBlobsPreparer(ctx, accountName, containerName, input)
+	req, err := client.ListBlobsPreparer(ctx, containerName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "ListBlobs", nil, "Failure preparing request")
 		return
@@ -112,7 +108,7 @@ func (client Client) ListBlobs(ctx context.Context, accountName, containerName s
 }
 
 // ListBlobsPreparer prepares the ListBlobs request.
-func (client Client) ListBlobsPreparer(ctx context.Context, accountName, containerName string, input ListBlobsInput) (*http.Request, error) {
+func (client Client) ListBlobsPreparer(ctx context.Context, containerName string, input ListBlobsInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -150,7 +146,7 @@ func (client Client) ListBlobsPreparer(ctx context.Context, accountName, contain
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

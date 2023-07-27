@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type PutBlockFromURLInput struct {
@@ -26,10 +25,7 @@ type PutBlockFromURLResult struct {
 }
 
 // PutBlockFromURL creates a new block to be committed as part of a blob where the contents are read from a URL
-func (client Client) PutBlockFromURL(ctx context.Context, accountName, containerName, blobName string, input PutBlockFromURLInput) (result PutBlockFromURLResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "PutBlockFromURL", "`accountName` cannot be an empty string.")
-	}
+func (client Client) PutBlockFromURL(ctx context.Context, containerName, blobName string, input PutBlockFromURLInput) (result PutBlockFromURLResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "PutBlockFromURL", "`containerName` cannot be an empty string.")
 	}
@@ -46,7 +42,7 @@ func (client Client) PutBlockFromURL(ctx context.Context, accountName, container
 		return result, validation.NewError("blobs.Client", "PutBlockFromURL", "`input.CopySource` cannot be an empty string.")
 	}
 
-	req, err := client.PutBlockFromURLPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.PutBlockFromURLPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "PutBlockFromURL", nil, "Failure preparing request")
 		return
@@ -69,7 +65,7 @@ func (client Client) PutBlockFromURL(ctx context.Context, accountName, container
 }
 
 // PutBlockFromURLPreparer prepares the PutBlockFromURL request.
-func (client Client) PutBlockFromURLPreparer(ctx context.Context, accountName, containerName, blobName string, input PutBlockFromURLInput) (*http.Request, error) {
+func (client Client) PutBlockFromURLPreparer(ctx context.Context, containerName, blobName string, input PutBlockFromURLInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -97,7 +93,7 @@ func (client Client) PutBlockFromURLPreparer(ctx context.Context, accountName, c
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

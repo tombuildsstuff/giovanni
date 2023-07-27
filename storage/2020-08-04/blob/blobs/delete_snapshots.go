@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type DeleteSnapshotsInput struct {
@@ -18,10 +17,7 @@ type DeleteSnapshotsInput struct {
 }
 
 // DeleteSnapshots marks all Snapshots of a Blob for Deletion, which will be deleted during the next Garbage Collection Cycle.
-func (client Client) DeleteSnapshots(ctx context.Context, accountName, containerName, blobName string, input DeleteSnapshotsInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "DeleteSnapshots", "`accountName` cannot be an empty string.")
-	}
+func (client Client) DeleteSnapshots(ctx context.Context, containerName, blobName string, input DeleteSnapshotsInput) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "DeleteSnapshots", "`containerName` cannot be an empty string.")
 	}
@@ -32,7 +28,7 @@ func (client Client) DeleteSnapshots(ctx context.Context, accountName, container
 		return result, validation.NewError("blobs.Client", "DeleteSnapshots", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.DeleteSnapshotsPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.DeleteSnapshotsPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "DeleteSnapshots", nil, "Failure preparing request")
 		return
@@ -55,7 +51,7 @@ func (client Client) DeleteSnapshots(ctx context.Context, accountName, container
 }
 
 // DeleteSnapshotsPreparer prepares the DeleteSnapshots request.
-func (client Client) DeleteSnapshotsPreparer(ctx context.Context, accountName, containerName, blobName string, input DeleteSnapshotsInput) (*http.Request, error) {
+func (client Client) DeleteSnapshotsPreparer(ctx context.Context, containerName, blobName string, input DeleteSnapshotsInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -73,7 +69,7 @@ func (client Client) DeleteSnapshotsPreparer(ctx context.Context, accountName, c
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

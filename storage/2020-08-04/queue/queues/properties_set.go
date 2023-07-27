@@ -6,17 +6,11 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // SetServiceProperties sets the properties for this queue
-func (client Client) SetServiceProperties(ctx context.Context, accountName string, properties StorageServiceProperties) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("queues.Client", "SetServiceProperties", "`accountName` cannot be an empty string.")
-	}
-
-	req, err := client.SetServicePropertiesPreparer(ctx, accountName, properties)
+func (client Client) SetServiceProperties(ctx context.Context, properties StorageServiceProperties) (result autorest.Response, err error) {
+	req, err := client.SetServicePropertiesPreparer(ctx, properties)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "queues.Client", "SetServiceProperties", nil, "Failure preparing request")
 		return
@@ -39,7 +33,7 @@ func (client Client) SetServiceProperties(ctx context.Context, accountName strin
 }
 
 // SetServicePropertiesPreparer prepares the SetServiceProperties request.
-func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountName string, properties StorageServiceProperties) (*http.Request, error) {
+func (client Client) SetServicePropertiesPreparer(ctx context.Context, properties StorageServiceProperties) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"comp":    autorest.Encode("path", "properties"),
 		"restype": autorest.Encode("path", "service"),
@@ -52,7 +46,7 @@ func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountNa
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPath("/"),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithXML(properties),

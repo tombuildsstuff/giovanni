@@ -7,8 +7,8 @@ import (
 )
 
 // CopyAndWait copies a blob to a destination within the storage account and waits for it to finish copying.
-func (client Client) CopyAndWait(ctx context.Context, accountName, containerName, blobName string, input CopyInput, pollingInterval time.Duration) error {
-	if _, err := client.Copy(ctx, accountName, containerName, blobName, input); err != nil {
+func (client Client) CopyAndWait(ctx context.Context, containerName, blobName string, input CopyInput, pollingInterval time.Duration) error {
+	if _, err := client.Copy(ctx, containerName, blobName, input); err != nil {
 		return fmt.Errorf("Error copying: %s", err)
 	}
 
@@ -16,7 +16,7 @@ func (client Client) CopyAndWait(ctx context.Context, accountName, containerName
 		getInput := GetPropertiesInput{
 			LeaseID: input.LeaseID,
 		}
-		getResult, err := client.GetProperties(ctx, accountName, containerName, blobName, getInput)
+		getResult, err := client.GetProperties(ctx, containerName, blobName, getInput)
 		if err != nil {
 			return fmt.Errorf("")
 		}

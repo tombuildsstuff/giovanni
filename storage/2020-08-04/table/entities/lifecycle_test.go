@@ -37,16 +37,16 @@ func TestEntitiesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	tablesClient := tables.NewWithEnvironment(client.AutoRestEnvironment)
+	tablesClient := tables.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Creating Table..")
-	if _, err := tablesClient.Create(ctx, accountName, tableName); err != nil {
+	if _, err := tablesClient.Create(ctx, tableName); err != nil {
 		t.Fatalf("Error creating Table %q: %s", tableName, err)
 	}
-	defer tablesClient.Delete(ctx, accountName, tableName)
+	defer tablesClient.Delete(ctx, tableName)
 
-	entitiesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	entitiesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	entitiesClient.Client = client.PrepareWithAuthorizer(entitiesClient.Client, storageAuth)
 
 	partitionKey := "hello"
@@ -61,7 +61,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 			"hello": "world",
 		},
 	}
-	if _, err := entitiesClient.Insert(ctx, accountName, tableName, insertInput); err != nil {
+	if _, err := entitiesClient.Insert(ctx, tableName, insertInput); err != nil {
 		t.Logf("Error retrieving: %s", err)
 	}
 
@@ -73,7 +73,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 			"hello": "ther88e",
 		},
 	}
-	if _, err := entitiesClient.InsertOrMerge(ctx, accountName, tableName, insertOrMergeInput); err != nil {
+	if _, err := entitiesClient.InsertOrMerge(ctx, tableName, insertOrMergeInput); err != nil {
 		t.Logf("Error insert/merging: %s", err)
 	}
 
@@ -85,7 +85,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 			"hello": "pandas",
 		},
 	}
-	if _, err := entitiesClient.InsertOrReplace(ctx, accountName, tableName, insertOrReplaceInput); err != nil {
+	if _, err := entitiesClient.InsertOrReplace(ctx, tableName, insertOrReplaceInput); err != nil {
 		t.Logf("Error inserting/replacing: %s", err)
 	}
 
@@ -93,7 +93,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 	queryInput := QueryEntitiesInput{
 		MetaDataLevel: NoMetaData,
 	}
-	results, err := entitiesClient.Query(ctx, accountName, tableName, queryInput)
+	results, err := entitiesClient.Query(ctx, tableName, queryInput)
 	if err != nil {
 		t.Logf("Error querying: %s", err)
 	}
@@ -119,7 +119,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 		PartitionKey:  partitionKey,
 		RowKey:        rowKey,
 	}
-	getResults, err := entitiesClient.Get(ctx, accountName, tableName, getInput)
+	getResults, err := entitiesClient.Get(ctx, tableName, getInput)
 	if err != nil {
 		t.Logf("Error querying: %s", err)
 	}
@@ -138,7 +138,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 		PartitionKey: partitionKey,
 		RowKey:       rowKey,
 	}
-	if _, err := entitiesClient.Delete(ctx, accountName, tableName, deleteInput); err != nil {
+	if _, err := entitiesClient.Delete(ctx, tableName, deleteInput); err != nil {
 		t.Logf("Error deleting: %s", err)
 	}
 }

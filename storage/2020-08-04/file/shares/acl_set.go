@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type setAcl struct {
@@ -19,10 +18,7 @@ type setAcl struct {
 }
 
 // SetACL sets the specified Access Control List on the specified Storage Share
-func (client Client) SetACL(ctx context.Context, accountName, shareName string, acls []SignedIdentifier) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "SetACL", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetACL(ctx context.Context, shareName string, acls []SignedIdentifier) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "SetACL", "`shareName` cannot be an empty string.")
 	}
@@ -30,7 +26,7 @@ func (client Client) SetACL(ctx context.Context, accountName, shareName string, 
 		return result, validation.NewError("shares.Client", "SetACL", "`shareName` must be a lower-cased string.")
 	}
 
-	req, err := client.SetACLPreparer(ctx, accountName, shareName, acls)
+	req, err := client.SetACLPreparer(ctx, shareName, acls)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "SetACL", nil, "Failure preparing request")
 		return
@@ -53,7 +49,7 @@ func (client Client) SetACL(ctx context.Context, accountName, shareName string, 
 }
 
 // SetACLPreparer prepares the SetACL request.
-func (client Client) SetACLPreparer(ctx context.Context, accountName, shareName string, acls []SignedIdentifier) (*http.Request, error) {
+func (client Client) SetACLPreparer(ctx context.Context, shareName string, acls []SignedIdentifier) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -74,7 +70,7 @@ func (client Client) SetACLPreparer(ctx context.Context, accountName, shareName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers),

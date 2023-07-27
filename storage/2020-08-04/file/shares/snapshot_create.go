@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -29,10 +28,7 @@ type CreateSnapshotResult struct {
 // CreateSnapshot creates a read-only snapshot of the share
 // A share can support creation of 200 share snapshots. Attempting to create more than 200 share snapshots fails with 409 (Conflict).
 // Attempting to create a share snapshot while a previous Snapshot Share operation is in progress fails with 409 (Conflict).
-func (client Client) CreateSnapshot(ctx context.Context, accountName, shareName string, input CreateSnapshotInput) (result CreateSnapshotResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "CreateSnapshot", "`accountName` cannot be an empty string.")
-	}
+func (client Client) CreateSnapshot(ctx context.Context, shareName string, input CreateSnapshotInput) (result CreateSnapshotResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "CreateSnapshot", "`shareName` cannot be an empty string.")
 	}
@@ -43,7 +39,7 @@ func (client Client) CreateSnapshot(ctx context.Context, accountName, shareName 
 		return result, validation.NewError("shares.Client", "CreateSnapshot", fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
-	req, err := client.CreateSnapshotPreparer(ctx, accountName, shareName, input)
+	req, err := client.CreateSnapshotPreparer(ctx, shareName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "CreateSnapshot", nil, "Failure preparing request")
 		return
@@ -66,7 +62,7 @@ func (client Client) CreateSnapshot(ctx context.Context, accountName, shareName 
 }
 
 // CreateSnapshotPreparer prepares the CreateSnapshot request.
-func (client Client) CreateSnapshotPreparer(ctx context.Context, accountName, shareName string, input CreateSnapshotInput) (*http.Request, error) {
+func (client Client) CreateSnapshotPreparer(ctx context.Context, shareName string, input CreateSnapshotInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -85,7 +81,7 @@ func (client Client) CreateSnapshotPreparer(ctx context.Context, accountName, sh
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

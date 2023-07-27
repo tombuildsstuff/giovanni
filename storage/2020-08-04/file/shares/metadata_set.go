@@ -9,15 +9,11 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 // SetMetaData sets the MetaData on the specified Storage Share
-func (client Client) SetMetaData(ctx context.Context, accountName, shareName string, metaData map[string]string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "SetMetaData", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetMetaData(ctx context.Context, shareName string, metaData map[string]string) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "SetMetaData", "`shareName` cannot be an empty string.")
 	}
@@ -28,7 +24,7 @@ func (client Client) SetMetaData(ctx context.Context, accountName, shareName str
 		return result, validation.NewError("shares.Client", "SetMetaData", fmt.Sprintf("`metadata` is not valid: %s.", err))
 	}
 
-	req, err := client.SetMetaDataPreparer(ctx, accountName, shareName, metaData)
+	req, err := client.SetMetaDataPreparer(ctx, shareName, metaData)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "SetMetaData", nil, "Failure preparing request")
 		return
@@ -51,7 +47,7 @@ func (client Client) SetMetaData(ctx context.Context, accountName, shareName str
 }
 
 // SetMetaDataPreparer prepares the SetMetaData request.
-func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, shareName string, metaData map[string]string) (*http.Request, error) {
+func (client Client) SetMetaDataPreparer(ctx context.Context, shareName string, metaData map[string]string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -69,7 +65,7 @@ func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, share
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

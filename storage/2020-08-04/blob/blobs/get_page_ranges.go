@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetPageRangesInput struct {
@@ -44,10 +43,7 @@ type PageRange struct {
 }
 
 // GetPageRanges returns the list of valid page ranges for a page blob or snapshot of a page blob.
-func (client Client) GetPageRanges(ctx context.Context, accountName, containerName, blobName string, input GetPageRangesInput) (result GetPageRangesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "GetPageRanges", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetPageRanges(ctx context.Context, containerName, blobName string, input GetPageRangesInput) (result GetPageRangesResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "GetPageRanges", "`containerName` cannot be an empty string.")
 	}
@@ -61,7 +57,7 @@ func (client Client) GetPageRanges(ctx context.Context, accountName, containerNa
 		return result, validation.NewError("blobs.Client", "GetPageRanges", "`input.StartByte` and `input.EndByte` must both be specified, or both be nil.")
 	}
 
-	req, err := client.GetPageRangesPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.GetPageRangesPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "GetPageRanges", nil, "Failure preparing request")
 		return
@@ -84,7 +80,7 @@ func (client Client) GetPageRanges(ctx context.Context, accountName, containerNa
 }
 
 // GetPageRangesPreparer prepares the GetPageRanges request.
-func (client Client) GetPageRangesPreparer(ctx context.Context, accountName, containerName, blobName string, input GetPageRangesInput) (*http.Request, error) {
+func (client Client) GetPageRangesPreparer(ctx context.Context, containerName, blobName string, input GetPageRangesInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -108,7 +104,7 @@ func (client Client) GetPageRangesPreparer(ctx context.Context, accountName, con
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

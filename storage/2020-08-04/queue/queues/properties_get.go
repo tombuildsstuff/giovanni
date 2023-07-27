@@ -6,8 +6,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type StorageServicePropertiesResponse struct {
@@ -16,12 +14,9 @@ type StorageServicePropertiesResponse struct {
 }
 
 // SetServiceProperties gets the properties for this queue
-func (client Client) GetServiceProperties(ctx context.Context, accountName string) (result StorageServicePropertiesResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("queues.Client", "GetServiceProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetServiceProperties(ctx context.Context) (result StorageServicePropertiesResponse, err error) {
 
-	req, err := client.GetServicePropertiesPreparer(ctx, accountName)
+	req, err := client.GetServicePropertiesPreparer(ctx)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "queues.Client", "GetServiceProperties", nil, "Failure preparing request")
 		return
@@ -44,7 +39,7 @@ func (client Client) GetServiceProperties(ctx context.Context, accountName strin
 }
 
 // GetServicePropertiesPreparer prepares the GetServiceProperties request.
-func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountName string) (*http.Request, error) {
+func (client Client) GetServicePropertiesPreparer(ctx context.Context) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"comp":    autorest.Encode("path", "properties"),
 		"restype": autorest.Encode("path", "service"),
@@ -57,7 +52,7 @@ func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountNa
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPath("/"),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

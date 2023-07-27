@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type PutPageClearInput struct {
@@ -20,10 +19,7 @@ type PutPageClearInput struct {
 }
 
 // PutPageClear clears a range of pages within a page blob.
-func (client Client) PutPageClear(ctx context.Context, accountName, containerName, blobName string, input PutPageClearInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "PutPageClear", "`accountName` cannot be an empty string.")
-	}
+func (client Client) PutPageClear(ctx context.Context, containerName, blobName string, input PutPageClearInput) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "PutPageClear", "`containerName` cannot be an empty string.")
 	}
@@ -40,7 +36,7 @@ func (client Client) PutPageClear(ctx context.Context, accountName, containerNam
 		return result, validation.NewError("blobs.Client", "PutPageClear", "`input.EndByte` must be greater than 0.")
 	}
 
-	req, err := client.PutPageClearPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.PutPageClearPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "PutPageClear", nil, "Failure preparing request")
 		return
@@ -63,7 +59,7 @@ func (client Client) PutPageClear(ctx context.Context, accountName, containerNam
 }
 
 // PutPageClearPreparer prepares the PutPageClear request.
-func (client Client) PutPageClearPreparer(ctx context.Context, accountName, containerName, blobName string, input PutPageClearInput) (*http.Request, error) {
+func (client Client) PutPageClearPreparer(ctx context.Context, containerName, blobName string, input PutPageClearInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -85,7 +81,7 @@ func (client Client) PutPageClearPreparer(ctx context.Context, accountName, cont
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

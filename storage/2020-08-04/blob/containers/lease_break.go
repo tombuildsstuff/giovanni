@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type BreakLeaseInput struct {
@@ -34,10 +33,7 @@ type BreakLeaseResponse struct {
 }
 
 // BreakLease breaks a lock based on it's Lease ID
-func (client Client) BreakLease(ctx context.Context, accountName, containerName string, input BreakLeaseInput) (result BreakLeaseResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "BreakLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) BreakLease(ctx context.Context, containerName string, input BreakLeaseInput) (result BreakLeaseResponse, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "BreakLease", "`containerName` cannot be an empty string.")
 	}
@@ -45,7 +41,7 @@ func (client Client) BreakLease(ctx context.Context, accountName, containerName 
 		return result, validation.NewError("containers.Client", "BreakLease", "`input.LeaseID` cannot be an empty string.")
 	}
 
-	req, err := client.BreakLeasePreparer(ctx, accountName, containerName, input)
+	req, err := client.BreakLeasePreparer(ctx, containerName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "BreakLease", nil, "Failure preparing request")
 		return
@@ -68,7 +64,7 @@ func (client Client) BreakLease(ctx context.Context, accountName, containerName 
 }
 
 // BreakLeasePreparer prepares the BreakLease request.
-func (client Client) BreakLeasePreparer(ctx context.Context, accountName string, containerName string, input BreakLeaseInput) (*http.Request, error) {
+func (client Client) BreakLeasePreparer(ctx context.Context, containerName string, input BreakLeaseInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -91,7 +87,7 @@ func (client Client) BreakLeasePreparer(ctx context.Context, accountName string,
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

@@ -9,15 +9,11 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 // SetMetaData returns the metadata for this Queue
-func (client Client) SetMetaData(ctx context.Context, accountName, queueName string, metaData map[string]string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("queues.Client", "SetMetaData", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetMetaData(ctx context.Context, queueName string, metaData map[string]string) (result autorest.Response, err error) {
 	if queueName == "" {
 		return result, validation.NewError("queues.Client", "SetMetaData", "`queueName` cannot be an empty string.")
 	}
@@ -28,7 +24,7 @@ func (client Client) SetMetaData(ctx context.Context, accountName, queueName str
 		return result, validation.NewError("queues.Client", "SetMetaData", fmt.Sprintf("`metadata` is not valid: %s.", err))
 	}
 
-	req, err := client.SetMetaDataPreparer(ctx, accountName, queueName, metaData)
+	req, err := client.SetMetaDataPreparer(ctx, queueName, metaData)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "queues.Client", "SetMetaData", nil, "Failure preparing request")
 		return
@@ -51,7 +47,7 @@ func (client Client) SetMetaData(ctx context.Context, accountName, queueName str
 }
 
 // SetMetaDataPreparer prepares the SetMetaData request.
-func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, queueName string, metaData map[string]string) (*http.Request, error) {
+func (client Client) SetMetaDataPreparer(ctx context.Context, queueName string, metaData map[string]string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 	}
@@ -69,7 +65,7 @@ func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, queue
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

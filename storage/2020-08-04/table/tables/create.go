@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type createTableRequest struct {
@@ -15,15 +14,12 @@ type createTableRequest struct {
 }
 
 // Create creates a new table in the storage account.
-func (client Client) Create(ctx context.Context, accountName, tableName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("tables.Client", "Create", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Create(ctx context.Context, tableName string) (result autorest.Response, err error) {
 	if tableName == "" {
 		return result, validation.NewError("tables.Client", "Create", "`tableName` cannot be an empty string.")
 	}
 
-	req, err := client.CreatePreparer(ctx, accountName, tableName)
+	req, err := client.CreatePreparer(ctx, tableName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "tables.Client", "Create", nil, "Failure preparing request")
 		return
@@ -46,7 +42,7 @@ func (client Client) Create(ctx context.Context, accountName, tableName string) 
 }
 
 // CreatePreparer prepares the Create request.
-func (client Client) CreatePreparer(ctx context.Context, accountName, tableName string) (*http.Request, error) {
+func (client Client) CreatePreparer(ctx context.Context, tableName string) (*http.Request, error) {
 	headers := map[string]interface{}{
 		"x-ms-version": APIVersion,
 		// NOTE: we could support returning metadata here, but it doesn't appear to be directly useful
@@ -62,7 +58,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/json"),
 		autorest.AsPost(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPath("/Tables"),
 		autorest.WithJSON(body),
 		autorest.WithHeaders(headers))

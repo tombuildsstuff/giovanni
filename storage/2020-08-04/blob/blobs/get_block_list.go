@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetBlockListInput struct {
@@ -38,10 +37,7 @@ type GetBlockListResult struct {
 }
 
 // GetBlockList retrieves the list of blocks that have been uploaded as part of a block blob.
-func (client Client) GetBlockList(ctx context.Context, accountName, containerName, blobName string, input GetBlockListInput) (result GetBlockListResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "GetBlockList", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetBlockList(ctx context.Context, containerName, blobName string, input GetBlockListInput) (result GetBlockListResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "GetBlockList", "`containerName` cannot be an empty string.")
 	}
@@ -52,7 +48,7 @@ func (client Client) GetBlockList(ctx context.Context, accountName, containerNam
 		return result, validation.NewError("blobs.Client", "GetBlockList", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.GetBlockListPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.GetBlockListPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "GetBlockList", nil, "Failure preparing request")
 		return
@@ -75,7 +71,7 @@ func (client Client) GetBlockList(ctx context.Context, accountName, containerNam
 }
 
 // GetBlockListPreparer prepares the GetBlockList request.
-func (client Client) GetBlockListPreparer(ctx context.Context, accountName, containerName, blobName string, input GetBlockListInput) (*http.Request, error) {
+func (client Client) GetBlockListPreparer(ctx context.Context, containerName, blobName string, input GetBlockListInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -96,7 +92,7 @@ func (client Client) GetBlockListPreparer(ctx context.Context, accountName, cont
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

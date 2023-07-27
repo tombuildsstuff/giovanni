@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -37,10 +36,7 @@ type CopyResult struct {
 }
 
 // Copy copies a blob or file to a destination file within the storage account asynchronously.
-func (client Client) Copy(ctx context.Context, accountName, shareName, path, fileName string, input CopyInput) (result CopyResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "Copy", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Copy(ctx context.Context, shareName, path, fileName string, input CopyInput) (result CopyResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "Copy", "`shareName` cannot be an empty string.")
 	}
@@ -57,7 +53,7 @@ func (client Client) Copy(ctx context.Context, accountName, shareName, path, fil
 		return result, validation.NewError("files.Client", "Copy", fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
-	req, err := client.CopyPreparer(ctx, accountName, shareName, path, fileName, input)
+	req, err := client.CopyPreparer(ctx, shareName, path, fileName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "Copy", nil, "Failure preparing request")
 		return
@@ -80,7 +76,7 @@ func (client Client) Copy(ctx context.Context, accountName, shareName, path, fil
 }
 
 // CopyPreparer prepares the Copy request.
-func (client Client) CopyPreparer(ctx context.Context, accountName, shareName, path, fileName string, input CopyInput) (*http.Request, error) {
+func (client Client) CopyPreparer(ctx context.Context, shareName, path, fileName string, input CopyInput) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -100,7 +96,7 @@ func (client Client) CopyPreparer(ctx context.Context, accountName, shareName, p
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

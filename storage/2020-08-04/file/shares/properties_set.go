@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type ShareProperties struct {
@@ -17,10 +16,7 @@ type ShareProperties struct {
 }
 
 // SetProperties lets you update the Quota for the specified Storage Share
-func (client Client) SetProperties(ctx context.Context, accountName, shareName string, properties ShareProperties) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "SetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetProperties(ctx context.Context, shareName string, properties ShareProperties) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "SetProperties", "`shareName` cannot be an empty string.")
 	}
@@ -31,7 +27,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, shareName s
 		return result, validation.NewError("shares.Client", "SetProperties", "`newQuotaGB` must be greater than 0, and less than/equal to 100TB (102400 GB)")
 	}
 
-	req, err := client.SetPropertiesPreparer(ctx, accountName, shareName, properties)
+	req, err := client.SetPropertiesPreparer(ctx, shareName, properties)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "SetProperties", nil, "Failure preparing request")
 		return
@@ -54,7 +50,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, shareName s
 }
 
 // SetPropertiesPreparer prepares the SetProperties request.
-func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, shareName string, properties ShareProperties) (*http.Request, error) {
+func (client Client) SetPropertiesPreparer(ctx context.Context, shareName string, properties ShareProperties) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -78,7 +74,7 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, sha
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

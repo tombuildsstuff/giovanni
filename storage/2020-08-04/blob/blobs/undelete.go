@@ -8,14 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Undelete restores the contents and metadata of soft deleted blob and any associated soft deleted snapshots.
-func (client Client) Undelete(ctx context.Context, accountName, containerName, blobName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "Undelete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Undelete(ctx context.Context, containerName, blobName string) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "Undelete", "`containerName` cannot be an empty string.")
 	}
@@ -26,7 +22,7 @@ func (client Client) Undelete(ctx context.Context, accountName, containerName, b
 		return result, validation.NewError("blobs.Client", "Undelete", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.UndeletePreparer(ctx, accountName, containerName, blobName)
+	req, err := client.UndeletePreparer(ctx, containerName, blobName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "Undelete", nil, "Failure preparing request")
 		return
@@ -49,7 +45,7 @@ func (client Client) Undelete(ctx context.Context, accountName, containerName, b
 }
 
 // UndeletePreparer prepares the Undelete request.
-func (client Client) UndeletePreparer(ctx context.Context, accountName, containerName, blobName string) (*http.Request, error) {
+func (client Client) UndeletePreparer(ctx context.Context, containerName, blobName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -65,7 +61,7 @@ func (client Client) UndeletePreparer(ctx context.Context, accountName, containe
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

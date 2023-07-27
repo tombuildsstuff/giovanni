@@ -10,9 +10,8 @@ import (
 
 // GetResourceID returns the Resource ID for the given Queue
 // This can be useful when, for example, you're using this as a unique identifier
-func (client Client) GetResourceID(accountName, queueName string) string {
-	domain := endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)
-	return fmt.Sprintf("%s/%s", domain, queueName)
+func (client Client) GetResourceID(queueName string) string {
+	return fmt.Sprintf("%s/%s", client.endpoint, queueName)
 }
 
 type ResourceID struct {

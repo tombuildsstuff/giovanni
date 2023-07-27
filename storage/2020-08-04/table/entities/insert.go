@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type InsertEntityInput struct {
@@ -30,10 +29,7 @@ type InsertEntityInput struct {
 }
 
 // Insert inserts a new entity into a table.
-func (client Client) Insert(ctx context.Context, accountName, tableName string, input InsertEntityInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("entities.Client", "Insert", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Insert(ctx context.Context, tableName string, input InsertEntityInput) (result autorest.Response, err error) {
 	if tableName == "" {
 		return result, validation.NewError("entities.Client", "Insert", "`tableName` cannot be an empty string.")
 	}
@@ -44,7 +40,7 @@ func (client Client) Insert(ctx context.Context, accountName, tableName string, 
 		return result, validation.NewError("entities.Client", "Insert", "`input.RowKey` cannot be an empty string.")
 	}
 
-	req, err := client.InsertPreparer(ctx, accountName, tableName, input)
+	req, err := client.InsertPreparer(ctx, tableName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "entities.Client", "Insert", nil, "Failure preparing request")
 		return
@@ -67,7 +63,7 @@ func (client Client) Insert(ctx context.Context, accountName, tableName string, 
 }
 
 // InsertPreparer prepares the Insert request.
-func (client Client) InsertPreparer(ctx context.Context, accountName, tableName string, input InsertEntityInput) (*http.Request, error) {
+func (client Client) InsertPreparer(ctx context.Context, tableName string, input InsertEntityInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"tableName": autorest.Encode("path", tableName),
 	}
@@ -84,7 +80,7 @@ func (client Client) InsertPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/json"),
 		autorest.AsPost(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{tableName}", pathParameters),
 		autorest.WithJSON(input.Entity),
 		autorest.WithHeaders(headers))

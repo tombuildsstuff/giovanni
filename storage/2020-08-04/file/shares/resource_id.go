@@ -10,9 +10,8 @@ import (
 
 // GetResourceID returns the Resource ID for the given File Share
 // This can be useful when, for example, you're using this as a unique identifier
-func (client Client) GetResourceID(accountName, shareName string) string {
-	domain := endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)
-	return fmt.Sprintf("%s/%s", domain, shareName)
+func (client Client) GetResourceID(shareName string) string {
+	return fmt.Sprintf("%s/%s", client.endpoint, shareName)
 }
 
 // GetResourceManagerResourceID returns the Resource Manager specific

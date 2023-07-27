@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -23,10 +22,7 @@ type SetMetaDataInput struct {
 }
 
 // SetMetaData marks the specified blob or snapshot for deletion. The blob is later deleted during garbage collection.
-func (client Client) SetMetaData(ctx context.Context, accountName, containerName, blobName string, input SetMetaDataInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "GetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetMetaData(ctx context.Context, containerName, blobName string, input SetMetaDataInput) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "GetProperties", "`containerName` cannot be an empty string.")
 	}
@@ -40,7 +36,7 @@ func (client Client) SetMetaData(ctx context.Context, accountName, containerName
 		return result, validation.NewError("blobs.Client", "GetProperties", fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
-	req, err := client.SetMetaDataPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.SetMetaDataPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "SetMetaData", nil, "Failure preparing request")
 		return
@@ -63,7 +59,7 @@ func (client Client) SetMetaData(ctx context.Context, accountName, containerName
 }
 
 // SetMetaDataPreparer prepares the SetMetaData request.
-func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, containerName, blobName string, input SetMetaDataInput) (*http.Request, error) {
+func (client Client) SetMetaDataPreparer(ctx context.Context, containerName, blobName string, input SetMetaDataInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -85,7 +81,7 @@ func (client Client) SetMetaDataPreparer(ctx context.Context, accountName, conta
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

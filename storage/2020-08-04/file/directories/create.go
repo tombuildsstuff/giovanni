@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -30,10 +29,7 @@ type CreateDirectoryInput struct {
 }
 
 // Create creates a new directory under the specified share or parent directory.
-func (client Client) Create(ctx context.Context, accountName, shareName, path string, input CreateDirectoryInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("directories.Client", "Create", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Create(ctx context.Context, shareName, path string, input CreateDirectoryInput) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("directories.Client", "Create", "`shareName` cannot be an empty string.")
 	}
@@ -47,7 +43,7 @@ func (client Client) Create(ctx context.Context, accountName, shareName, path st
 		return result, validation.NewError("directories.Client", "Create", fmt.Sprintf("`metadata` is not valid: %s.", err))
 	}
 
-	req, err := client.CreatePreparer(ctx, accountName, shareName, path, input)
+	req, err := client.CreatePreparer(ctx, shareName, path, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "directories.Client", "Create", nil, "Failure preparing request")
 		return
@@ -70,7 +66,7 @@ func (client Client) Create(ctx context.Context, accountName, shareName, path st
 }
 
 // CreatePreparer prepares the Create request.
-func (client Client) CreatePreparer(ctx context.Context, accountName, shareName, path string, input CreateDirectoryInput) (*http.Request, error) {
+func (client Client) CreatePreparer(ctx context.Context, shareName, path string, input CreateDirectoryInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 		"directory": autorest.Encode("path", path),
@@ -103,7 +99,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName,
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

@@ -34,7 +34,7 @@ func Example() error {
     input := messages.PutInput{
     	Message: "<over><message>hello</message></over>",
     }
-    if _, err := messagesClient.Put(ctx, accountName, queueName, input); err != nil {
+    if _, err := messagesClient.Put(ctx, queueName, input); err != nil {
         return fmt.Errorf("Error creating Message: %s", err)
     }
     

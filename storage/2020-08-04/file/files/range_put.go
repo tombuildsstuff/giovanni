@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type PutByteRangeInput struct {
@@ -22,10 +21,7 @@ type PutByteRangeInput struct {
 }
 
 // PutByteRange puts the specified Byte Range in the specified File.
-func (client Client) PutByteRange(ctx context.Context, accountName, shareName, path, fileName string, input PutByteRangeInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "PutByteRange", "`accountName` cannot be an empty string.")
-	}
+func (client Client) PutByteRange(ctx context.Context, shareName, path, fileName string, input PutByteRangeInput) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "PutByteRange", "`shareName` cannot be an empty string.")
 	}
@@ -52,7 +48,7 @@ func (client Client) PutByteRange(ctx context.Context, accountName, shareName, p
 		return result, validation.NewError("files.Client", "PutByteRange", "Specified Byte Range must be at most 4MB.")
 	}
 
-	req, err := client.PutByteRangePreparer(ctx, accountName, shareName, path, fileName, input)
+	req, err := client.PutByteRangePreparer(ctx, shareName, path, fileName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "PutByteRange", nil, "Failure preparing request")
 		return
@@ -75,7 +71,7 @@ func (client Client) PutByteRange(ctx context.Context, accountName, shareName, p
 }
 
 // PutByteRangePreparer prepares the PutByteRange request.
-func (client Client) PutByteRangePreparer(ctx context.Context, accountName, shareName, path, fileName string, input PutByteRangeInput) (*http.Request, error) {
+func (client Client) PutByteRangePreparer(ctx context.Context, shareName, path, fileName string, input PutByteRangeInput) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -98,7 +94,7 @@ func (client Client) PutByteRangePreparer(ctx context.Context, accountName, shar
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters),

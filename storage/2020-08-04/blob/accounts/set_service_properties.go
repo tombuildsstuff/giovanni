@@ -6,8 +6,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // SetServicePropertiesSender sends the SetServiceProperties request. The method will close the
@@ -18,7 +16,7 @@ func (client Client) SetServicePropertiesSender(req *http.Request) (*http.Respon
 }
 
 // SetServicePropertiesPreparer prepares the SetServiceProperties request.
-func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountName string, input StorageServiceProperties) (*http.Request, error) {
+func (client Client) SetServicePropertiesPreparer(ctx context.Context, input StorageServiceProperties) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"restype": "service",
 		"comp":    "properties",
@@ -30,7 +28,7 @@ func (client Client) SetServicePropertiesPreparer(ctx context.Context, accountNa
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithHeaders(headers),
 		autorest.WithXML(input),
 		autorest.WithQueryParameters(queryParameters))
@@ -49,12 +47,8 @@ func (client Client) SetServicePropertiesResponder(resp *http.Response) (result 
 	return
 }
 
-func (client Client) SetServiceProperties(ctx context.Context, accountName string, input StorageServiceProperties) (result SetServicePropertiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("accounts.Client", "SetServiceProperties", "`accountName` cannot be an empty string.")
-	}
-
-	req, err := client.SetServicePropertiesPreparer(ctx, accountName, input)
+func (client Client) SetServiceProperties(ctx context.Context, input StorageServiceProperties) (result SetServicePropertiesResult, err error) {
+	req, err := client.SetServicePropertiesPreparer(ctx, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "accounts.Client", "SetServiceProperties", nil, "Failure preparing request")
 		return

@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -25,10 +24,7 @@ type GetResult struct {
 
 // Get returns all system properties for the specified directory,
 // and can also be used to check the existence of a directory.
-func (client Client) Get(ctx context.Context, accountName, shareName, path string) (result GetResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("directories.Client", "Get", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Get(ctx context.Context, shareName, path string) (result GetResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("directories.Client", "Get", "`shareName` cannot be an empty string.")
 	}
@@ -39,7 +35,7 @@ func (client Client) Get(ctx context.Context, accountName, shareName, path strin
 		return result, validation.NewError("directories.Client", "Get", "`path` cannot be an empty string.")
 	}
 
-	req, err := client.GetPreparer(ctx, accountName, shareName, path)
+	req, err := client.GetPreparer(ctx, shareName, path)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "directories.Client", "Get", nil, "Failure preparing request")
 		return
@@ -62,7 +58,7 @@ func (client Client) Get(ctx context.Context, accountName, shareName, path strin
 }
 
 // GetPreparer prepares the Get request.
-func (client Client) GetPreparer(ctx context.Context, accountName, shareName, path string) (*http.Request, error) {
+func (client Client) GetPreparer(ctx context.Context, shareName, path string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 		"directory": autorest.Encode("path", path),
@@ -79,7 +75,7 @@ func (client Client) GetPreparer(ctx context.Context, accountName, shareName, pa
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

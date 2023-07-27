@@ -7,20 +7,16 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete marks the specified container for deletion.
 // The container and any blobs contained within it are later deleted during garbage collection.
-func (client Client) Delete(ctx context.Context, accountName, containerName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, containerName string) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "Delete", "`containerName` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, containerName)
+	req, err := client.DeletePreparer(ctx, containerName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -42,7 +38,7 @@ func (client Client) Delete(ctx context.Context, accountName, containerName stri
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName string, containerName string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, containerName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -58,7 +54,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName string, con
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

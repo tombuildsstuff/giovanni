@@ -28,7 +28,7 @@ func Example() error {
     fileName := "example-large-file.iso"
     
     storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
-    blobClient := blobs.New()
+    blobClient := blobs.New(accountName)
     blobClient.Client.Authorizer = storageAuth
     
     ctx := context.TODO()
@@ -36,7 +36,7 @@ func Example() error {
         CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
     }
     refreshInterval := 5 * time.Second
-    if err := blobClient.CopyAndWait(ctx, accountName, containerName, fileName, copyInput, refreshInterval); err != nil {
+    if err := blobClient.CopyAndWait(ctx, containerName, fileName, copyInput, refreshInterval); err != nil {
         return fmt.Errorf("Error copying: %s", err)
     }
     

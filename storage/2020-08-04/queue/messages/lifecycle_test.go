@@ -33,26 +33,26 @@ func TestLifeCycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	queuesClient := queues.NewWithEnvironment(client.AutoRestEnvironment)
+	queuesClient := queues.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	queuesClient.Client = client.PrepareWithStorageResourceManagerAuth(queuesClient.Client)
 
 	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	messagesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	messagesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	messagesClient.Client = client.PrepareWithAuthorizer(messagesClient.Client, storageAuth)
 
-	_, err = queuesClient.Create(ctx, accountName, queueName, map[string]string{})
+	_, err = queuesClient.Create(ctx, queueName, map[string]string{})
 	if err != nil {
 		t.Fatalf("Error creating queue: %s", err)
 	}
-	defer queuesClient.Delete(ctx, accountName, queueName)
+	defer queuesClient.Delete(ctx, queueName)
 
 	input := PutInput{
 		Message: "ohhai",
 	}
-	putResp, err := messagesClient.Put(ctx, accountName, queueName, input)
+	putResp, err := messagesClient.Put(ctx, queueName, input)
 	if err != nil {
 		t.Fatalf("Error putting message in queue: %s", err)
 	}
@@ -60,7 +60,7 @@ func TestLifeCycle(t *testing.T) {
 	messageId := (*putResp.QueueMessages)[0].MessageId
 	popReceipt := (*putResp.QueueMessages)[0].PopReceipt
 
-	_, err = messagesClient.Update(ctx, accountName, queueName, messageId, UpdateInput{
+	_, err = messagesClient.Update(ctx, queueName, messageId, UpdateInput{
 		PopReceipt:        popReceipt,
 		Message:           "Updated message",
 		VisibilityTimeout: 65,
@@ -73,13 +73,13 @@ func TestLifeCycle(t *testing.T) {
 		input := PutInput{
 			Message: fmt.Sprintf("Message %d", i),
 		}
-		_, err := messagesClient.Put(ctx, accountName, queueName, input)
+		_, err := messagesClient.Put(ctx, queueName, input)
 		if err != nil {
 			t.Fatalf("Error putting message %d in queue: %s", i, err)
 		}
 	}
 
-	peakedMessages, err := messagesClient.Peek(ctx, accountName, queueName, 3)
+	peakedMessages, err := messagesClient.Peek(ctx, queueName, 3)
 	if err != nil {
 		t.Fatalf("Error peaking messages: %s", err)
 	}
@@ -88,7 +88,7 @@ func TestLifeCycle(t *testing.T) {
 		t.Logf("Message: %q", v.MessageId)
 	}
 
-	retrievedMessages, err := messagesClient.Get(ctx, accountName, queueName, 6, GetInput{})
+	retrievedMessages, err := messagesClient.Get(ctx, queueName, 6, GetInput{})
 	if err != nil {
 		t.Fatalf("Error retrieving messages: %s", err)
 	}
@@ -96,7 +96,7 @@ func TestLifeCycle(t *testing.T) {
 	for _, v := range *retrievedMessages.QueueMessages {
 		t.Logf("Message: %q", v.MessageId)
 
-		_, err = messagesClient.Delete(ctx, accountName, queueName, v.MessageId, v.PopReceipt)
+		_, err = messagesClient.Delete(ctx, queueName, v.MessageId, v.PopReceipt)
 		if err != nil {
 			t.Fatalf("Error deleting message from queue: %s", err)
 		}

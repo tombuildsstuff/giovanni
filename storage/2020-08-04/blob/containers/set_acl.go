@@ -7,24 +7,20 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // SetAccessControl sets the Access Control for a Container without a Lease ID
-func (client Client) SetAccessControl(ctx context.Context, accountName, containerName string, level AccessLevel) (autorest.Response, error) {
-	return client.SetAccessControlWithLeaseID(ctx, accountName, containerName, "", level)
+func (client Client) SetAccessControl(ctx context.Context, containerName string, level AccessLevel) (autorest.Response, error) {
+	return client.SetAccessControlWithLeaseID(ctx, containerName, "", level)
 }
 
 // SetAccessControlWithLeaseID sets the Access Control for a Container using the specified Lease ID
-func (client Client) SetAccessControlWithLeaseID(ctx context.Context, accountName, containerName, leaseID string, level AccessLevel) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "SetAccessControl", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetAccessControlWithLeaseID(ctx context.Context, containerName, leaseID string, level AccessLevel) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "SetAccessControl", "`containerName` cannot be an empty string.")
 	}
 
-	req, err := client.SetAccessControlWithLeaseIDPreparer(ctx, accountName, containerName, leaseID, level)
+	req, err := client.SetAccessControlWithLeaseIDPreparer(ctx, containerName, leaseID, level)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "SetAccessControl", nil, "Failure preparing request")
 		return
@@ -47,7 +43,7 @@ func (client Client) SetAccessControlWithLeaseID(ctx context.Context, accountNam
 }
 
 // SetAccessControlWithLeaseIDPreparer prepares the SetAccessControlWithLeaseID request.
-func (client Client) SetAccessControlWithLeaseIDPreparer(ctx context.Context, accountName, containerName, leaseID string, level AccessLevel) (*http.Request, error) {
+func (client Client) SetAccessControlWithLeaseIDPreparer(ctx context.Context, containerName, leaseID string, level AccessLevel) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -72,7 +68,7 @@ func (client Client) SetAccessControlWithLeaseIDPreparer(ctx context.Context, ac
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

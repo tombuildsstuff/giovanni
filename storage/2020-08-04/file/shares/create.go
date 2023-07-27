@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -37,10 +36,7 @@ type CreateInput struct {
 }
 
 // Create creates the specified Storage Share within the specified Storage Account
-func (client Client) Create(ctx context.Context, accountName, shareName string, input CreateInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "Create", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Create(ctx context.Context, shareName string, input CreateInput) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "Create", "`shareName` cannot be an empty string.")
 	}
@@ -54,7 +50,7 @@ func (client Client) Create(ctx context.Context, accountName, shareName string, 
 		return result, validation.NewError("shares.Client", "Create", fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
-	req, err := client.CreatePreparer(ctx, accountName, shareName, input)
+	req, err := client.CreatePreparer(ctx, shareName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "Create", nil, "Failure preparing request")
 		return
@@ -77,7 +73,7 @@ func (client Client) Create(ctx context.Context, accountName, shareName string, 
 }
 
 // CreatePreparer prepares the Create request.
-func (client Client) CreatePreparer(ctx context.Context, accountName, shareName string, input CreateInput) (*http.Request, error) {
+func (client Client) CreatePreparer(ctx context.Context, shareName string, input CreateInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -106,7 +102,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName, shareName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

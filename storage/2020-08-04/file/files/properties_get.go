@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -36,10 +35,7 @@ type GetResult struct {
 }
 
 // GetProperties returns the Properties for the specified file
-func (client Client) GetProperties(ctx context.Context, accountName, shareName, path, fileName string) (result GetResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "GetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetProperties(ctx context.Context, shareName, path, fileName string) (result GetResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "GetProperties", "`shareName` cannot be an empty string.")
 	}
@@ -50,7 +46,7 @@ func (client Client) GetProperties(ctx context.Context, accountName, shareName, 
 		return result, validation.NewError("files.Client", "GetProperties", "`fileName` cannot be an empty string.")
 	}
 
-	req, err := client.GetPropertiesPreparer(ctx, accountName, shareName, path, fileName)
+	req, err := client.GetPropertiesPreparer(ctx, shareName, path, fileName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "GetProperties", nil, "Failure preparing request")
 		return
@@ -73,7 +69,7 @@ func (client Client) GetProperties(ctx context.Context, accountName, shareName, 
 }
 
 // GetPropertiesPreparer prepares the GetProperties request.
-func (client Client) GetPropertiesPreparer(ctx context.Context, accountName, shareName, path, fileName string) (*http.Request, error) {
+func (client Client) GetPropertiesPreparer(ctx context.Context, shareName, path, fileName string) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -90,7 +86,7 @@ func (client Client) GetPropertiesPreparer(ctx context.Context, accountName, sha
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

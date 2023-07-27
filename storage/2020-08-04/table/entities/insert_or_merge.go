@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type InsertOrMergeEntityInput struct {
@@ -27,10 +26,7 @@ type InsertOrMergeEntityInput struct {
 
 // InsertOrMerge updates an existing entity or inserts a new entity if it does not exist in the table.
 // Because this operation can insert or update an entity, it is also known as an upsert operation.
-func (client Client) InsertOrMerge(ctx context.Context, accountName, tableName string, input InsertOrMergeEntityInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("entities.Client", "InsertOrMerge", "`accountName` cannot be an empty string.")
-	}
+func (client Client) InsertOrMerge(ctx context.Context, tableName string, input InsertOrMergeEntityInput) (result autorest.Response, err error) {
 	if tableName == "" {
 		return result, validation.NewError("entities.Client", "InsertOrMerge", "`tableName` cannot be an empty string.")
 	}
@@ -41,7 +37,7 @@ func (client Client) InsertOrMerge(ctx context.Context, accountName, tableName s
 		return result, validation.NewError("entities.Client", "InsertOrMerge", "`input.RowKey` cannot be an empty string.")
 	}
 
-	req, err := client.InsertOrMergePreparer(ctx, accountName, tableName, input)
+	req, err := client.InsertOrMergePreparer(ctx, tableName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "entities.Client", "InsertOrMerge", nil, "Failure preparing request")
 		return
@@ -64,7 +60,7 @@ func (client Client) InsertOrMerge(ctx context.Context, accountName, tableName s
 }
 
 // InsertOrMergePreparer prepares the InsertOrMerge request.
-func (client Client) InsertOrMergePreparer(ctx context.Context, accountName, tableName string, input InsertOrMergeEntityInput) (*http.Request, error) {
+func (client Client) InsertOrMergePreparer(ctx context.Context, tableName string, input InsertOrMergeEntityInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"tableName":    autorest.Encode("path", tableName),
 		"partitionKey": autorest.Encode("path", input.PartitionKey),
@@ -80,7 +76,7 @@ func (client Client) InsertOrMergePreparer(ctx context.Context, accountName, tab
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/json"),
 		autorest.AsMerge(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{tableName}(PartitionKey='{partitionKey}', RowKey='{rowKey}')", pathParameters),
 		autorest.WithJSON(input.Entity),
 		autorest.WithHeaders(headers))

@@ -28,19 +28,19 @@ func TestCreateHasNoTagsByDefault(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	fileSystemsClient := NewWithEnvironment(client.AutoRestEnvironment)
+	fileSystemsClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
 
 	t.Logf("[DEBUG] Creating an empty File System..")
 	input := CreateInput{
 		Properties: map[string]string{},
 	}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, input); err != nil {
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, input); err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
 	t.Logf("[DEBUG] Retrieving the Properties..")
-	props, err := fileSystemsClient.GetProperties(ctx, accountName, fileSystemName)
+	props, err := fileSystemsClient.GetProperties(ctx, fileSystemName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties: %s", err))
 	}
@@ -50,7 +50,7 @@ func TestCreateHasNoTagsByDefault(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting File System..")
-	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
+	if _, err := fileSystemsClient.Delete(ctx, fileSystemName); err != nil {
 		t.Fatalf("Error deleting: %s", err)
 	}
 }

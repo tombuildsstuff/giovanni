@@ -8,20 +8,16 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 // SetMetaData sets the specified MetaData on the Container without a Lease ID
-func (client Client) SetMetaData(ctx context.Context, accountName, containerName string, metaData map[string]string) (autorest.Response, error) {
-	return client.SetMetaDataWithLeaseID(ctx, accountName, containerName, "", metaData)
+func (client Client) SetMetaData(ctx context.Context, containerName string, metaData map[string]string) (autorest.Response, error) {
+	return client.SetMetaDataWithLeaseID(ctx, containerName, "", metaData)
 }
 
 // SetMetaDataWithLeaseID sets the specified MetaData on the Container using the specified Lease ID
-func (client Client) SetMetaDataWithLeaseID(ctx context.Context, accountName, containerName, leaseID string, metaData map[string]string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "SetMetaData", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetMetaDataWithLeaseID(ctx context.Context, containerName, leaseID string, metaData map[string]string) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "SetMetaData", "`containerName` cannot be an empty string.")
 	}
@@ -29,7 +25,7 @@ func (client Client) SetMetaDataWithLeaseID(ctx context.Context, accountName, co
 		return result, validation.NewError("containers.Client", "SetMetaData", fmt.Sprintf("`metaData` is not valid: %s.", err))
 	}
 
-	req, err := client.SetMetaDataWithLeaseIDPreparer(ctx, accountName, containerName, leaseID, metaData)
+	req, err := client.SetMetaDataWithLeaseIDPreparer(ctx, containerName, leaseID, metaData)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "SetMetaData", nil, "Failure preparing request")
 		return
@@ -52,7 +48,7 @@ func (client Client) SetMetaDataWithLeaseID(ctx context.Context, accountName, co
 }
 
 // SetMetaDataWithLeaseIDPreparer prepares the SetMetaDataWithLeaseID request.
-func (client Client) SetMetaDataWithLeaseIDPreparer(ctx context.Context, accountName, containerName, leaseID string, metaData map[string]string) (*http.Request, error) {
+func (client Client) SetMetaDataWithLeaseIDPreparer(ctx context.Context, containerName, leaseID string, metaData map[string]string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -77,7 +73,7 @@ func (client Client) SetMetaDataWithLeaseIDPreparer(ctx context.Context, account
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

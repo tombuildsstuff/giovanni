@@ -10,9 +10,8 @@ import (
 
 // GetResourceID returns the Resource ID for the given Message within a Queue
 // This can be useful when, for example, you're using this as a unique identifier
-func (client Client) GetResourceID(accountName, queueName, messageID string) string {
-	domain := endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)
-	return fmt.Sprintf("%s/%s/messages/%s", domain, queueName, messageID)
+func (client Client) GetResourceID(queueName, messageID string) string {
+	return fmt.Sprintf("%s/%s/messages/%s", client.endpoint, queueName, messageID)
 }
 
 type ResourceID struct {

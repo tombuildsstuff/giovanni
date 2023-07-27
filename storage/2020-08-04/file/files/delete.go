@@ -9,14 +9,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete immediately deletes the file from the File Share.
-func (client Client) Delete(ctx context.Context, accountName, shareName, path, fileName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, shareName, path, fileName string) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "Delete", "`shareName` cannot be an empty string.")
 	}
@@ -27,7 +23,7 @@ func (client Client) Delete(ctx context.Context, accountName, shareName, path, f
 		return result, validation.NewError("files.Client", "Delete", "`fileName` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, shareName, path, fileName)
+	req, err := client.DeletePreparer(ctx, shareName, path, fileName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -50,7 +46,7 @@ func (client Client) Delete(ctx context.Context, accountName, shareName, path, f
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName, shareName, path, fileName string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, shareName, path, fileName string) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -67,7 +63,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, shareName,
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

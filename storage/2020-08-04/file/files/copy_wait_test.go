@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -37,19 +36,19 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
+	sharesClient := shares.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
 		QuotaInGB: 10,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, false)
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	filesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	copiedFileName := "ubuntu.iso"
@@ -58,13 +57,13 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Copy And Waiting..")
-	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", copiedFileName, copyInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, copyInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copy & waiting: %s", err)
 	}
 
 	t.Logf("[DEBUG] Asserting that the file's ready..")
 
-	props, err := filesClient.GetProperties(ctx, accountName, shareName, "", copiedFileName)
+	props, err := filesClient.GetProperties(ctx, shareName, "", copiedFileName)
 	if err != nil {
 		t.Fatalf("Error retrieving file: %s", err)
 	}
@@ -97,19 +96,19 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
+	sharesClient := shares.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
 		QuotaInGB: 10,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, false)
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	filesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	originalFileName := "ubuntu.iso"
@@ -118,20 +117,20 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 	t.Logf("[DEBUG] Copy And Waiting the original file..")
-	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", originalFileName, copyInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", originalFileName, copyInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copy & waiting: %s", err)
 	}
 
 	t.Logf("[DEBUG] Now copying that blob..")
 	duplicateInput := CopyInput{
-		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetOrBuildFileEndpoint(client.endpoint, filesClient.BaseURI, accountName), shareName, originalFileName),
+		CopySource: fmt.Sprintf("%s/%s/%s", filesClient.endpoint, shareName, originalFileName),
 	}
-	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", copiedFileName, duplicateInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, duplicateInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copying duplicate: %s", err)
 	}
 
 	t.Logf("[DEBUG] Asserting that the file's ready..")
-	props, err := filesClient.GetProperties(ctx, accountName, shareName, "", copiedFileName)
+	props, err := filesClient.GetProperties(ctx, shareName, "", copiedFileName)
 	if err != nil {
 		t.Fatalf("Error retrieving file: %s", err)
 	}

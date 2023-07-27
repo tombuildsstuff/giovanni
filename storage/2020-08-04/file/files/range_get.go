@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetByteRangeInput struct {
@@ -24,10 +23,7 @@ type GetByteRangeResult struct {
 }
 
 // GetByteRange returns the specified Byte Range from the specified File.
-func (client Client) GetByteRange(ctx context.Context, accountName, shareName, path, fileName string, input GetByteRangeInput) (result GetByteRangeResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "GetByteRange", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetByteRange(ctx context.Context, shareName, path, fileName string, input GetByteRangeInput) (result GetByteRangeResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "GetByteRange", "`shareName` cannot be an empty string.")
 	}
@@ -51,7 +47,7 @@ func (client Client) GetByteRange(ctx context.Context, accountName, shareName, p
 		return result, validation.NewError("files.Client", "GetByteRange", "Requested Byte Range must be at most 4MB.")
 	}
 
-	req, err := client.GetByteRangePreparer(ctx, accountName, shareName, path, fileName, input)
+	req, err := client.GetByteRangePreparer(ctx, shareName, path, fileName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "GetByteRange", nil, "Failure preparing request")
 		return
@@ -74,7 +70,7 @@ func (client Client) GetByteRange(ctx context.Context, accountName, shareName, p
 }
 
 // GetByteRangePreparer prepares the GetByteRange request.
-func (client Client) GetByteRangePreparer(ctx context.Context, accountName, shareName, path, fileName string, input GetByteRangeInput) (*http.Request, error) {
+func (client Client) GetByteRangePreparer(ctx context.Context, shareName, path, fileName string, input GetByteRangeInput) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -91,7 +87,7 @@ func (client Client) GetByteRangePreparer(ctx context.Context, accountName, shar
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

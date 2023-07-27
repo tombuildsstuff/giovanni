@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -19,10 +18,7 @@ type GetSnapshotPropertiesResult struct {
 }
 
 // GetSnapshot gets information about the specified Snapshot of the specified Storage Share
-func (client Client) GetSnapshot(ctx context.Context, accountName, shareName, snapshotShare string) (result GetSnapshotPropertiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "GetSnapshot", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetSnapshot(ctx context.Context, shareName, snapshotShare string) (result GetSnapshotPropertiesResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "GetSnapshot", "`shareName` cannot be an empty string.")
 	}
@@ -33,7 +29,7 @@ func (client Client) GetSnapshot(ctx context.Context, accountName, shareName, sn
 		return result, validation.NewError("shares.Client", "GetSnapshot", "`snapshotShare` cannot be an empty string.")
 	}
 
-	req, err := client.GetSnapshotPreparer(ctx, accountName, shareName, snapshotShare)
+	req, err := client.GetSnapshotPreparer(ctx, shareName, snapshotShare)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "GetSnapshot", nil, "Failure preparing request")
 		return
@@ -56,7 +52,7 @@ func (client Client) GetSnapshot(ctx context.Context, accountName, shareName, sn
 }
 
 // GetSnapshotPreparer prepares the GetSnapshot request.
-func (client Client) GetSnapshotPreparer(ctx context.Context, accountName, shareName, snapshotShare string) (*http.Request, error) {
+func (client Client) GetSnapshotPreparer(ctx context.Context, shareName, snapshotShare string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -73,7 +69,7 @@ func (client Client) GetSnapshotPreparer(ctx context.Context, accountName, share
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

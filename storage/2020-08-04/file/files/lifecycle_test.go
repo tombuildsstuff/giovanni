@@ -37,19 +37,19 @@ func TestFilesLifeCycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
+	sharesClient := shares.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
 		QuotaInGB: 1,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, false)
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	filesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	fileName := "bled5.png"
@@ -60,12 +60,12 @@ func TestFilesLifeCycle(t *testing.T) {
 		ContentLength:   1024,
 		ContentEncoding: &contentEncoding,
 	}
-	if _, err := filesClient.Create(ctx, accountName, shareName, "", fileName, createInput); err != nil {
+	if _, err := filesClient.Create(ctx, shareName, "", fileName, createInput); err != nil {
 		t.Fatalf("Error creating Top-Level File: %s", err)
 	}
 
 	t.Logf("[DEBUG] Retrieving Properties for the Top-Level File..")
-	file, err := filesClient.GetProperties(ctx, accountName, shareName, "", fileName)
+	file, err := filesClient.GetProperties(ctx, shareName, "", fileName)
 	if err != nil {
 		t.Fatalf("Error retrieving Top-Level File: %s", err)
 	}
@@ -88,12 +88,12 @@ func TestFilesLifeCycle(t *testing.T) {
 		},
 	}
 	t.Logf("[DEBUG] Setting Properties for the Top-Level File..")
-	if _, err := filesClient.SetProperties(ctx, accountName, shareName, "", fileName, updatedInput); err != nil {
+	if _, err := filesClient.SetProperties(ctx, shareName, "", fileName, updatedInput); err != nil {
 		t.Fatalf("Error setting properties: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-retrieving Properties for the Top-Level File..")
-	file, err = filesClient.GetProperties(ctx, accountName, shareName, "", fileName)
+	file, err = filesClient.GetProperties(ctx, shareName, "", fileName)
 	if err != nil {
 		t.Fatalf("Error retrieving Top-Level File: %s", err)
 	}
@@ -117,12 +117,12 @@ func TestFilesLifeCycle(t *testing.T) {
 	metaData := map[string]string{
 		"hello": "there",
 	}
-	if _, err := filesClient.SetMetaData(ctx, accountName, shareName, "", fileName, metaData); err != nil {
+	if _, err := filesClient.SetMetaData(ctx, shareName, "", fileName, metaData); err != nil {
 		t.Fatalf("Error setting MetaData: %s", err)
 	}
 
 	t.Logf("[DEBUG] Retrieving MetaData..")
-	retrievedMetaData, err := filesClient.GetMetaData(ctx, accountName, shareName, "", fileName)
+	retrievedMetaData, err := filesClient.GetMetaData(ctx, shareName, "", fileName)
 	if err != nil {
 		t.Fatalf("Error retrieving MetaData: %s", err)
 	}
@@ -138,12 +138,12 @@ func TestFilesLifeCycle(t *testing.T) {
 		"hello":  "there",
 		"second": "thing",
 	}
-	if _, err := filesClient.SetMetaData(ctx, accountName, shareName, "", fileName, metaData); err != nil {
+	if _, err := filesClient.SetMetaData(ctx, shareName, "", fileName, metaData); err != nil {
 		t.Fatalf("Error setting MetaData: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-Retrieving MetaData..")
-	retrievedMetaData, err = filesClient.GetMetaData(ctx, accountName, shareName, "", fileName)
+	retrievedMetaData, err = filesClient.GetMetaData(ctx, shareName, "", fileName)
 	if err != nil {
 		t.Fatalf("Error retrieving MetaData: %s", err)
 	}
@@ -158,7 +158,7 @@ func TestFilesLifeCycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting Top Level File..")
-	if _, err := filesClient.Delete(ctx, accountName, shareName, "", fileName); err != nil {
+	if _, err := filesClient.Delete(ctx, shareName, "", fileName); err != nil {
 		t.Fatalf("Error deleting Top-Level File: %s", err)
 	}
 }

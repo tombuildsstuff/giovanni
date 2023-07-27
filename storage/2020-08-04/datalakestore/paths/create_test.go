@@ -30,31 +30,31 @@ func TestCreateDirectory(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	fileSystemsClient := filesystems.NewWithEnvironment(client.AutoRestEnvironment)
+	fileSystemsClient := filesystems.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
 
 	t.Logf("[DEBUG] Creating an empty File System..")
 	fileSystemInput := filesystems.CreateInput{
 		Properties: map[string]string{},
 	}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, fileSystemInput); err != nil {
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, fileSystemInput); err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
 	t.Logf("[DEBUG] Creating path..")
-	pathsClient := NewWithEnvironment(client.AutoRestEnvironment)
+	pathsClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	pathsClient.Client = client.PrepareWithStorageResourceManagerAuth(pathsClient.Client)
 
 	input := CreateInput{
 		Resource: PathResourceDirectory,
 	}
 
-	if _, err = pathsClient.Create(ctx, accountName, fileSystemName, path, input); err != nil {
+	if _, err = pathsClient.Create(ctx, fileSystemName, path, input); err != nil {
 		t.Fatal(fmt.Errorf("Error creating path: %s", err))
 	}
 
 	t.Logf("[DEBUG] Deleting File System..")
-	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
+	if _, err := fileSystemsClient.Delete(ctx, fileSystemName); err != nil {
 		t.Fatalf("Error deleting: %s", err)
 	}
 }

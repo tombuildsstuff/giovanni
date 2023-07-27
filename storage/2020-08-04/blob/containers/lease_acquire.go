@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type AcquireLeaseInput struct {
@@ -25,10 +24,7 @@ type AcquireLeaseResponse struct {
 }
 
 // AcquireLease establishes and manages a lock on a container for delete operations.
-func (client Client) AcquireLease(ctx context.Context, accountName, containerName string, input AcquireLeaseInput) (result AcquireLeaseResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "AcquireLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) AcquireLease(ctx context.Context, containerName string, input AcquireLeaseInput) (result AcquireLeaseResponse, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "AcquireLease", "`containerName` cannot be an empty string.")
 	}
@@ -37,7 +33,7 @@ func (client Client) AcquireLease(ctx context.Context, accountName, containerNam
 		return result, validation.NewError("containers.Client", "AcquireLease", "`input.LeaseDuration` must be -1 (infinite), or between 15 and 60 seconds.")
 	}
 
-	req, err := client.AcquireLeasePreparer(ctx, accountName, containerName, input)
+	req, err := client.AcquireLeasePreparer(ctx, containerName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "AcquireLease", nil, "Failure preparing request")
 		return
@@ -60,7 +56,7 @@ func (client Client) AcquireLease(ctx context.Context, accountName, containerNam
 }
 
 // AcquireLeasePreparer prepares the AcquireLease request.
-func (client Client) AcquireLeasePreparer(ctx context.Context, accountName string, containerName string, input AcquireLeaseInput) (*http.Request, error) {
+func (client Client) AcquireLeasePreparer(ctx context.Context, containerName string, input AcquireLeaseInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -83,7 +79,7 @@ func (client Client) AcquireLeasePreparer(ctx context.Context, accountName strin
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

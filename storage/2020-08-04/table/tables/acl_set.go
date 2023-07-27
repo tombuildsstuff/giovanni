@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type setAcl struct {
@@ -18,15 +17,12 @@ type setAcl struct {
 }
 
 // SetACL sets the specified Access Control List for the specified Table
-func (client Client) SetACL(ctx context.Context, accountName, tableName string, acls []SignedIdentifier) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("tables.Client", "SetACL", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetACL(ctx context.Context, tableName string, acls []SignedIdentifier) (result autorest.Response, err error) {
 	if tableName == "" {
 		return result, validation.NewError("tables.Client", "SetACL", "`tableName` cannot be an empty string.")
 	}
 
-	req, err := client.SetACLPreparer(ctx, accountName, tableName, acls)
+	req, err := client.SetACLPreparer(ctx, tableName, acls)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "tables.Client", "SetACL", nil, "Failure preparing request")
 		return
@@ -49,7 +45,7 @@ func (client Client) SetACL(ctx context.Context, accountName, tableName string, 
 }
 
 // SetACLPreparer prepares the SetACL request.
-func (client Client) SetACLPreparer(ctx context.Context, accountName, tableName string, acls []SignedIdentifier) (*http.Request, error) {
+func (client Client) SetACLPreparer(ctx context.Context, tableName string, acls []SignedIdentifier) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"tableName": autorest.Encode("path", tableName),
 	}
@@ -69,7 +65,7 @@ func (client Client) SetACLPreparer(ctx context.Context, accountName, tableName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{tableName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers),

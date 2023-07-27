@@ -7,7 +7,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetSnapshotPropertiesInput struct {
@@ -21,10 +20,7 @@ type GetSnapshotPropertiesInput struct {
 
 // GetSnapshotProperties returns all user-defined metadata, standard HTTP properties, and system properties for
 // the specified snapshot of a blob
-func (client Client) GetSnapshotProperties(ctx context.Context, accountName, containerName, blobName string, input GetSnapshotPropertiesInput) (result GetPropertiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "GetSnapshotProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetSnapshotProperties(ctx context.Context, containerName, blobName string, input GetSnapshotPropertiesInput) (result GetPropertiesResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "GetSnapshotProperties", "`containerName` cannot be an empty string.")
 	}
@@ -38,7 +34,7 @@ func (client Client) GetSnapshotProperties(ctx context.Context, accountName, con
 		return result, validation.NewError("blobs.Client", "GetSnapshotProperties", "`input.SnapshotID` cannot be an empty string.")
 	}
 
-	req, err := client.GetSnapshotPropertiesPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.GetSnapshotPropertiesPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "GetSnapshotProperties", nil, "Failure preparing request")
 		return
@@ -62,7 +58,7 @@ func (client Client) GetSnapshotProperties(ctx context.Context, accountName, con
 }
 
 // GetSnapshotPreparer prepares the GetSnapshot request.
-func (client Client) GetSnapshotPropertiesPreparer(ctx context.Context, accountName, containerName, blobName string, input GetSnapshotPropertiesInput) (*http.Request, error) {
+func (client Client) GetSnapshotPropertiesPreparer(ctx context.Context, containerName, blobName string, input GetSnapshotPropertiesInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -82,7 +78,7 @@ func (client Client) GetSnapshotPropertiesPreparer(ctx context.Context, accountN
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsHead(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

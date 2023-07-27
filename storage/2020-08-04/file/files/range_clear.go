@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type ClearByteRangeInput struct {
@@ -18,10 +17,7 @@ type ClearByteRangeInput struct {
 }
 
 // ClearByteRange clears the specified Byte Range from within the specified File
-func (client Client) ClearByteRange(ctx context.Context, accountName, shareName, path, fileName string, input ClearByteRangeInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "ClearByteRange", "`accountName` cannot be an empty string.")
-	}
+func (client Client) ClearByteRange(ctx context.Context, shareName, path, fileName string, input ClearByteRangeInput) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "ClearByteRange", "`shareName` cannot be an empty string.")
 	}
@@ -38,7 +34,7 @@ func (client Client) ClearByteRange(ctx context.Context, accountName, shareName,
 		return result, validation.NewError("files.Client", "ClearByteRange", "`input.EndBytes` must be greater than 0.")
 	}
 
-	req, err := client.ClearByteRangePreparer(ctx, accountName, shareName, path, fileName, input)
+	req, err := client.ClearByteRangePreparer(ctx, shareName, path, fileName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "ClearByteRange", nil, "Failure preparing request")
 		return
@@ -61,7 +57,7 @@ func (client Client) ClearByteRange(ctx context.Context, accountName, shareName,
 }
 
 // ClearByteRangePreparer prepares the ClearByteRange request.
-func (client Client) ClearByteRangePreparer(ctx context.Context, accountName, shareName, path, fileName string, input ClearByteRangeInput) (*http.Request, error) {
+func (client Client) ClearByteRangePreparer(ctx context.Context, shareName, path, fileName string, input ClearByteRangeInput) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -84,7 +80,7 @@ func (client Client) ClearByteRangePreparer(ctx context.Context, accountName, sh
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

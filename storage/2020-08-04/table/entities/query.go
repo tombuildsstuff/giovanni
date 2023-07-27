@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type QueryEntitiesInput struct {
@@ -46,15 +45,12 @@ type QueryEntitiesResult struct {
 }
 
 // Query queries entities in a table and includes the $filter and $select options.
-func (client Client) Query(ctx context.Context, accountName, tableName string, input QueryEntitiesInput) (result QueryEntitiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("entities.Client", "Query", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Query(ctx context.Context, tableName string, input QueryEntitiesInput) (result QueryEntitiesResult, err error) {
 	if tableName == "" {
 		return result, validation.NewError("entities.Client", "Query", "`tableName` cannot be an empty string.")
 	}
 
-	req, err := client.QueryPreparer(ctx, accountName, tableName, input)
+	req, err := client.QueryPreparer(ctx, tableName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "entities.Client", "Query", nil, "Failure preparing request")
 		return
@@ -77,7 +73,7 @@ func (client Client) Query(ctx context.Context, accountName, tableName string, i
 }
 
 // QueryPreparer prepares the Query request.
-func (client Client) QueryPreparer(ctx context.Context, accountName, tableName string, input QueryEntitiesInput) (*http.Request, error) {
+func (client Client) QueryPreparer(ctx context.Context, tableName string, input QueryEntitiesInput) (*http.Request, error) {
 
 	pathParameters := map[string]interface{}{
 		"tableName":            autorest.Encode("path", tableName),
@@ -128,7 +124,7 @@ func (client Client) QueryPreparer(ctx context.Context, accountName, tableName s
 	// GET /myaccount/Customers()?$filter=(Rating%20ge%203)%20and%20(Rating%20le%206)&$select=PartitionKey,RowKey,Address,CustomerSince
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{tableName}({additionalParameters})", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

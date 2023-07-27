@@ -34,8 +34,8 @@ func TestGetResourceID(t *testing.T) {
 	}
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Path %q", v.Path)
-		c := NewWithEnvironment(azure.PublicCloud)
-		actual := c.GetResourceID(v.AccountName, v.FileSystemName, v.Path)
+		c := NewWithEnvironment(v.AccountName, azure.PublicCloud)
+		actual := c.GetResourceID(v.FileSystemName, v.Path)
 		if actual != v.Expected {
 			t.Fatalf("Expected the Resource ID to be %q but got %q", v.Expected, actual)
 		}

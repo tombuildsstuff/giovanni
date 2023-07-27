@@ -7,8 +7,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetResult struct {
@@ -19,12 +17,8 @@ type GetResult struct {
 }
 
 // Query returns a list of tables under the specified account.
-func (client Client) Query(ctx context.Context, accountName string, metaDataLevel MetaDataLevel) (result GetResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("tables.Client", "Query", "`accountName` cannot be an empty string.")
-	}
-
-	req, err := client.QueryPreparer(ctx, accountName, metaDataLevel)
+func (client Client) Query(ctx context.Context, metaDataLevel MetaDataLevel) (result GetResult, err error) {
+	req, err := client.QueryPreparer(ctx, metaDataLevel)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "tables.Client", "Query", nil, "Failure preparing request")
 		return
@@ -47,7 +41,7 @@ func (client Client) Query(ctx context.Context, accountName string, metaDataLeve
 }
 
 // QueryPreparer prepares the Query request.
-func (client Client) QueryPreparer(ctx context.Context, accountName string, metaDataLevel MetaDataLevel) (*http.Request, error) {
+func (client Client) QueryPreparer(ctx context.Context, metaDataLevel MetaDataLevel) (*http.Request, error) {
 	// NOTE: whilst this supports ContinuationTokens and 'Top'
 	// it appears that 'Skip' returns a '501 Not Implemented'
 	// as such, we intentionally don't support those right now
@@ -59,7 +53,7 @@ func (client Client) QueryPreparer(ctx context.Context, accountName string, meta
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildTableEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPath("/Tables"),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

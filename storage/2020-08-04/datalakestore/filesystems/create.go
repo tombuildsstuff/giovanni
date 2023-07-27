@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type CreateInput struct {
@@ -19,15 +18,12 @@ type CreateInput struct {
 }
 
 // Create creates a Data Lake Store Gen2 FileSystem within a Storage Account
-func (client Client) Create(ctx context.Context, accountName string, fileSystemName string, input CreateInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("datalakestore.Client", "Create", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Create(ctx context.Context, fileSystemName string, input CreateInput) (result autorest.Response, err error) {
 	if fileSystemName == "" {
 		return result, validation.NewError("datalakestore.Client", "Create", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.CreatePreparer(ctx, accountName, fileSystemName, input)
+	req, err := client.CreatePreparer(ctx, fileSystemName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "Create", nil, "Failure preparing request")
 		return
@@ -49,7 +45,7 @@ func (client Client) Create(ctx context.Context, accountName string, fileSystemN
 }
 
 // CreatePreparer prepares the Create request.
-func (client Client) CreatePreparer(ctx context.Context, accountName string, fileSystemName string, input CreateInput) (*http.Request, error) {
+func (client Client) CreatePreparer(ctx context.Context, fileSystemName string, input CreateInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 	}
@@ -65,7 +61,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName string, fil
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{fileSystemName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type ChangeLeaseInput struct {
@@ -22,10 +21,7 @@ type ChangeLeaseResponse struct {
 }
 
 // ChangeLease changes the lock from one Lease ID to another Lease ID
-func (client Client) ChangeLease(ctx context.Context, accountName, containerName string, input ChangeLeaseInput) (result ChangeLeaseResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "ChangeLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) ChangeLease(ctx context.Context, containerName string, input ChangeLeaseInput) (result ChangeLeaseResponse, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "ChangeLease", "`containerName` cannot be an empty string.")
 	}
@@ -36,7 +32,7 @@ func (client Client) ChangeLease(ctx context.Context, accountName, containerName
 		return result, validation.NewError("containers.Client", "ChangeLease", "`input.ProposedLeaseID` cannot be an empty string.")
 	}
 
-	req, err := client.ChangeLeasePreparer(ctx, accountName, containerName, input)
+	req, err := client.ChangeLeasePreparer(ctx, containerName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "ChangeLease", nil, "Failure preparing request")
 		return
@@ -59,7 +55,7 @@ func (client Client) ChangeLease(ctx context.Context, accountName, containerName
 }
 
 // ChangeLeasePreparer prepares the ChangeLease request.
-func (client Client) ChangeLeasePreparer(ctx context.Context, accountName string, containerName string, input ChangeLeaseInput) (*http.Request, error) {
+func (client Client) ChangeLeasePreparer(ctx context.Context, containerName string, input ChangeLeaseInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -79,7 +75,7 @@ func (client Client) ChangeLeasePreparer(ctx context.Context, accountName string
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

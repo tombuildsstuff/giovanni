@@ -30,8 +30,8 @@ func TestGetResourceID(t *testing.T) {
 	}
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
-		c := NewWithEnvironment(v.Environment)
-		actual := c.GetResourceID("account1", "directory1")
+		c := NewWithEnvironment("account1", v.Environment)
+		actual := c.GetResourceID("directory1")
 		if actual != v.Expected {
 			t.Fatalf("Expected the Resource ID to be %q but got %q", v.Expected, actual)
 		}

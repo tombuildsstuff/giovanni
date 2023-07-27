@@ -39,7 +39,7 @@ func Example() error {
     	    "artist": "Sigrid",
     	},
     }
-    if _, err := entitiesClient.Insert(ctx, accountName, tableName, input); err != nil {
+    if _, err := entitiesClient.Insert(ctx, tableName, input); err != nil {
         return fmt.Errorf("Error creating Entity: %s", err)
     }
     

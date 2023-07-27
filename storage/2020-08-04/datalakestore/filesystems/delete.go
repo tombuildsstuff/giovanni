@@ -7,19 +7,15 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete deletes a Data Lake Store Gen2 FileSystem within a Storage Account
-func (client Client) Delete(ctx context.Context, accountName string, fileSystemName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("datalakestore.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, fileSystemName string) (result autorest.Response, err error) {
 	if fileSystemName == "" {
 		return result, validation.NewError("datalakestore.Client", "Delete", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, fileSystemName)
+	req, err := client.DeletePreparer(ctx, fileSystemName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -41,7 +37,7 @@ func (client Client) Delete(ctx context.Context, accountName string, fileSystemN
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName string, fileSystemName string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, fileSystemName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 	}
@@ -56,7 +52,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName string, fil
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{fileSystemName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -114,10 +113,7 @@ type CopyResult struct {
 }
 
 // Copy copies a blob to a destination within the storage account asynchronously.
-func (client Client) Copy(ctx context.Context, accountName, containerName, blobName string, input CopyInput) (result CopyResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "Copy", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Copy(ctx context.Context, containerName, blobName string, input CopyInput) (result CopyResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "Copy", "`containerName` cannot be an empty string.")
 	}
@@ -131,7 +127,7 @@ func (client Client) Copy(ctx context.Context, accountName, containerName, blobN
 		return result, validation.NewError("blobs.Client", "Copy", "`input.CopySource` cannot be an empty string.")
 	}
 
-	req, err := client.CopyPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.CopyPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "Copy", nil, "Failure preparing request")
 		return
@@ -154,7 +150,7 @@ func (client Client) Copy(ctx context.Context, accountName, containerName, blobN
 }
 
 // CopyPreparer prepares the Copy request.
-func (client Client) CopyPreparer(ctx context.Context, accountName, containerName, blobName string, input CopyInput) (*http.Request, error) {
+func (client Client) CopyPreparer(ctx context.Context, containerName, blobName string, input CopyInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -205,7 +201,7 @@ func (client Client) CopyPreparer(ctx context.Context, accountName, containerNam
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

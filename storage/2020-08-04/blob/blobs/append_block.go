@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type AppendBlockInput struct {
@@ -56,10 +55,7 @@ type AppendBlockResult struct {
 }
 
 // AppendBlock commits a new block of data to the end of an existing append blob.
-func (client Client) AppendBlock(ctx context.Context, accountName, containerName, blobName string, input AppendBlockInput) (result AppendBlockResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "AppendBlock", "`accountName` cannot be an empty string.")
-	}
+func (client Client) AppendBlock(ctx context.Context, containerName, blobName string, input AppendBlockInput) (result AppendBlockResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "AppendBlock", "`containerName` cannot be an empty string.")
 	}
@@ -73,7 +69,7 @@ func (client Client) AppendBlock(ctx context.Context, accountName, containerName
 		return result, validation.NewError("files.Client", "PutByteRange", "`input.Content` must be at most 4MB.")
 	}
 
-	req, err := client.AppendBlockPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.AppendBlockPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "AppendBlock", nil, "Failure preparing request")
 		return
@@ -96,7 +92,7 @@ func (client Client) AppendBlock(ctx context.Context, accountName, containerName
 }
 
 // AppendBlockPreparer prepares the AppendBlock request.
-func (client Client) AppendBlockPreparer(ctx context.Context, accountName, containerName, blobName string, input AppendBlockInput) (*http.Request, error) {
+func (client Client) AppendBlockPreparer(ctx context.Context, containerName, blobName string, input AppendBlockInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -128,7 +124,7 @@ func (client Client) AppendBlockPreparer(ctx context.Context, accountName, conta
 
 	decorators := []autorest.PrepareDecorator{
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers),

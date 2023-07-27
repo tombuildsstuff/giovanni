@@ -7,14 +7,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // ReleaseLease releases the lock based on the Lease ID
-func (client Client) ReleaseLease(ctx context.Context, accountName, containerName, leaseID string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "ReleaseLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) ReleaseLease(ctx context.Context, containerName, leaseID string) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "ReleaseLease", "`containerName` cannot be an empty string.")
 	}
@@ -22,7 +18,7 @@ func (client Client) ReleaseLease(ctx context.Context, accountName, containerNam
 		return result, validation.NewError("containers.Client", "ReleaseLease", "`leaseID` cannot be an empty string.")
 	}
 
-	req, err := client.ReleaseLeasePreparer(ctx, accountName, containerName, leaseID)
+	req, err := client.ReleaseLeasePreparer(ctx, containerName, leaseID)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "ReleaseLease", nil, "Failure preparing request")
 		return
@@ -45,7 +41,7 @@ func (client Client) ReleaseLease(ctx context.Context, accountName, containerNam
 }
 
 // ReleaseLeasePreparer prepares the ReleaseLease request.
-func (client Client) ReleaseLeasePreparer(ctx context.Context, accountName string, containerName string, leaseID string) (*http.Request, error) {
+func (client Client) ReleaseLeasePreparer(ctx context.Context, containerName string, leaseID string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -64,7 +60,7 @@ func (client Client) ReleaseLeasePreparer(ctx context.Context, accountName strin
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

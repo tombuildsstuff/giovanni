@@ -46,19 +46,19 @@ func testGetFile(t *testing.T, fileName string, contentType string) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
+	sharesClient := shares.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
 
 	input := shares.CreateInput{
 		QuotaInGB: 10,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, false)
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	filesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
 
 	// store files outside of this directory, since they're reused
@@ -77,17 +77,17 @@ func testGetFile(t *testing.T, fileName string, contentType string) {
 		ContentLength: info.Size(),
 		ContentType:   &contentType,
 	}
-	if _, err := filesClient.Create(ctx, accountName, shareName, "", fileName, createFileInput); err != nil {
+	if _, err := filesClient.Create(ctx, shareName, "", fileName, createFileInput); err != nil {
 		t.Fatalf("Error creating Top-Level File: %s", err)
 	}
 
 	t.Logf("[DEBUG] Uploading File..")
-	if err := filesClient.PutFile(ctx, accountName, shareName, "", fileName, file, 4); err != nil {
+	if err := filesClient.PutFile(ctx, shareName, "", fileName, file, 4); err != nil {
 		t.Fatalf("Error uploading File: %s", err)
 	}
 
 	t.Logf("[DEBUG] Downloading file..")
-	_, downloadedBytes, err := filesClient.GetFile(ctx, accountName, shareName, "", fileName, 4)
+	_, downloadedBytes, err := filesClient.GetFile(ctx, shareName, "", fileName, 4)
 	if err != nil {
 		t.Fatalf("Error downloading file: %s", err)
 	}
@@ -108,7 +108,7 @@ func testGetFile(t *testing.T, fileName string, contentType string) {
 	}
 
 	t.Logf("[DEBUG] Deleting Top Level File..")
-	if _, err := filesClient.Delete(ctx, accountName, shareName, "", fileName); err != nil {
+	if _, err := filesClient.Delete(ctx, shareName, "", fileName); err != nil {
 		t.Fatalf("Error deleting Top-Level File: %s", err)
 	}
 

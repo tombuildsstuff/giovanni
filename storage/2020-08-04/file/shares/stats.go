@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetStatsResult struct {
@@ -20,10 +19,7 @@ type GetStatsResult struct {
 }
 
 // GetStats returns information about the specified Storage Share
-func (client Client) GetStats(ctx context.Context, accountName, shareName string) (result GetStatsResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "GetStats", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetStats(ctx context.Context, shareName string) (result GetStatsResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "GetStats", "`shareName` cannot be an empty string.")
 	}
@@ -31,7 +27,7 @@ func (client Client) GetStats(ctx context.Context, accountName, shareName string
 		return result, validation.NewError("shares.Client", "GetStats", "`shareName` must be a lower-cased string.")
 	}
 
-	req, err := client.GetStatsPreparer(ctx, accountName, shareName)
+	req, err := client.GetStatsPreparer(ctx, shareName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "GetStats", nil, "Failure preparing request")
 		return
@@ -54,7 +50,7 @@ func (client Client) GetStats(ctx context.Context, accountName, shareName string
 }
 
 // GetStatsPreparer prepares the GetStats request.
-func (client Client) GetStatsPreparer(ctx context.Context, accountName, shareName string) (*http.Request, error) {
+func (client Client) GetStatsPreparer(ctx context.Context, shareName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -71,7 +67,7 @@ func (client Client) GetStatsPreparer(ctx context.Context, accountName, shareNam
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

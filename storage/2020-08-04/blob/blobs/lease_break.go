@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type BreakLeaseInput struct {
@@ -34,10 +33,7 @@ type BreakLeaseResponse struct {
 }
 
 // BreakLease breaks an existing lock on a blob using the LeaseID.
-func (client Client) BreakLease(ctx context.Context, accountName, containerName, blobName string, input BreakLeaseInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "BreakLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) BreakLease(ctx context.Context, containerName, blobName string, input BreakLeaseInput) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "BreakLease", "`containerName` cannot be an empty string.")
 	}
@@ -51,7 +47,7 @@ func (client Client) BreakLease(ctx context.Context, accountName, containerName,
 		return result, validation.NewError("blobs.Client", "BreakLease", "`input.LeaseID` cannot be an empty string.")
 	}
 
-	req, err := client.BreakLeasePreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.BreakLeasePreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "BreakLease", nil, "Failure preparing request")
 		return
@@ -74,7 +70,7 @@ func (client Client) BreakLease(ctx context.Context, accountName, containerName,
 }
 
 // BreakLeasePreparer prepares the BreakLease request.
-func (client Client) BreakLeasePreparer(ctx context.Context, accountName, containerName, blobName string, input BreakLeaseInput) (*http.Request, error) {
+func (client Client) BreakLeasePreparer(ctx context.Context, containerName, blobName string, input BreakLeaseInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -96,7 +92,7 @@ func (client Client) BreakLeasePreparer(ctx context.Context, accountName, contai
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

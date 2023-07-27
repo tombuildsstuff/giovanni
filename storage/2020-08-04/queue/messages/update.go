@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type UpdateInput struct {
@@ -27,10 +26,7 @@ type UpdateInput struct {
 }
 
 // Update updates an existing message based on it's Pop Receipt
-func (client Client) Update(ctx context.Context, accountName, queueName string, messageID string, input UpdateInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Update", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Update(ctx context.Context, queueName string, messageID string, input UpdateInput) (result autorest.Response, err error) {
 	if queueName == "" {
 		return result, validation.NewError("messages.Client", "Update", "`queueName` cannot be an empty string.")
 	}
@@ -41,7 +37,7 @@ func (client Client) Update(ctx context.Context, accountName, queueName string, 
 		return result, validation.NewError("messages.Client", "Update", "`input.PopReceipt` cannot be an empty string.")
 	}
 
-	req, err := client.UpdatePreparer(ctx, accountName, queueName, messageID, input)
+	req, err := client.UpdatePreparer(ctx, queueName, messageID, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "messages.Client", "Update", nil, "Failure preparing request")
 		return
@@ -64,7 +60,7 @@ func (client Client) Update(ctx context.Context, accountName, queueName string, 
 }
 
 // UpdatePreparer prepares the Update request.
-func (client Client) UpdatePreparer(ctx context.Context, accountName, queueName string, messageID string, input UpdateInput) (*http.Request, error) {
+func (client Client) UpdatePreparer(ctx context.Context, queueName string, messageID string, input UpdateInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 		"messageID": autorest.Encode("path", messageID),
@@ -86,7 +82,7 @@ func (client Client) UpdatePreparer(ctx context.Context, accountName, queueName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}/messages/{messageID}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithXML(body),

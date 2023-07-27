@@ -32,17 +32,17 @@ func TestQueuesLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	queuesClient := NewWithEnvironment(client.AutoRestEnvironment)
+	queuesClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	queuesClient.Client = client.PrepareWithStorageResourceManagerAuth(queuesClient.Client)
 
 	// first let's test an empty container
-	_, err = queuesClient.Create(ctx, accountName, queueName, map[string]string{})
+	_, err = queuesClient.Create(ctx, queueName, map[string]string{})
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
 	// then let's retrieve it to ensure there's no metadata..
-	resp, err := queuesClient.GetMetaData(ctx, accountName, queueName)
+	resp, err := queuesClient.GetMetaData(ctx, queueName)
 	if err != nil {
 		t.Fatalf("Error retrieving MetaData: %s", err)
 	}
@@ -55,12 +55,12 @@ func TestQueuesLifecycle(t *testing.T) {
 		"band":  "panic",
 		"boots": "the-overpass",
 	}
-	_, err = queuesClient.SetMetaData(ctx, accountName, queueName, updatedMetaData)
+	_, err = queuesClient.SetMetaData(ctx, queueName, updatedMetaData)
 	if err != nil {
 		t.Fatalf("Error setting MetaData: %s", err)
 	}
 
-	resp, err = queuesClient.GetMetaData(ctx, accountName, queueName)
+	resp, err = queuesClient.GetMetaData(ctx, queueName)
 	if err != nil {
 		t.Fatalf("Error re-retrieving MetaData: %s", err)
 	}
@@ -76,12 +76,12 @@ func TestQueuesLifecycle(t *testing.T) {
 	}
 
 	// and woo let's remove it again
-	_, err = queuesClient.SetMetaData(ctx, accountName, queueName, map[string]string{})
+	_, err = queuesClient.SetMetaData(ctx, queueName, map[string]string{})
 	if err != nil {
 		t.Fatalf("Error setting MetaData: %s", err)
 	}
 
-	resp, err = queuesClient.GetMetaData(ctx, accountName, queueName)
+	resp, err = queuesClient.GetMetaData(ctx, queueName)
 	if err != nil {
 		t.Fatalf("Error retrieving MetaData: %s", err)
 	}
@@ -136,12 +136,12 @@ func TestQueuesLifecycle(t *testing.T) {
 			},
 		},
 	}
-	_, err = queuesClient.SetServiceProperties(ctx, accountName, props)
+	_, err = queuesClient.SetServiceProperties(ctx, props)
 	if err != nil {
 		t.Fatalf("SetServiceProperties failed: %s", err)
 	}
 
-	properties, err := queuesClient.GetServiceProperties(ctx, accountName)
+	properties, err := queuesClient.GetServiceProperties(ctx)
 	if err != nil {
 		t.Fatalf("GetServiceProperties failed: %s", err)
 	}
@@ -212,12 +212,12 @@ func TestQueuesLifecycle(t *testing.T) {
 		},
 	}
 
-	_, err = queuesClient.SetServiceProperties(ctx, accountName, props2)
+	_, err = queuesClient.SetServiceProperties(ctx, props2)
 	if err != nil {
 		t.Fatalf("SetServiceProperties failed: %s", err)
 	}
 
-	properties, err = queuesClient.GetServiceProperties(ctx, accountName)
+	properties, err = queuesClient.GetServiceProperties(ctx)
 	if err != nil {
 		t.Fatalf("GetServiceProperties failed: %s", err)
 	}
@@ -243,7 +243,7 @@ func TestQueuesLifecycle(t *testing.T) {
 	}
 
 	log.Printf("[DEBUG] Deleting..")
-	_, err = queuesClient.Delete(ctx, accountName, queueName)
+	_, err = queuesClient.Delete(ctx, queueName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error deleting: %s", err))
 	}

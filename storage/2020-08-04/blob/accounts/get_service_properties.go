@@ -6,8 +6,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetServicePropertiesResult struct {
@@ -18,7 +16,7 @@ type GetServicePropertiesResult struct {
 }
 
 // GetServicePropertiesPreparer prepares the GetServiceProperties request.
-func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountName string) (*http.Request, error) {
+func (client Client) GetServicePropertiesPreparer(ctx context.Context) (*http.Request, error) {
 	queryParameters := map[string]interface{}{
 		"restype": "service",
 		"comp":    "properties",
@@ -30,7 +28,7 @@ func (client Client) GetServicePropertiesPreparer(ctx context.Context, accountNa
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))
@@ -56,12 +54,8 @@ func (client Client) GetServicePropertiesResponder(resp *http.Response) (result 
 	return
 }
 
-func (client Client) GetServiceProperties(ctx context.Context, accountName string) (result GetServicePropertiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("accounts.Client", "GetServiceProperties", "`accountName` cannot be an empty string.")
-	}
-
-	req, err := client.GetServicePropertiesPreparer(ctx, accountName)
+func (client Client) GetServiceProperties(ctx context.Context) (result GetServicePropertiesResult, err error) {
+	req, err := client.GetServicePropertiesPreparer(ctx)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "accounts.Client", "GetServiceProperties", nil, "Failure preparing request")
 		return

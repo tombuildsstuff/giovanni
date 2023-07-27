@@ -28,11 +28,11 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	accountsClient := NewWithEnvironment(client.AutoRestEnvironment)
+	accountsClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	accountsClient.Client = client.PrepareWithStorageResourceManagerAuth(accountsClient.Client)
 
 	input := StorageServiceProperties{}
-	_, err = accountsClient.SetServiceProperties(ctx, accountName, input)
+	_, err = accountsClient.SetServiceProperties(ctx, input)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error setting properties: %s", err))
 	}
@@ -59,7 +59,7 @@ func TestContainerLifecycle(t *testing.T) {
 		},
 	}
 
-	_, err = accountsClient.SetServiceProperties(ctx, accountName, input)
+	_, err = accountsClient.SetServiceProperties(ctx, input)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error setting properties: %s", err))
 	}
@@ -67,7 +67,7 @@ func TestContainerLifecycle(t *testing.T) {
 	t.Log("[DEBUG] Waiting 2 seconds..")
 	time.Sleep(2 * time.Second)
 
-	result, err := accountsClient.GetServiceProperties(ctx, accountName)
+	result, err := accountsClient.GetServiceProperties(ctx)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error getting properties: %s", err))
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type SetPropertiesInput struct {
@@ -32,10 +31,7 @@ type SetPropertiesResult struct {
 }
 
 // SetProperties sets system properties on the blob.
-func (client Client) SetProperties(ctx context.Context, accountName, containerName, blobName string, input SetPropertiesInput) (result SetPropertiesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "SetProperties", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetProperties(ctx context.Context, containerName, blobName string, input SetPropertiesInput) (result SetPropertiesResult, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "SetProperties", "`containerName` cannot be an empty string.")
 	}
@@ -46,7 +42,7 @@ func (client Client) SetProperties(ctx context.Context, accountName, containerNa
 		return result, validation.NewError("blobs.Client", "SetProperties", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.SetPropertiesPreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.SetPropertiesPreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "SetProperties", nil, "Failure preparing request")
 		return
@@ -77,7 +73,7 @@ var (
 )
 
 // SetPropertiesPreparer prepares the SetProperties request.
-func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, containerName, blobName string, input SetPropertiesInput) (*http.Request, error) {
+func (client Client) SetPropertiesPreparer(ctx context.Context, containerName, blobName string, input SetPropertiesInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -124,7 +120,7 @@ func (client Client) SetPropertiesPreparer(ctx context.Context, accountName, con
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

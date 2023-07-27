@@ -30,8 +30,8 @@ func TestGetResourceID(t *testing.T) {
 	}
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
-		c := NewWithEnvironment(v.Environment)
-		actual := c.GetResourceID("account1", "share1")
+		c := NewWithEnvironment("account1", v.Environment)
+		actual := c.GetResourceID("share1")
 		if actual != v.Expected {
 			t.Fatalf("Expected the Resource ID to be %q but got %q", v.Expected, actual)
 		}
@@ -62,7 +62,7 @@ func TestGetResourceManagerResourceID(t *testing.T) {
 	}
 	for _, v := range testData {
 		t.Logf("[DEBUG] Testing Environment %q", v.Environment.Name)
-		c := NewWithEnvironment(v.Environment)
+		c := NewWithEnvironment("account1", v.Environment)
 		actual := c.GetResourceManagerResourceID("11112222-3333-4444-5555-666677778888", "group1", "account1", "share1")
 		if actual != v.Expected {
 			t.Fatalf("Expected the Resource Manager Resource ID to be %q but got %q", v.Expected, actual)

@@ -32,29 +32,29 @@ func TestAppendBlobLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	containersClient := containers.NewWithEnvironment(client.AutoRestEnvironment)
+	containersClient := containers.NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	containersClient.Client = client.PrepareWithStorageResourceManagerAuth(containersClient.Client)
 
-	_, err = containersClient.Create(ctx, accountName, containerName, containers.CreateInput{})
+	_, err = containersClient.Create(ctx, containerName, containers.CreateInput{})
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
-	defer containersClient.Delete(ctx, accountName, containerName)
+	defer containersClient.Delete(ctx, containerName)
 
 	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
+	blobClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
 
 	t.Logf("[DEBUG] Putting Append Blob..")
-	if _, err := blobClient.PutAppendBlob(ctx, accountName, containerName, fileName, PutAppendBlobInput{}); err != nil {
+	if _, err := blobClient.PutAppendBlob(ctx, containerName, fileName, PutAppendBlobInput{}); err != nil {
 		t.Fatalf("Error putting append blob: %s", err)
 	}
 
 	t.Logf("[DEBUG] Retrieving Properties..")
-	props, err := blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	props, err := blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error retrieving properties: %s", err)
 	}
@@ -73,12 +73,12 @@ func TestAppendBlobLifecycle(t *testing.T) {
 			10,
 		},
 	}
-	if _, err := blobClient.AppendBlock(ctx, accountName, containerName, fileName, appendInput); err != nil {
+	if _, err := blobClient.AppendBlock(ctx, containerName, fileName, appendInput); err != nil {
 		t.Fatalf("Error appending first block: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-Retrieving Properties..")
-	props, err = blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	props, err = blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error retrieving properties: %s", err)
 	}
@@ -97,12 +97,12 @@ func TestAppendBlobLifecycle(t *testing.T) {
 			77,
 		},
 	}
-	if _, err := blobClient.AppendBlock(ctx, accountName, containerName, fileName, appendInput); err != nil {
+	if _, err := blobClient.AppendBlock(ctx, containerName, fileName, appendInput); err != nil {
 		t.Fatalf("Error appending Second block: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-Retrieving Properties..")
-	props, err = blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	props, err = blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error retrieving properties: %s", err)
 	}
@@ -111,7 +111,7 @@ func TestAppendBlobLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Acquiring Lease..")
-	leaseDetails, err := blobClient.AcquireLease(ctx, accountName, containerName, fileName, AcquireLeaseInput{
+	leaseDetails, err := blobClient.AcquireLease(ctx, containerName, fileName, AcquireLeaseInput{
 		LeaseDuration: -1,
 	})
 	if err != nil {
@@ -131,12 +131,12 @@ func TestAppendBlobLifecycle(t *testing.T) {
 		},
 		LeaseID: &leaseDetails.LeaseID,
 	}
-	if _, err := blobClient.AppendBlock(ctx, accountName, containerName, fileName, appendInput); err != nil {
+	if _, err := blobClient.AppendBlock(ctx, containerName, fileName, appendInput); err != nil {
 		t.Fatalf("Error appending Third block: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-Retrieving Properties..")
-	props, err = blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{
+	props, err = blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{
 		LeaseID: &leaseDetails.LeaseID,
 	})
 	if err != nil {
@@ -150,12 +150,12 @@ func TestAppendBlobLifecycle(t *testing.T) {
 	breakLeaseInput := BreakLeaseInput{
 		LeaseID: leaseDetails.LeaseID,
 	}
-	if _, err := blobClient.BreakLease(ctx, accountName, containerName, fileName, breakLeaseInput); err != nil {
+	if _, err := blobClient.BreakLease(ctx, containerName, fileName, breakLeaseInput); err != nil {
 		t.Fatalf("Error breaking lease: %s", err)
 	}
 
 	t.Logf("[DEBUG] Deleting Lease..")
-	if _, err := blobClient.Delete(ctx, accountName, containerName, fileName, DeleteInput{}); err != nil {
+	if _, err := blobClient.Delete(ctx, containerName, fileName, DeleteInput{}); err != nil {
 		t.Fatalf("Error deleting: %s", err)
 	}
 }

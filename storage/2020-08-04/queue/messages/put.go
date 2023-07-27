@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type PutInput struct {
@@ -30,10 +29,7 @@ type PutInput struct {
 }
 
 // Put adds a new message to the back of the message queue
-func (client Client) Put(ctx context.Context, accountName, queueName string, input PutInput) (result QueueMessagesListResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Put", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Put(ctx context.Context, queueName string, input PutInput) (result QueueMessagesListResult, err error) {
 	if queueName == "" {
 		return result, validation.NewError("messages.Client", "Put", "`queueName` cannot be an empty string.")
 	}
@@ -41,7 +37,7 @@ func (client Client) Put(ctx context.Context, accountName, queueName string, inp
 		return result, validation.NewError("messages.Client", "Put", "`queueName` must be a lower-cased string.")
 	}
 
-	req, err := client.PutPreparer(ctx, accountName, queueName, input)
+	req, err := client.PutPreparer(ctx, queueName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "messages.Client", "Put", nil, "Failure preparing request")
 		return
@@ -64,7 +60,7 @@ func (client Client) Put(ctx context.Context, accountName, queueName string, inp
 }
 
 // PutPreparer prepares the Put request.
-func (client Client) PutPreparer(ctx context.Context, accountName, queueName string, input PutInput) (*http.Request, error) {
+func (client Client) PutPreparer(ctx context.Context, queueName string, input PutInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 	}
@@ -90,7 +86,7 @@ func (client Client) PutPreparer(ctx context.Context, accountName, queueName str
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPost(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}/messages", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithXML(body),

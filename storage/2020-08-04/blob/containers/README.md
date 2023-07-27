@@ -36,7 +36,7 @@ func Example() error {
     createInput := containers.CreateInput{
         AccessLevel: containers.Private,
     }
-    if _, err := containersClient.Create(ctx, accountName, containerName, createInput); err != nil {
+    if _, err := containersClient.Create(ctx, containerName, createInput); err != nil {
         return fmt.Errorf("Error creating Container: %s", err)
     }
     

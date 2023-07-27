@@ -8,15 +8,11 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete removes the specified empty directory
 // Note that the directory must be empty before it can be deleted.
-func (client Client) Delete(ctx context.Context, accountName, shareName, path string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("directories.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, shareName, path string) (result autorest.Response, err error) {
 	if shareName == "" {
 		return result, validation.NewError("directories.Client", "Delete", "`shareName` cannot be an empty string.")
 	}
@@ -27,7 +23,7 @@ func (client Client) Delete(ctx context.Context, accountName, shareName, path st
 		return result, validation.NewError("directories.Client", "Delete", "`path` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, shareName, path)
+	req, err := client.DeletePreparer(ctx, shareName, path)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "directories.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -50,7 +46,7 @@ func (client Client) Delete(ctx context.Context, accountName, shareName, path st
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName, shareName, path string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, shareName, path string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 		"directory": autorest.Encode("path", path),
@@ -67,7 +63,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, shareName,
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

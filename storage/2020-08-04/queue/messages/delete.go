@@ -8,14 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete deletes a specific message
-func (client Client) Delete(ctx context.Context, accountName, queueName, messageID, popReceipt string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, queueName, messageID, popReceipt string) (result autorest.Response, err error) {
 	if queueName == "" {
 		return result, validation.NewError("messages.Client", "Delete", "`queueName` cannot be an empty string.")
 	}
@@ -29,7 +25,7 @@ func (client Client) Delete(ctx context.Context, accountName, queueName, message
 		return result, validation.NewError("messages.Client", "Delete", "`popReceipt` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, queueName, messageID, popReceipt)
+	req, err := client.DeletePreparer(ctx, queueName, messageID, popReceipt)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "messages.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -52,7 +48,7 @@ func (client Client) Delete(ctx context.Context, accountName, queueName, message
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName, queueName, messageID, popReceipt string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, queueName, messageID, popReceipt string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 		"messageID": autorest.Encode("path", messageID),
@@ -69,7 +65,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, queueName,
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}/messages/{messageID}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

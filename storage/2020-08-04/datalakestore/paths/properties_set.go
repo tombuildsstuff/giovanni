@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type SetAccessControlInput struct {
@@ -25,15 +24,12 @@ type SetAccessControlInput struct {
 }
 
 // SetProperties sets the access control properties for a Data Lake Store Gen2 Path within a Storage Account File System
-func (client Client) SetAccessControl(ctx context.Context, accountName string, fileSystemName string, path string, input SetAccessControlInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("datalakestore.Client", "SetAccessControl", "`accountName` cannot be an empty string.")
-	}
+func (client Client) SetAccessControl(ctx context.Context, fileSystemName string, path string, input SetAccessControlInput) (result autorest.Response, err error) {
 	if fileSystemName == "" {
 		return result, validation.NewError("datalakestore.Client", "SetAccessControl", "`fileSystemName` cannot be an empty string.")
 	}
 
-	req, err := client.SetAccessControlPreparer(ctx, accountName, fileSystemName, path, input)
+	req, err := client.SetAccessControlPreparer(ctx, fileSystemName, path, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "datalakestore.Client", "SetAccessControl", nil, "Failure preparing request")
 		return
@@ -55,7 +51,7 @@ func (client Client) SetAccessControl(ctx context.Context, accountName string, f
 }
 
 // SetAccessControlPreparer prepares the SetAccessControl request.
-func (client Client) SetAccessControlPreparer(ctx context.Context, accountName string, fileSystemName string, path string, input SetAccessControlInput) (*http.Request, error) {
+func (client Client) SetAccessControlPreparer(ctx context.Context, fileSystemName string, path string, input SetAccessControlInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"fileSystemName": autorest.Encode("path", fileSystemName),
 		"path":           autorest.Encode("path", path),
@@ -88,7 +84,7 @@ func (client Client) SetAccessControlPreparer(ctx context.Context, accountName s
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPatch(),
-		autorest.WithBaseURL(endpoints.GetOrBuildDataLakeStoreEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{fileSystemName}/{path}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

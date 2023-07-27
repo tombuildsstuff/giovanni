@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type DeleteInput struct {
@@ -22,10 +21,7 @@ type DeleteInput struct {
 }
 
 // Delete marks the specified blob or snapshot for deletion. The blob is later deleted during garbage collection.
-func (client Client) Delete(ctx context.Context, accountName, containerName, blobName string, input DeleteInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, containerName, blobName string, input DeleteInput) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "Delete", "`containerName` cannot be an empty string.")
 	}
@@ -36,7 +32,7 @@ func (client Client) Delete(ctx context.Context, accountName, containerName, blo
 		return result, validation.NewError("blobs.Client", "Delete", "`blobName` cannot be an empty string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, containerName, blobName, input)
+	req, err := client.DeletePreparer(ctx, containerName, blobName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -59,7 +55,7 @@ func (client Client) Delete(ctx context.Context, accountName, containerName, blo
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName, containerName, blobName string, input DeleteInput) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, containerName, blobName string, input DeleteInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -79,7 +75,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName, containerN
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

@@ -8,14 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // Delete deletes the specified Queue within the specified Storage Account
-func (client Client) Delete(ctx context.Context, accountName, queueName string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("queues.Client", "Delete", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Delete(ctx context.Context, queueName string) (result autorest.Response, err error) {
 	if queueName == "" {
 		return result, validation.NewError("queues.Client", "Delete", "`queueName` cannot be an empty string.")
 	}
@@ -23,7 +19,7 @@ func (client Client) Delete(ctx context.Context, accountName, queueName string) 
 		return result, validation.NewError("queues.Client", "Delete", "`queueName` must be a lower-cased string.")
 	}
 
-	req, err := client.DeletePreparer(ctx, accountName, queueName)
+	req, err := client.DeletePreparer(ctx, queueName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "queues.Client", "Delete", nil, "Failure preparing request")
 		return
@@ -46,7 +42,7 @@ func (client Client) Delete(ctx context.Context, accountName, queueName string) 
 }
 
 // DeletePreparer prepares the Delete request.
-func (client Client) DeletePreparer(ctx context.Context, accountName string, queueName string) (*http.Request, error) {
+func (client Client) DeletePreparer(ctx context.Context, queueName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"queueName": autorest.Encode("path", queueName),
 	}
@@ -58,7 +54,7 @@ func (client Client) DeletePreparer(ctx context.Context, accountName string, que
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsDelete(),
-		autorest.WithBaseURL(endpoints.GetOrBuildQueueEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{queueName}", pathParameters),
 		autorest.WithHeaders(headers))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))

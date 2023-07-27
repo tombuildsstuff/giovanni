@@ -36,17 +36,17 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	containersClient := NewWithEnvironment(client.AutoRestEnvironment)
+	containersClient := NewWithEnvironment(accountName, client.AutoRestEnvironment)
 	containersClient.Client = client.PrepareWithAuthorizer(containersClient.Client, storageAuth)
 
 	// first let's test an empty container
 	input := CreateInput{}
-	_, err = containersClient.Create(ctx, accountName, containerName, input)
+	_, err = containersClient.Create(ctx, containerName, input)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
-	container, err := containersClient.GetProperties(ctx, accountName, containerName)
+	container, err := containersClient.GetProperties(ctx, containerName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error retrieving: %s", err))
 	}
@@ -65,7 +65,7 @@ func TestContainerLifecycle(t *testing.T) {
 	metaData := map[string]string{
 		"dont": "kill-my-vibe",
 	}
-	_, err = containersClient.SetMetaData(ctx, accountName, containerName, metaData)
+	_, err = containersClient.SetMetaData(ctx, containerName, metaData)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error updating metadata: %s", err))
 	}
@@ -74,7 +74,7 @@ func TestContainerLifecycle(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// then assert that
-	container, err = containersClient.GetProperties(ctx, accountName, containerName)
+	container, err = containersClient.GetProperties(ctx, containerName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error re-retrieving: %s", err))
 	}
@@ -92,7 +92,7 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 
 	// then update the ACL
-	_, err = containersClient.SetAccessControl(ctx, accountName, containerName, Blob)
+	_, err = containersClient.SetAccessControl(ctx, containerName, Blob)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error updating ACL's: %s", err))
 	}
@@ -101,7 +101,7 @@ func TestContainerLifecycle(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// then assert that
-	container, err = containersClient.GetProperties(ctx, accountName, containerName)
+	container, err = containersClient.GetProperties(ctx, containerName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error re-retrieving: %s", err))
 	}
@@ -119,7 +119,7 @@ func TestContainerLifecycle(t *testing.T) {
 	acquireLeaseInput := AcquireLeaseInput{
 		LeaseDuration: 30,
 	}
-	acquireLeaseResp, err := containersClient.AcquireLease(ctx, accountName, containerName, acquireLeaseInput)
+	acquireLeaseResp, err := containersClient.AcquireLease(ctx, containerName, acquireLeaseInput)
 	if err != nil {
 		t.Fatalf("Error acquiring lease: %s", err)
 	}
@@ -131,13 +131,13 @@ func TestContainerLifecycle(t *testing.T) {
 		ExistingLeaseID: acquireLeaseResp.LeaseID,
 		ProposedLeaseID: "aaaabbbb-aaaa-bbbb-cccc-aaaabbbbcccc",
 	}
-	updateLeaseResp, err := containersClient.ChangeLease(ctx, accountName, containerName, updateLeaseInput)
+	updateLeaseResp, err := containersClient.ChangeLease(ctx, containerName, updateLeaseInput)
 	if err != nil {
 		t.Fatalf("Error changing lease: %s", err)
 	}
 
 	// then renew it
-	_, err = containersClient.RenewLease(ctx, accountName, containerName, updateLeaseResp.LeaseID)
+	_, err = containersClient.RenewLease(ctx, containerName, updateLeaseResp.LeaseID)
 	if err != nil {
 		t.Fatalf("Error renewing lease: %s", err)
 	}
@@ -148,7 +148,7 @@ func TestContainerLifecycle(t *testing.T) {
 		LeaseID:     updateLeaseResp.LeaseID,
 		BreakPeriod: &breakPeriod,
 	}
-	breakLeaseResp, err := containersClient.BreakLease(ctx, accountName, containerName, breakLeaseInput)
+	breakLeaseResp, err := containersClient.BreakLease(ctx, containerName, breakLeaseInput)
 	if err != nil {
 		t.Fatalf("Error breaking lease: %s", err)
 	}
@@ -157,14 +157,14 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 
 	// and finally ditch it
-	_, err = containersClient.ReleaseLease(ctx, accountName, containerName, updateLeaseResp.LeaseID)
+	_, err = containersClient.ReleaseLease(ctx, containerName, updateLeaseResp.LeaseID)
 	if err != nil {
 		t.Fatalf("Error releasing lease: %s", err)
 	}
 
 	t.Logf("[DEBUG] Listing blobs in the container..")
 	listInput := ListBlobsInput{}
-	listResult, err := containersClient.ListBlobs(ctx, accountName, containerName, listInput)
+	listResult, err := containersClient.ListBlobs(ctx, containerName, listInput)
 	if err != nil {
 		t.Fatalf("Error listing blobs: %s", err)
 	}
@@ -174,7 +174,7 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting..")
-	_, err = containersClient.Delete(ctx, accountName, containerName)
+	_, err = containersClient.Delete(ctx, containerName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error deleting: %s", err))
 	}

@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type ListRangesResult struct {
@@ -24,10 +23,7 @@ type Range struct {
 }
 
 // ListRanges returns the list of valid ranges for the specified File.
-func (client Client) ListRanges(ctx context.Context, accountName, shareName, path, fileName string) (result ListRangesResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("files.Client", "ListRanges", "`accountName` cannot be an empty string.")
-	}
+func (client Client) ListRanges(ctx context.Context, shareName, path, fileName string) (result ListRangesResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("files.Client", "ListRanges", "`shareName` cannot be an empty string.")
 	}
@@ -41,7 +37,7 @@ func (client Client) ListRanges(ctx context.Context, accountName, shareName, pat
 		return result, validation.NewError("files.Client", "ListRanges", "`fileName` cannot be an empty string.")
 	}
 
-	req, err := client.ListRangesPreparer(ctx, accountName, shareName, path, fileName)
+	req, err := client.ListRangesPreparer(ctx, shareName, path, fileName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "files.Client", "ListRanges", nil, "Failure preparing request")
 		return
@@ -64,7 +60,7 @@ func (client Client) ListRanges(ctx context.Context, accountName, shareName, pat
 }
 
 // ListRangesPreparer prepares the ListRanges request.
-func (client Client) ListRangesPreparer(ctx context.Context, accountName, shareName, path, fileName string) (*http.Request, error) {
+func (client Client) ListRangesPreparer(ctx context.Context, shareName, path, fileName string) (*http.Request, error) {
 	if path != "" {
 		path = fmt.Sprintf("%s/", path)
 	}
@@ -85,7 +81,7 @@ func (client Client) ListRangesPreparer(ctx context.Context, accountName, shareN
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}/{directory}{fileName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

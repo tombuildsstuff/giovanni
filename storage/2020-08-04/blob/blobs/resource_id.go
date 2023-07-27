@@ -10,9 +10,8 @@ import (
 
 // GetResourceID returns the Resource ID for the given Blob
 // This can be useful when, for example, you're using this as a unique identifier
-func (client Client) GetResourceID(accountName, containerName, blobName string) string {
-	domain := endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)
-	return fmt.Sprintf("%s/%s/%s", domain, containerName, blobName)
+func (client Client) GetResourceID(containerName, blobName string) string {
+	return fmt.Sprintf("%s/%s/%s", client.endpoint, containerName, blobName)
 }
 
 type ResourceID struct {

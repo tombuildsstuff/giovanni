@@ -30,7 +30,7 @@ func Example() error {
     tablesClient.Client.Authorizer = storageAuth
     
     ctx := context.TODO()
-    if _, err := tablesClient.Insert(ctx, accountName, tableName); err != nil {
+    if _, err := tablesClient.Insert(ctx, tableName); err != nil {
         return fmt.Errorf("Error creating Table: %s", err)
     }
     

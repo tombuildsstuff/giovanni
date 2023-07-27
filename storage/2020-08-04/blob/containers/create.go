@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
@@ -27,10 +26,7 @@ type CreateResponse struct {
 
 // Create creates a new container under the specified account.
 // If the container with the same name already exists, the operation fails.
-func (client Client) Create(ctx context.Context, accountName, containerName string, input CreateInput) (result CreateResponse, err error) {
-	if accountName == "" {
-		return result, validation.NewError("containers.Client", "Create", "`accountName` cannot be an empty string.")
-	}
+func (client Client) Create(ctx context.Context, containerName string, input CreateInput) (result CreateResponse, err error) {
 	if containerName == "" {
 		return result, validation.NewError("containers.Client", "Create", "`containerName` cannot be an empty string.")
 	}
@@ -38,7 +34,7 @@ func (client Client) Create(ctx context.Context, accountName, containerName stri
 		return result, validation.NewError("containers.Client", "Create", fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
-	req, err := client.CreatePreparer(ctx, accountName, containerName, input)
+	req, err := client.CreatePreparer(ctx, containerName, input)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "containers.Client", "Create", nil, "Failure preparing request")
 		return
@@ -61,7 +57,7 @@ func (client Client) Create(ctx context.Context, accountName, containerName stri
 }
 
 // CreatePreparer prepares the Create request.
-func (client Client) CreatePreparer(ctx context.Context, accountName string, containerName string, input CreateInput) (*http.Request, error) {
+func (client Client) CreatePreparer(ctx context.Context, containerName string, input CreateInput) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 	}
@@ -80,7 +76,7 @@ func (client Client) CreatePreparer(ctx context.Context, accountName string, con
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

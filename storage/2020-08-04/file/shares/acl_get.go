@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 type GetACLResult struct {
@@ -18,10 +17,7 @@ type GetACLResult struct {
 }
 
 // GetACL get the Access Control List for the specified Storage Share
-func (client Client) GetACL(ctx context.Context, accountName, shareName string) (result GetACLResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("shares.Client", "GetACL", "`accountName` cannot be an empty string.")
-	}
+func (client Client) GetACL(ctx context.Context, shareName string) (result GetACLResult, err error) {
 	if shareName == "" {
 		return result, validation.NewError("shares.Client", "GetACL", "`shareName` cannot be an empty string.")
 	}
@@ -29,7 +25,7 @@ func (client Client) GetACL(ctx context.Context, accountName, shareName string) 
 		return result, validation.NewError("shares.Client", "GetACL", "`shareName` must be a lower-cased string.")
 	}
 
-	req, err := client.GetACLPreparer(ctx, accountName, shareName)
+	req, err := client.GetACLPreparer(ctx, shareName)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "shares.Client", "GetACL", nil, "Failure preparing request")
 		return
@@ -52,7 +48,7 @@ func (client Client) GetACL(ctx context.Context, accountName, shareName string) 
 }
 
 // GetACLPreparer prepares the GetACL request.
-func (client Client) GetACLPreparer(ctx context.Context, accountName, shareName string) (*http.Request, error) {
+func (client Client) GetACLPreparer(ctx context.Context, shareName string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"shareName": autorest.Encode("path", shareName),
 	}
@@ -69,7 +65,7 @@ func (client Client) GetACLPreparer(ctx context.Context, accountName, shareName 
 	preparer := autorest.CreatePreparer(
 		autorest.AsContentType("application/xml; charset=utf-8"),
 		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetOrBuildFileEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{shareName}", pathParameters),
 		autorest.WithQueryParameters(queryParameters),
 		autorest.WithHeaders(headers))

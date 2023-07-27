@@ -8,14 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 )
 
 // ReleaseLease releases a lock based on the Lease ID.
-func (client Client) ReleaseLease(ctx context.Context, accountName, containerName, blobName, leaseID string) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("blobs.Client", "ReleaseLease", "`accountName` cannot be an empty string.")
-	}
+func (client Client) ReleaseLease(ctx context.Context, containerName, blobName, leaseID string) (result autorest.Response, err error) {
 	if containerName == "" {
 		return result, validation.NewError("blobs.Client", "ReleaseLease", "`containerName` cannot be an empty string.")
 	}
@@ -29,7 +25,7 @@ func (client Client) ReleaseLease(ctx context.Context, accountName, containerNam
 		return result, validation.NewError("blobs.Client", "ReleaseLease", "`leaseID` cannot be an empty string.")
 	}
 
-	req, err := client.ReleaseLeasePreparer(ctx, accountName, containerName, blobName, leaseID)
+	req, err := client.ReleaseLeasePreparer(ctx, containerName, blobName, leaseID)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "blobs.Client", "ReleaseLease", nil, "Failure preparing request")
 		return
@@ -52,7 +48,7 @@ func (client Client) ReleaseLease(ctx context.Context, accountName, containerNam
 }
 
 // ReleaseLeasePreparer prepares the ReleaseLease request.
-func (client Client) ReleaseLeasePreparer(ctx context.Context, accountName, containerName, blobName, leaseID string) (*http.Request, error) {
+func (client Client) ReleaseLeasePreparer(ctx context.Context, containerName, blobName, leaseID string) (*http.Request, error) {
 	pathParameters := map[string]interface{}{
 		"containerName": autorest.Encode("path", containerName),
 		"blobName":      autorest.Encode("path", blobName),
@@ -70,7 +66,7 @@ func (client Client) ReleaseLeasePreparer(ctx context.Context, accountName, cont
 
 	preparer := autorest.CreatePreparer(
 		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetOrBuildBlobEndpoint(client.endpoint, client.BaseURI, accountName)),
+		autorest.WithBaseURL(client.endpoint),
 		autorest.WithPathParameters("/{containerName}/{blobName}", pathParameters),
 		autorest.WithHeaders(headers),
 		autorest.WithQueryParameters(queryParameters))

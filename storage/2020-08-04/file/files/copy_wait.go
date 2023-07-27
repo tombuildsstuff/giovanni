@@ -18,8 +18,8 @@ type CopyAndWaitResult struct {
 const DefaultCopyPollDuration = 15 * time.Second
 
 // CopyAndWait is a convenience method which doesn't exist in the API, which copies the file and then waits for the copy to complete
-func (client Client) CopyAndWait(ctx context.Context, accountName, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (result CopyResult, err error) {
-	copy, e := client.Copy(ctx, accountName, shareName, path, fileName, input)
+func (client Client) CopyAndWait(ctx context.Context, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (result CopyResult, err error) {
+	copy, e := client.Copy(ctx, shareName, path, fileName, input)
 	if err != nil {
 		result.Response = copy.Response
 		err = fmt.Errorf("Error copying: %s", e)
@@ -30,7 +30,7 @@ func (client Client) CopyAndWait(ctx context.Context, accountName, shareName, pa
 
 	// since the API doesn't return a LRO, this is a hack which also polls every 10s, but should be sufficient
 	for true {
-		props, e := client.GetProperties(ctx, accountName, shareName, path, fileName)
+		props, e := client.GetProperties(ctx, shareName, path, fileName)
 		if e != nil {
 			result.Response = copy.Response
 			err = fmt.Errorf("Error waiting for copy: %s", e)
