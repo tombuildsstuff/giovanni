@@ -32,14 +32,25 @@ func TestPageBlobLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	containersClient := containers.NewWithEnvironment(client.AutoRestEnvironment)
-	containersClient.Client = client.PrepareWithStorageResourceManagerAuth(containersClient.Client)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
 
-	_, err = containersClient.Create(ctx, accountName, containerName, containers.CreateInput{})
+	containersClient, err := containers.NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", testData.StorageAccountName, *domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(containersClient.Client, testData); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
+
+	_, err = containersClient.Create(ctx, containerName, containers.CreateInput{})
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
-	defer containersClient.Delete(ctx, accountName, containerName)
+	defer containersClient.Delete(ctx, containerName)
 
 	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
 	if err != nil {
