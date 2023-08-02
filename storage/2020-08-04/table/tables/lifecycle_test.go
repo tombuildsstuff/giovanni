@@ -3,12 +3,12 @@ package tables
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/go-autorest/autorest"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -22,7 +22,7 @@ func TestTablesLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	tableName := fmt.Sprintf("table%d", testhelpers.RandomInt())

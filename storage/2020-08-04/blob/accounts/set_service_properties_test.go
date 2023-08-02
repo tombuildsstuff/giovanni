@@ -28,8 +28,15 @@ func TestContainerLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	accountsClient := NewWithEnvironment(client.AutoRestEnvironment)
-	accountsClient.Client = client.PrepareWithStorageResourceManagerAuth(accountsClient.Client)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
+	accountsClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", accountName, *domainSuffix))
+	if err != nil {
+		t.Fatal(fmt.Errorf("building client for environment: %+v", err))
+	}
+	client.PrepareWithResourceManagerAuth(accountsClient.Client)
 
 	input := StorageServiceProperties{}
 	_, err = accountsClient.SetServiceProperties(ctx, accountName, input)
@@ -72,12 +79,12 @@ func TestContainerLifecycle(t *testing.T) {
 		t.Fatal(fmt.Errorf("error getting properties: %s", err))
 	}
 
-	website := result.StorageServiceProperties.StaticWebsite
+	website := result.Model.StaticWebsite
 	if website.Enabled != true {
 		t.Fatalf("Expected the StaticWebsite %t but got %t", true, website.Enabled)
 	}
 
-	logging := result.StorageServiceProperties.Logging
+	logging := result.Model.Logging
 	if logging.Version != "2.0" {
 		t.Fatalf("Expected the Logging Version %s but got %s", "2.0", logging.Version)
 	}

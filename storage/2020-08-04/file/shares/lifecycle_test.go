@@ -337,7 +337,7 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	resourceGroup := fmt.Sprintf("acctestrg-%d", testhelpers.RandomInt())
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	shareName := fmt.Sprintf("share-%d", testhelpers.RandomInt())
