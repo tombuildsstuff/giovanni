@@ -23,12 +23,24 @@ func TestLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	fileSystemName := fmt.Sprintf("acctestfs-%s", testhelpers.RandomString())
 
-	if _, err = client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage); err != nil {
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage)
+	if err != nil {
 		t.Fatal(err)
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
-	fileSystemsClient := NewWithEnvironment(client.AutoRestEnvironment)
-	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
+
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
+	fileSystemsClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.%s.%s", accountName, "dfs", *domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(fileSystemsClient.Client, testData); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	t.Logf("[DEBUG] Creating an empty File System..")
 	input := CreateInput{
@@ -36,12 +48,12 @@ func TestLifecycle(t *testing.T) {
 			"hello": "aGVsbG8=",
 		},
 	}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, input); err != nil {
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, input); err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
 
 	t.Logf("[DEBUG] Retrieving the Properties..")
-	props, err := fileSystemsClient.GetProperties(ctx, accountName, fileSystemName)
+	props, err := fileSystemsClient.GetProperties(ctx, fileSystemName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties: %s", err))
 	}
@@ -60,12 +72,12 @@ func TestLifecycle(t *testing.T) {
 			"private": "ZXll",
 		},
 	}
-	if _, err := fileSystemsClient.SetProperties(ctx, accountName, fileSystemName, setInput); err != nil {
+	if _, err := fileSystemsClient.SetProperties(ctx, fileSystemName, setInput); err != nil {
 		t.Fatalf("Error setting properties: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-Retrieving the Properties..")
-	props, err = fileSystemsClient.GetProperties(ctx, accountName, fileSystemName)
+	props, err = fileSystemsClient.GetProperties(ctx, fileSystemName)
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error getting properties: %s", err))
 	}
@@ -80,7 +92,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting File System..")
-	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
+	if _, err := fileSystemsClient.Delete(ctx, fileSystemName); err != nil {
 		t.Fatalf("Error deleting: %s", err)
 	}
 }

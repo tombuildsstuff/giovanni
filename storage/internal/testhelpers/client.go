@@ -218,3 +218,12 @@ func (c Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest
 	input.SkipResourceProviderRegistration = true
 	return input
 }
+
+func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources) error {
+	auth, err := auth.NewSharedKeyAuthorizer(data.StorageAccountName, data.StorageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
+	input.WithAuthorizer(auth)
+	return nil
+}
