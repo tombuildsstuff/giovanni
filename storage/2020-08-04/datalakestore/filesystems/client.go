@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/client/dataplane/storage"
 )
 
-// Client is the base client for Blob Storage Blobs.
+// Client is the base client for Data Lake Store Filesystems.
 type Client struct {
 	Client *storage.BaseClient
 }

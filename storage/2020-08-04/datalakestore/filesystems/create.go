@@ -45,15 +45,15 @@ func (c Client) Create(ctx context.Context, fileSystemName string, input CreateI
 
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
-		return resp, err
+		return
 	}
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
-		return resp, err
+		return
 	}
 
-	return resp, nil
+	return
 }
 
 type createOptions struct {

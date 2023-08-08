@@ -25,36 +25,57 @@ func TestCreateDirectory(t *testing.T) {
 	fileSystemName := fmt.Sprintf("acctestfs-%s", testhelpers.RandomString())
 	path := "test"
 
-	if _, err = client.BuildTestResourcesWithHns(ctx, resourceGroup, accountName, storage.KindBlobStorage); err != nil {
+	testData, err := client.BuildTestResourcesWithHns(ctx, resourceGroup, accountName, storage.KindBlobStorage)
+	if err != nil {
 		t.Fatal(err)
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	fileSystemsClient := filesystems.NewWithEnvironment(client.AutoRestEnvironment)
-	fileSystemsClient.Client = client.PrepareWithStorageResourceManagerAuth(fileSystemsClient.Client)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
+
+	baseUri := fmt.Sprintf("https://%s.%s.%s", accountName, "dfs", *domainSuffix)
+
+	fileSystemsClient, err := filesystems.NewWithBaseUri(baseUri)
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(fileSystemsClient.Client, testData); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	t.Logf("[DEBUG] Creating an empty File System..")
 	fileSystemInput := filesystems.CreateInput{
 		Properties: map[string]string{},
 	}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, fileSystemInput); err != nil {
-		t.Fatal(fmt.Errorf("Error creating: %s", err))
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, fileSystemInput); err != nil {
+		t.Fatal(fmt.Errorf("error creating: %s", err))
 	}
 
 	t.Logf("[DEBUG] Creating path..")
-	pathsClient := NewWithEnvironment(client.AutoRestEnvironment)
-	pathsClient.Client = client.PrepareWithStorageResourceManagerAuth(pathsClient.Client)
+
+	pathsClient, err := NewWithBaseUri(baseUri)
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(pathsClient.Client, testData); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	input := CreateInput{
 		Resource: PathResourceDirectory,
 	}
 
-	if _, err = pathsClient.Create(ctx, accountName, fileSystemName, path, input); err != nil {
-		t.Fatal(fmt.Errorf("Error creating path: %s", err))
+	if _, err = pathsClient.Create(ctx, fileSystemName, path, input); err != nil {
+		t.Fatal(fmt.Errorf("error creating path: %s", err))
 	}
 
 	t.Logf("[DEBUG] Deleting File System..")
-	if _, err := fileSystemsClient.Delete(ctx, accountName, fileSystemName); err != nil {
+	if _, err := fileSystemsClient.Delete(ctx, fileSystemName); err != nil {
 		t.Fatalf("Error deleting: %s", err)
 	}
 }
