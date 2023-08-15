@@ -2,23 +2,20 @@ package shares
 
 import (
 	"context"
-
-	"github.com/Azure/go-autorest/autorest"
 )
 
 type StorageShare interface {
-	SetACL(ctx context.Context, accountName, shareName string, acls []SignedIdentifier) (result autorest.Response, err error)
-	GetSnapshot(ctx context.Context, accountName, shareName, snapshotShare string) (result GetSnapshotPropertiesResult, err error)
-	GetStats(ctx context.Context, accountName, shareName string) (result GetStatsResult, err error)
-	GetACL(ctx context.Context, accountName, shareName string) (result GetACLResult, err error)
-	SetMetaData(ctx context.Context, accountName, shareName string, metaData map[string]string) (result autorest.Response, err error)
-	GetMetaData(ctx context.Context, accountName, shareName string) (result GetMetaDataResult, err error)
-	SetProperties(ctx context.Context, accountName, shareName string, properties ShareProperties) (result autorest.Response, err error)
-	DeleteSnapshot(ctx context.Context, accountName, shareName string, shareSnapshot string) (result autorest.Response, err error)
-	CreateSnapshot(ctx context.Context, accountName, shareName string, input CreateSnapshotInput) (result CreateSnapshotResult, err error)
-	GetResourceID(accountName, shareName string) string
+	SetACL(ctx context.Context, shareName string, input SignedIdentifiers) (resp setAclResponse, err error)
+	GetSnapshot(ctx context.Context, shareName string, input GetSnapshotPropertiesInput) (resp GetSnapshotPropertiesResponse, err error)
+	GetStats(ctx context.Context, shareName string) (resp GetStatsResponse, err error)
+	GetACL(ctx context.Context, shareName string) (resp GetACLResult, err error)
+	SetMetaData(ctx context.Context, shareName string, input SetMetaDataInput) (resp SetMetaDataResponse, err error)
+	GetMetaData(ctx context.Context, shareName string) (resp GetMetaDataResponse, err error)
+	SetProperties(ctx context.Context, shareName string, properties ShareProperties) (resp SetPropertiesResponse, err error)
+	DeleteSnapshot(ctx context.Context, accountName string, shareName string, shareSnapshot string) (resp DeleteSnapshotResponse, err error)
+	CreateSnapshot(ctx context.Context, shareName string, input CreateSnapshotInput) (resp CreateSnapshotResponse, err error)
 	GetResourceManagerResourceID(subscriptionID, resourceGroup, accountName, shareName string) string
-	GetProperties(ctx context.Context, accountName, shareName string) (result GetPropertiesResult, err error)
-	Delete(ctx context.Context, accountName, shareName string, deleteSnapshots bool) (result autorest.Response, err error)
-	Create(ctx context.Context, accountName, shareName string, input CreateInput) (result autorest.Response, err error)
+	GetProperties(ctx context.Context, shareName string) (resp GetPropertiesResult, err error)
+	Delete(ctx context.Context, shareName string, input DeleteInput) (resp DeleteResponse, err error)
+	Create(ctx context.Context, shareName string, input CreateInput) (resp CreateResponse, err error)
 }
