@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -47,24 +46,28 @@ func testPutFile(t *testing.T, fileName string, contentType string) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
-	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+	sharesClient, err := shares.NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	input := shares.CreateInput{
 		QuotaInGB: 10,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, shares.DeleteInput{DeleteSnapshots: false})
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
+	filesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(filesClient.Client, testData); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	// store files outside of this directory, since they're reused
 	file, err := os.Open("../../../testdata/" + fileName)
@@ -82,17 +85,17 @@ func testPutFile(t *testing.T, fileName string, contentType string) {
 		ContentLength: info.Size(),
 		ContentType:   &contentType,
 	}
-	if _, err := filesClient.Create(ctx, accountName, shareName, "", fileName, createFileInput); err != nil {
+	if _, err := filesClient.Create(ctx, shareName, "", fileName, createFileInput); err != nil {
 		t.Fatalf("Error creating Top-Level File: %s", err)
 	}
 
 	t.Logf("[DEBUG] Uploading File..")
-	if err := filesClient.PutFile(ctx, accountName, shareName, "", fileName, file, 4); err != nil {
+	if err := filesClient.PutFile(ctx, shareName, "", fileName, file, 4); err != nil {
 		t.Fatalf("Error uploading File: %s", err)
 	}
 
 	t.Logf("[DEBUG] Deleting Top Level File..")
-	if _, err := filesClient.Delete(ctx, accountName, shareName, "", fileName); err != nil {
+	if _, err := filesClient.Delete(ctx, shareName, "", fileName); err != nil {
 		t.Fatalf("Error deleting Top-Level File: %s", err)
 	}
 }

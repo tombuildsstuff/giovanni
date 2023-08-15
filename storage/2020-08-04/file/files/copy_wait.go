@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
 )
 
 type CopyAndWaitResult struct {
-	autorest.Response
+	HttpResponse *client.Response
 
 	CopyID string
 }
@@ -18,22 +18,22 @@ type CopyAndWaitResult struct {
 const DefaultCopyPollDuration = 15 * time.Second
 
 // CopyAndWait is a convenience method which doesn't exist in the API, which copies the file and then waits for the copy to complete
-func (client Client) CopyAndWait(ctx context.Context, accountName, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (result CopyResult, err error) {
-	copy, e := client.Copy(ctx, accountName, shareName, path, fileName, input)
+func (c Client) CopyAndWait(ctx context.Context, accountName, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (resp CopyResponse, err error) {
+	copy, e := c.Copy(ctx, shareName, path, fileName, input)
 	if err != nil {
-		result.Response = copy.Response
-		err = fmt.Errorf("Error copying: %s", e)
+		resp.HttpResponse = copy.HttpResponse
+		err = fmt.Errorf("error copying: %s", e)
 		return
 	}
 
-	result.CopyID = copy.CopyID
+	resp.CopyID = copy.CopyID
 
 	// since the API doesn't return a LRO, this is a hack which also polls every 10s, but should be sufficient
 	for true {
-		props, e := client.GetProperties(ctx, accountName, shareName, path, fileName)
+		props, e := c.GetProperties(ctx, shareName, path, fileName)
 		if e != nil {
-			result.Response = copy.Response
-			err = fmt.Errorf("Error waiting for copy: %s", e)
+			resp.HttpResponse = copy.HttpResponse
+			err = fmt.Errorf("error waiting for copy: %s", e)
 			return
 		}
 
