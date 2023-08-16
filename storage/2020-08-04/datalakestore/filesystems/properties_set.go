@@ -80,8 +80,6 @@ func (o setPropertiesOptions) ToHeaders() *client.Headers {
 		headers.Append("x-ms-properties", props)
 	}
 
-	return headers
-
 	if o.ifModifiedSince != nil {
 		headers.Append("If-Modified-Since", *o.ifModifiedSince)
 	}

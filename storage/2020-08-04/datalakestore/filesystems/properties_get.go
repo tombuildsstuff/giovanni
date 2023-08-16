@@ -61,7 +61,7 @@ func (c Client) GetProperties(ctx context.Context, fileSystemName string) (resp 
 		}
 
 		resp.Properties = *properties
-		resp.NamespaceEnabled = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-namespace-enabled"), "tru")
+		resp.NamespaceEnabled = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-namespace-enabled"), "true")
 
 	}
 	return

@@ -25,7 +25,7 @@ func (c Client) Delete(ctx context.Context, fileSystemName string, path string) 
 			http.StatusOK,
 		},
 		HttpMethod:    http.MethodDelete,
-		OptionsObject: pathOptions{},
+		OptionsObject: nil,
 		Path:          fmt.Sprintf("/%s/%s", fileSystemName, path),
 	}
 	req, err := c.Client.NewRequest(ctx, opts)
