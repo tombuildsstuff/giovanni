@@ -1,13 +1,15 @@
 package messages
 
-import "github.com/Azure/go-autorest/autorest"
+import (
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+)
 
 type QueueMessage struct {
 	MessageText string `xml:"MessageText"`
 }
 
-type QueueMessagesListResult struct {
-	autorest.Response
+type QueueMessagesListResponse struct {
+	HttpResponse *client.Response
 
 	QueueMessages *[]QueueMessageResponse `xml:"QueueMessage"`
 }

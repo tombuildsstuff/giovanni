@@ -2,13 +2,13 @@ package messages
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type PutInput struct {
@@ -30,91 +30,77 @@ type PutInput struct {
 }
 
 // Put adds a new message to the back of the message queue
-func (client Client) Put(ctx context.Context, accountName, queueName string, input PutInput) (result QueueMessagesListResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Put", "`accountName` cannot be an empty string.")
-	}
+func (c Client) Put(ctx context.Context, queueName string, input PutInput) (resp QueueMessagesListResponse, err error) {
 	if queueName == "" {
-		return result, validation.NewError("messages.Client", "Put", "`queueName` cannot be an empty string.")
+		return resp, fmt.Errorf("`queueName` cannot be an empty string")
 	}
+
 	if strings.ToLower(queueName) != queueName {
-		return result, validation.NewError("messages.Client", "Put", "`queueName` must be a lower-cased string.")
+		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
-	req, err := client.PutPreparer(ctx, accountName, queueName, input)
+	opts := client.RequestOptions{
+		ContentType: "application/xml; charset=utf-8",
+		ExpectedStatusCodes: []int{
+			http.StatusCreated,
+		},
+		HttpMethod: http.MethodPost,
+		OptionsObject: putOptions{
+			input: input,
+		},
+		Path: fmt.Sprintf("%s/messages", queueName),
+	}
+
+	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Put", nil, "Failure preparing request")
+		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
 
-	resp, err := client.PutSender(req)
-	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "messages.Client", "Put", resp, "Failure sending request")
-		return
-	}
-
-	result, err = client.PutResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Put", resp, "Failure responding to request")
-		return
-	}
-
-	return
-}
-
-// PutPreparer prepares the Put request.
-func (client Client) PutPreparer(ctx context.Context, accountName, queueName string, input PutInput) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"queueName": autorest.Encode("path", queueName),
-	}
-
-	queryParameters := map[string]interface{}{}
-
-	if input.MessageTtl != nil {
-		queryParameters["messagettl"] = autorest.Encode("path", *input.MessageTtl)
-	}
-
-	if input.VisibilityTimeout != nil {
-		queryParameters["visibilitytimeout"] = autorest.Encode("path", *input.VisibilityTimeout)
-	}
-
-	headers := map[string]interface{}{
-		"x-ms-version": APIVersion,
-	}
-
-	body := QueueMessage{
+	err = req.Marshal(QueueMessage{
 		MessageText: input.Message,
+	})
+	if err != nil {
+		return resp, fmt.Errorf("marshalling request: %v", err)
 	}
 
-	preparer := autorest.CreatePreparer(
-		autorest.AsContentType("application/xml; charset=utf-8"),
-		autorest.AsPost(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
-		autorest.WithPathParameters("/{queueName}/messages", pathParameters),
-		autorest.WithQueryParameters(queryParameters),
-		autorest.WithXML(body),
-		autorest.WithHeaders(headers))
-	return preparer.Prepare((&http.Request{}).WithContext(ctx))
-}
+	resp.HttpResponse, err = req.Execute(ctx)
+	if err != nil {
+		err = fmt.Errorf("executing request: %+v", err)
+		return
+	}
 
-// PutSender sends the Put request. The method will close the
-// http.Response Body if it receives an error.
-func (client Client) PutSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
-}
-
-// PutResponder handles the response to the Put request. The method always
-// closes the http.Response Body.
-func (client Client) PutResponder(resp *http.Response) (result QueueMessagesListResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		autorest.ByUnmarshallingXML(&result),
-		azure.WithErrorUnlessStatusCode(http.StatusCreated),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
+	if resp.HttpResponse != nil {
+		if err = resp.HttpResponse.Unmarshal(&resp.QueueMessages); err != nil {
+			return resp, fmt.Errorf("unmarshalling response: %+v", err)
+		}
+	}
 
 	return
+}
+
+type putOptions struct {
+	input PutInput
+}
+
+func (p putOptions) ToHeaders() *client.Headers {
+	return nil
+}
+
+func (p putOptions) ToOData() *odata.Query {
+	return nil
+}
+
+func (p putOptions) ToQuery() *client.QueryParams {
+	out := &client.QueryParams{}
+
+	if p.input.MessageTtl != nil {
+		out.Append("messagettl", strconv.Itoa(*p.input.MessageTtl))
+	}
+
+	if p.input.VisibilityTimeout != nil {
+		out.Append("visibilitytimeout", strconv.Itoa(*p.input.VisibilityTimeout))
+	}
+
+	return out
 }

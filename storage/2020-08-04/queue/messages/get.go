@@ -2,111 +2,99 @@ package messages
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type GetInput struct {
 	// VisibilityTimeout specifies the new visibility timeout value, in seconds, relative to server time.
 	// The new value must be larger than or equal to 0, and cannot be larger than 7 days.
 	VisibilityTimeout *int
+
+	numberOfMessages int
+}
+
+type GetResponse struct {
+	HttpResponse *client.Response
 }
 
 // Get retrieves one or more messages from the front of the queue
-func (client Client) Get(ctx context.Context, accountName, queueName string, numberOfMessages int, input GetInput) (result QueueMessagesListResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Get", "`accountName` cannot be an empty string.")
-	}
+func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp QueueMessagesListResponse, err error) {
 	if queueName == "" {
-		return result, validation.NewError("messages.Client", "Get", "`queueName` cannot be an empty string.")
+		return resp, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 	if strings.ToLower(queueName) != queueName {
-		return result, validation.NewError("messages.Client", "Get", "`queueName` must be a lower-cased string.")
+		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
-	if numberOfMessages < 1 || numberOfMessages > 32 {
-		return result, validation.NewError("messages.Client", "Get", "`numberOfMessages` must be between 1 and 32.")
+	if input.numberOfMessages < 1 || input.numberOfMessages > 32 {
+		return resp, fmt.Errorf("`input.numberOfMessages` must be between 1 and 32")
 	}
 	if input.VisibilityTimeout != nil {
 		t := *input.VisibilityTimeout
 		maxTime := (time.Hour * 24 * 7).Seconds()
 		if t < 1 || t < int(maxTime) {
-			return result, validation.NewError("messages.Client", "Get", "`input.VisibilityTimeout` must be larger than or equal to 1 second, and cannot be larger than 7 days.")
+			return resp, fmt.Errorf("`input.VisibilityTimeout` must be larger than or equal to 1 second, and cannot be larger than 7 days")
 		}
 	}
 
-	req, err := client.GetPreparer(ctx, accountName, queueName, numberOfMessages, input)
+	opts := client.RequestOptions{
+		ContentType: "application/xml; charset=utf-8",
+		ExpectedStatusCodes: []int{
+			http.StatusOK,
+		},
+		HttpMethod: http.MethodGet,
+		OptionsObject: getOptions{
+			visibilityTimeout: input.VisibilityTimeout,
+			numberOfMessages:  input.numberOfMessages,
+		},
+		Path: fmt.Sprintf("%s/messages", queueName),
+	}
+
+	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Get", nil, "Failure preparing request")
+		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
 
-	resp, err := client.GetSender(req)
+	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "messages.Client", "Get", resp, "Failure sending request")
+		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	result, err = client.GetResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Get", resp, "Failure responding to request")
-		return
+	if resp.HttpResponse != nil {
+		if err = resp.HttpResponse.Unmarshal(&resp.QueueMessages); err != nil {
+			return resp, fmt.Errorf("unmarshalling response: %+v", err)
+		}
 	}
 
 	return
 }
 
-// GetPreparer prepares the Get request.
-func (client Client) GetPreparer(ctx context.Context, accountName, queueName string, numberOfMessages int, input GetInput) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"queueName": autorest.Encode("path", queueName),
-	}
-
-	queryParameters := map[string]interface{}{
-		"numofmessages": autorest.Encode("query", numberOfMessages),
-	}
-
-	if input.VisibilityTimeout != nil {
-		queryParameters["visibilitytimeout"] = autorest.Encode("query", *input.VisibilityTimeout)
-	}
-
-	headers := map[string]interface{}{
-		"x-ms-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsContentType("application/xml; charset=utf-8"),
-		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
-		autorest.WithPathParameters("/{queueName}/messages", pathParameters),
-		autorest.WithQueryParameters(queryParameters),
-		autorest.WithHeaders(headers))
-	return preparer.Prepare((&http.Request{}).WithContext(ctx))
+type getOptions struct {
+	visibilityTimeout *int
+	numberOfMessages  int
 }
 
-// GetSender sends the Get request. The method will close the
-// http.Response Body if it receives an error.
-func (client Client) GetSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+func (g getOptions) ToHeaders() *client.Headers {
+	return nil
 }
 
-// GetResponder handles the response to the Get request. The method always
-// closes the http.Response Body.
-func (client Client) GetResponder(resp *http.Response) (result QueueMessagesListResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		autorest.ByUnmarshallingXML(&result),
-		azure.WithErrorUnlessStatusCode(http.StatusOK),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
+func (g getOptions) ToOData() *odata.Query {
+	return nil
+}
 
-	return
+func (g getOptions) ToQuery() *client.QueryParams {
+	out := &client.QueryParams{}
+	if g.visibilityTimeout != nil {
+		out.Append("visibilitytimeout", strconv.Itoa(*g.visibilityTimeout))
+	}
+	out.Append("numofmessages", strconv.Itoa(g.numberOfMessages))
+	return out
 }
