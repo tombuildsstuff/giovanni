@@ -219,12 +219,11 @@ func (c Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest
 	return input
 }
 
-func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources) error {
-	auth, err := auth.NewSharedKeyAuthorizer(data.StorageAccountName, data.StorageAccountKey, auth.SharedKey)
+func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources, keyType auth.SharedKeyType) error {
+	auth, err := auth.NewSharedKeyAuthorizer(data.StorageAccountName, data.StorageAccountKey, keyType)
 	if err != nil {
 		return fmt.Errorf("building SharedKey authorizer: %+v", err)
 	}
 	input.WithAuthorizer(auth)
 	return nil
-
 }

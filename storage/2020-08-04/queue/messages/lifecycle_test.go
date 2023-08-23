@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/queue/queues"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -41,7 +42,7 @@ func TestLifeCycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
-	if err := client.PrepareWithSharedKeyAuth(queuesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(queuesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
@@ -50,7 +51,7 @@ func TestLifeCycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
-	if err := client.PrepareWithSharedKeyAuth(messagesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(messagesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
