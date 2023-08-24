@@ -7,8 +7,8 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/validation v0.3.1
 	github.com/google/uuid v1.1.1
-	github.com/hashicorp/go-azure-helpers v0.57.0
-	github.com/hashicorp/go-azure-sdk v0.20230802.1072231
+	github.com/hashicorp/go-azure-helpers v0.59.0
+	github.com/hashicorp/go-azure-sdk v0.20230824.1094135
 	github.com/stretchr/testify v1.8.2
 )
 
