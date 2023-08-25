@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/table/tables"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -33,21 +33,33 @@ func TestEntitiesLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLiteForTable)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	tablesClient := tables.NewWithEnvironment(client.AutoRestEnvironment)
-	tablesClient.Client = client.PrepareWithAuthorizer(tablesClient.Client, storageAuth)
+	tablesClient, err := tables.NewWithBaseUri(fmt.Sprintf("https://%s.%s.%s", accountName, "table", *domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(tablesClient.Client, testData, auth.SharedKeyTable); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	t.Logf("[DEBUG] Creating Table..")
-	if _, err := tablesClient.Create(ctx, accountName, tableName); err != nil {
+	if _, err := tablesClient.Create(ctx, tableName); err != nil {
 		t.Fatalf("Error creating Table %q: %s", tableName, err)
 	}
-	defer tablesClient.Delete(ctx, accountName, tableName)
+	defer tablesClient.Delete(ctx, tableName)
 
-	entitiesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	entitiesClient.Client = client.PrepareWithAuthorizer(entitiesClient.Client, storageAuth)
+	entitiesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.%s.%s", accountName, "table", *domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(entitiesClient.Client, testData, auth.SharedKeyTable); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	partitionKey := "hello"
 	rowKey := "there"
@@ -61,7 +73,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 			"hello": "world",
 		},
 	}
-	if _, err := entitiesClient.Insert(ctx, accountName, tableName, insertInput); err != nil {
+	if _, err := entitiesClient.Insert(ctx, tableName, insertInput); err != nil {
 		t.Logf("Error retrieving: %s", err)
 	}
 
@@ -73,7 +85,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 			"hello": "ther88e",
 		},
 	}
-	if _, err := entitiesClient.InsertOrMerge(ctx, accountName, tableName, insertOrMergeInput); err != nil {
+	if _, err := entitiesClient.InsertOrMerge(ctx, tableName, insertOrMergeInput); err != nil {
 		t.Logf("Error insert/merging: %s", err)
 	}
 
@@ -85,7 +97,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 			"hello": "pandas",
 		},
 	}
-	if _, err := entitiesClient.InsertOrReplace(ctx, accountName, tableName, insertOrReplaceInput); err != nil {
+	if _, err := entitiesClient.InsertOrReplace(ctx, tableName, insertOrReplaceInput); err != nil {
 		t.Logf("Error inserting/replacing: %s", err)
 	}
 
@@ -93,7 +105,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 	queryInput := QueryEntitiesInput{
 		MetaDataLevel: NoMetaData,
 	}
-	results, err := entitiesClient.Query(ctx, accountName, tableName, queryInput)
+	results, err := entitiesClient.Query(ctx, tableName, queryInput)
 	if err != nil {
 		t.Logf("Error querying: %s", err)
 	}
@@ -119,7 +131,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 		PartitionKey:  partitionKey,
 		RowKey:        rowKey,
 	}
-	getResults, err := entitiesClient.Get(ctx, accountName, tableName, getInput)
+	getResults, err := entitiesClient.Get(ctx, tableName, getInput)
 	if err != nil {
 		t.Logf("Error querying: %s", err)
 	}
@@ -138,7 +150,7 @@ func TestEntitiesLifecycle(t *testing.T) {
 		PartitionKey: partitionKey,
 		RowKey:       rowKey,
 	}
-	if _, err := entitiesClient.Delete(ctx, accountName, tableName, deleteInput); err != nil {
+	if _, err := entitiesClient.Delete(ctx, tableName, deleteInput); err != nil {
 		t.Logf("Error deleting: %s", err)
 	}
 }
