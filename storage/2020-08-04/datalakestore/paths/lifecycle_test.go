@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/datalakestore/filesystems"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -43,7 +44,7 @@ func TestLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building client for environment: %+v", err)
 	}
-	if err := client.PrepareWithSharedKeyAuth(fileSystemsClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(fileSystemsClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
@@ -51,7 +52,7 @@ func TestLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building client for environment: %+v", err)
 	}
-	if err := client.PrepareWithSharedKeyAuth(pathsClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(pathsClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
