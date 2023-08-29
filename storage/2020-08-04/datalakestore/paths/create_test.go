@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/giovanni/storage/2020-08-04/datalakestore/filesystems"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/datalakestore/filesystems"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
