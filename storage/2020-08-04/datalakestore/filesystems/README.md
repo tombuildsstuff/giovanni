@@ -15,11 +15,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-    "time"
 	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
-    "github.com/Azure/go-autorest/autorest/azure"
     "github.com/hashicorp/go-azure-helpers/authentication"
     "github.com/hashicorp/go-azure-helpers/sender"
     "github.com/tombuildsstuff/giovanni/storage/2020-08-04/datalakestore/filesystems"
@@ -67,15 +63,14 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("Error retrieving Authorization Token")
 	}
-
-   
-    fileSystemsClient := filesystems.NewWithEnvironment(env)
-	fileSystemsClient.Client.Authorizer = storageAuth
+	
+    fileSystemsClient, err := filesystems.NewWithBaseUri(fmt.Sprintf("https://%s.dfs.core.windows.net", accountName))
+	fileSystemsClient.Client.WithAuthorizer(storageAuth)
 
 	input := filesystems.CreateInput{
 		Properties: map[string]string{},
 	}
-	if _, err = fileSystemsClient.Create(ctx, accountName, fileSystemName, input); err != nil {
+	if _, err = fileSystemsClient.Create(ctx, fileSystemName, input); err != nil {
 		return fmt.Errorf("Error creating: %s", err)
 	}
 	
