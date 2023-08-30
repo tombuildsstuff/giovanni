@@ -1,13 +1,10 @@
 package shares
 
 import (
-	"bytes"
 	"context"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
@@ -16,18 +13,16 @@ import (
 
 type setAclResponse struct {
 	HttpResponse *client.Response
+}
 
+type SetAclInput struct {
 	SignedIdentifiers []SignedIdentifier `xml:"SignedIdentifier"`
 
 	XMLName xml.Name `xml:"SignedIdentifiers"`
 }
 
-type SignedIdentifiers struct {
-	SignedIdentifiers []SignedIdentifier `xml:"SignedIdentifier"`
-}
-
 // SetACL sets the specified Access Control List on the specified Storage Share
-func (c Client) SetACL(ctx context.Context, shareName string, input SignedIdentifiers) (resp setAclResponse, err error) {
+func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput) (resp setAclResponse, err error) {
 
 	if shareName == "" {
 		return resp, fmt.Errorf("`shareName` cannot be an empty string")
@@ -52,15 +47,10 @@ func (c Client) SetACL(ctx context.Context, shareName string, input SignedIdenti
 		return
 	}
 
-	b, err := xml.Marshal(&input)
+	err = req.Marshal(&input)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling ACLs xml: %v", err)
+		return resp, fmt.Errorf("marshalling request: %v", err)
 	}
-	withHeader := xml.Header + string(b)
-	bytesWithHeader := []byte(withHeader)
-	req.ContentLength = int64(len(bytesWithHeader))
-	req.Header.Set("Content-Length", strconv.Itoa(len(bytesWithHeader)))
-	req.Body = io.NopCloser(bytes.NewReader(bytesWithHeader))
 
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {

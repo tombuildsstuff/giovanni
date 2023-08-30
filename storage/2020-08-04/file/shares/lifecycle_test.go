@@ -161,7 +161,7 @@ func TestSharesLifecycle(t *testing.T) {
 			},
 		},
 	}
-	_, err = sharesClient.SetACL(ctx, shareName, SignedIdentifiers{SignedIdentifiers: updatedAcls})
+	_, err = sharesClient.SetACL(ctx, shareName, SetAclInput{SignedIdentifiers: updatedAcls})
 	if err != nil {
 		t.Fatalf("Error setting ACL's: %s", err)
 	}
@@ -315,7 +315,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 			},
 		},
 	}
-	_, err = sharesClient.SetACL(ctx, shareName, SignedIdentifiers{SignedIdentifiers: updatedAcls})
+	_, err = sharesClient.SetACL(ctx, shareName, SetAclInput{SignedIdentifiers: updatedAcls})
 	if err != nil {
 		t.Fatalf("Error setting ACL's: %s", err)
 	}
