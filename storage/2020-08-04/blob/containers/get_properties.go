@@ -3,11 +3,11 @@ package containers
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-azure-sdk/sdk/client"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"net/http"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
