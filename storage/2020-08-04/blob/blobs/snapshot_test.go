@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -54,12 +53,14 @@ func TestSnapshotLifecycle(t *testing.T) {
 	}
 	defer containersClient.Delete(ctx, containerName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
+	blobClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", testData.StorageAccountName, *domainSuffix))
 	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+		t.Fatalf("building client for environment: %+v", err)
 	}
-	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
-	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
+
+	if err := client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	t.Logf("[DEBUG] Copying file to Blob Storage..")
 	copyInput := CopyInput{
@@ -67,12 +68,12 @@ func TestSnapshotLifecycle(t *testing.T) {
 	}
 
 	refreshInterval := 5 * time.Second
-	if err := blobClient.CopyAndWait(ctx, accountName, containerName, fileName, copyInput, refreshInterval); err != nil {
+	if err := blobClient.CopyAndWait(ctx, containerName, fileName, copyInput, refreshInterval); err != nil {
 		t.Fatalf("Error copying: %s", err)
 	}
 
 	t.Logf("[DEBUG] First Snapshot..")
-	firstSnapshot, err := blobClient.Snapshot(ctx, accountName, containerName, fileName, SnapshotInput{})
+	firstSnapshot, err := blobClient.Snapshot(ctx, containerName, fileName, SnapshotInput{})
 	if err != nil {
 		t.Fatalf("Error taking first snapshot: %s", err)
 	}
@@ -82,7 +83,7 @@ func TestSnapshotLifecycle(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	t.Logf("[DEBUG] Second Snapshot..")
-	secondSnapshot, err := blobClient.Snapshot(ctx, accountName, containerName, fileName, SnapshotInput{
+	secondSnapshot, err := blobClient.Snapshot(ctx, containerName, fileName, SnapshotInput{
 		MetaData: map[string]string{
 			"hello": "world",
 		},
@@ -93,7 +94,7 @@ func TestSnapshotLifecycle(t *testing.T) {
 	t.Logf("[DEBUG] Second Snapshot ID: %q", secondSnapshot.SnapshotDateTime)
 
 	t.Logf("[DEBUG] Leasing the Blob..")
-	leaseDetails, err := blobClient.AcquireLease(ctx, accountName, containerName, fileName, AcquireLeaseInput{
+	leaseDetails, err := blobClient.AcquireLease(ctx, containerName, fileName, AcquireLeaseInput{
 		// infinite
 		LeaseDuration: -1,
 	})
@@ -103,7 +104,7 @@ func TestSnapshotLifecycle(t *testing.T) {
 	t.Logf("[DEBUG] Lease ID: %q", leaseDetails.LeaseID)
 
 	t.Logf("[DEBUG] Third Snapshot..")
-	thirdSnapshot, err := blobClient.Snapshot(ctx, accountName, containerName, fileName, SnapshotInput{
+	thirdSnapshot, err := blobClient.Snapshot(ctx, containerName, fileName, SnapshotInput{
 		LeaseID: &leaseDetails.LeaseID,
 	})
 	if err != nil {
@@ -112,35 +113,35 @@ func TestSnapshotLifecycle(t *testing.T) {
 	t.Logf("[DEBUG] Third Snapshot ID: %q", thirdSnapshot.SnapshotDateTime)
 
 	t.Logf("[DEBUG] Releasing Lease..")
-	if _, err := blobClient.ReleaseLease(ctx, accountName, containerName, fileName, leaseDetails.LeaseID); err != nil {
+	if _, err := blobClient.ReleaseLease(ctx, containerName, fileName, ReleaseLeaseInput{leaseDetails.LeaseID}); err != nil {
 		t.Fatalf("Error releasing Lease: %s", err)
 	}
 
 	// get the properties from the blob, which should include the LastModifiedDate
 	t.Logf("[DEBUG] Retrieving Properties for Blob")
-	props, err := blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	props, err := blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error getting properties: %s", err)
 	}
 
 	// confirm that the If-Modified-None returns an error
 	t.Logf("[DEBUG] Third Snapshot..")
-	fourthSnapshot, err := blobClient.Snapshot(ctx, accountName, containerName, fileName, SnapshotInput{
+	fourthSnapshot, err := blobClient.Snapshot(ctx, containerName, fileName, SnapshotInput{
 		LeaseID:         &leaseDetails.LeaseID,
 		IfModifiedSince: &props.LastModified,
 	})
 	if err == nil {
 		t.Fatalf("Expected an error but didn't get one")
 	}
-	if fourthSnapshot.Response.StatusCode != http.StatusPreconditionFailed {
-		t.Fatalf("Expected the status code to be Precondition Failed but got: %d", fourthSnapshot.Response.StatusCode)
+	if fourthSnapshot.HttpResponse.StatusCode != http.StatusPreconditionFailed {
+		t.Fatalf("Expected the status code to be Precondition Failed but got: %d", fourthSnapshot.HttpResponse.StatusCode)
 	}
 
 	t.Logf("[DEBUG] Retrieving the Second Snapshot Properties..")
 	getSecondSnapshotInput := GetSnapshotPropertiesInput{
 		SnapshotID: secondSnapshot.SnapshotDateTime,
 	}
-	if _, err := blobClient.GetSnapshotProperties(ctx, accountName, containerName, fileName, getSecondSnapshotInput); err != nil {
+	if _, err := blobClient.GetSnapshotProperties(ctx, containerName, fileName, getSecondSnapshotInput); err != nil {
 		t.Fatalf("Error retrieving properties for the second snapshot: %s", err)
 	}
 
@@ -148,21 +149,21 @@ func TestSnapshotLifecycle(t *testing.T) {
 	deleteSnapshotInput := DeleteSnapshotInput{
 		SnapshotDateTime: secondSnapshot.SnapshotDateTime,
 	}
-	if _, err := blobClient.DeleteSnapshot(ctx, accountName, containerName, fileName, deleteSnapshotInput); err != nil {
+	if _, err := blobClient.DeleteSnapshot(ctx, containerName, fileName, deleteSnapshotInput); err != nil {
 		t.Fatalf("Error deleting snapshot: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-Retrieving the Second Snapshot Properties..")
-	secondSnapshotProps, err := blobClient.GetSnapshotProperties(ctx, accountName, containerName, fileName, getSecondSnapshotInput)
+	secondSnapshotProps, err := blobClient.GetSnapshotProperties(ctx, containerName, fileName, getSecondSnapshotInput)
 	if err == nil {
 		t.Fatalf("Expected an error retrieving the snapshot but got none")
 	}
-	if secondSnapshotProps.Response.StatusCode != http.StatusNotFound {
-		t.Fatalf("Expected the status code to be %d but got %q", http.StatusNoContent, secondSnapshotProps.Response.StatusCode)
+	if secondSnapshotProps.HttpResponse.StatusCode != http.StatusNotFound {
+		t.Fatalf("Expected the status code to be %d but got %q", http.StatusNoContent, secondSnapshotProps.HttpResponse.StatusCode)
 	}
 
 	t.Logf("[DEBUG] Deleting all the snapshots..")
-	if _, err := blobClient.DeleteSnapshots(ctx, accountName, containerName, fileName, DeleteSnapshotsInput{}); err != nil {
+	if _, err := blobClient.DeleteSnapshots(ctx, containerName, fileName, DeleteSnapshotsInput{}); err != nil {
 		t.Fatalf("Error deleting snapshots: %s", err)
 	}
 
@@ -170,7 +171,7 @@ func TestSnapshotLifecycle(t *testing.T) {
 	deleteInput := DeleteInput{
 		DeleteSnapshots: false,
 	}
-	if _, err := blobClient.Delete(ctx, accountName, containerName, fileName, deleteInput); err != nil {
+	if _, err := blobClient.Delete(ctx, containerName, fileName, deleteInput); err != nil {
 		t.Fatalf("Error deleting Blob: %s", err)
 	}
 }

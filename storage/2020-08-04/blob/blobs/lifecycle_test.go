@@ -56,12 +56,23 @@ func TestLifecycle(t *testing.T) {
 
 	_, err = containersClient.Create(ctx, containerName, containers.CreateInput{})
 	if err != nil {
-		t.Fatal(fmt.Errorf("Error creating: %s", err))
+		t.Fatal(fmt.Errorf("error creating: %s", err))
 	}
 	defer containersClient.Delete(ctx, containerName)
 
-	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
-	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
+
+	blobClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", testData.StorageAccountName, *domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	t.Logf("[DEBUG] Copying file to Blob Storage..")
 	copyInput := CopyInput{
@@ -69,12 +80,12 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	refreshInterval := 5 * time.Second
-	if err := blobClient.CopyAndWait(ctx, accountName, containerName, fileName, copyInput, refreshInterval); err != nil {
+	if err := blobClient.CopyAndWait(ctx, containerName, fileName, copyInput, refreshInterval); err != nil {
 		t.Fatalf("Error copying: %s", err)
 	}
 
 	t.Logf("[DEBUG] Retrieving Blob Properties..")
-	details, err := blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	details, err := blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error retrieving properties: %s", err)
 	}
@@ -109,12 +120,12 @@ func TestLifecycle(t *testing.T) {
 			"hello": "there",
 		},
 	}
-	if _, err := blobClient.SetMetaData(ctx, accountName, containerName, fileName, metaDataInput); err != nil {
+	if _, err := blobClient.SetMetaData(ctx, containerName, fileName, metaDataInput); err != nil {
 		t.Fatalf("Error setting MetaData: %s", err)
 	}
 
 	t.Logf("[DEBUG] Re-retrieving Blob Properties..")
-	details, err = blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	details, err = blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error re-retrieving properties: %s", err)
 	}
@@ -137,7 +148,7 @@ func TestLifecycle(t *testing.T) {
 	getBlockListInput := GetBlockListInput{
 		BlockListType: All,
 	}
-	blockList, err := blobClient.GetBlockList(ctx, accountName, containerName, fileName, getBlockListInput)
+	blockList, err := blobClient.GetBlockList(ctx, containerName, fileName, getBlockListInput)
 	if err != nil {
 		t.Fatalf("Error retrieving Block List: %s", err)
 	}
@@ -158,12 +169,12 @@ func TestLifecycle(t *testing.T) {
 	}
 	for _, tier := range tiers {
 		t.Logf("[DEBUG] Updating the Access Tier to %q..", string(tier))
-		if _, err := blobClient.SetTier(ctx, accountName, containerName, fileName, tier); err != nil {
+		if _, err := blobClient.SetTier(ctx, containerName, fileName, SetTierInput{Tier: tier}); err != nil {
 			t.Fatalf("Error setting the Access Tier: %s", err)
 		}
 
 		t.Logf("[DEBUG] Re-retrieving Blob Properties..")
-		details, err = blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+		details, err = blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 		if err != nil {
 			t.Fatalf("Error re-retrieving properties: %s", err)
 		}
@@ -174,7 +185,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Deleting Blob")
-	if _, err := blobClient.Delete(ctx, accountName, containerName, fileName, DeleteInput{}); err != nil {
+	if _, err := blobClient.Delete(ctx, containerName, fileName, DeleteInput{}); err != nil {
 		t.Fatalf("Error deleting Blob: %s", err)
 	}
 }
