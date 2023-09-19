@@ -3,9 +3,10 @@ package containers
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"net/http"
 )
 
 type SetAccessControlInput struct {
