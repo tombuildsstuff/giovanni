@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -42,7 +43,7 @@ func TestPageBlobLifecycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
-	if err := client.PrepareWithSharedKeyAuth(containersClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(containersClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
