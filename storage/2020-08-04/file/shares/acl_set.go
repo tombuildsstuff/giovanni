@@ -1,10 +1,13 @@
 package shares
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
@@ -27,6 +30,7 @@ func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput)
 	if shareName == "" {
 		return resp, fmt.Errorf("`shareName` cannot be an empty string")
 	}
+
 	if strings.ToLower(shareName) != shareName {
 		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
 	}
@@ -47,10 +51,15 @@ func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput)
 		return
 	}
 
-	err = req.Marshal(&input)
+	b, err := xml.Marshal(&input)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		return resp, fmt.Errorf("marshalling input: %v", err)
 	}
+	withHeader := xml.Header + string(b)
+	bytesWithHeader := []byte(withHeader)
+	req.ContentLength = int64(len(bytesWithHeader))
+	req.Header.Set("Content-Length", strconv.Itoa(len(bytesWithHeader)))
+	req.Body = io.NopCloser(bytes.NewReader(bytesWithHeader))
 
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {

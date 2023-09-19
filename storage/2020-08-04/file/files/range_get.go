@@ -58,7 +58,6 @@ func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName stri
 	}
 
 	opts := client.RequestOptions{
-		ContentType: "application/octet-stream",
 		ExpectedStatusCodes: []int{
 			http.StatusOK,
 			http.StatusPartialContent,

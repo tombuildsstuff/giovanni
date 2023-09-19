@@ -63,7 +63,6 @@ func (c Client) PutByteRange(ctx context.Context, shareName, path, fileName stri
 	}
 
 	opts := client.RequestOptions{
-		ContentType: "application/octet-stream",
 		ExpectedStatusCodes: []int{
 			http.StatusCreated,
 		},
@@ -81,7 +80,9 @@ func (c Client) PutByteRange(ctx context.Context, shareName, path, fileName stri
 	}
 
 	req.Body = io.NopCloser(bytes.NewReader(input.Content))
+	req.ContentLength = int64(len(input.Content))
 
+	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
