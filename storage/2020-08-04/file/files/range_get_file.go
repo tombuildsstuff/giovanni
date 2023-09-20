@@ -33,7 +33,7 @@ func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, i
 	}
 
 	if file.ContentLength == nil {
-		err = fmt.Errorf("content-Length was nil")
+		err = fmt.Errorf("Content-Length was nil")
 		return
 	}
 

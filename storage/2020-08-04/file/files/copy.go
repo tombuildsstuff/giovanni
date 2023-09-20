@@ -78,7 +78,6 @@ func (c Client) Copy(ctx context.Context, shareName, path, fileName string, inpu
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
