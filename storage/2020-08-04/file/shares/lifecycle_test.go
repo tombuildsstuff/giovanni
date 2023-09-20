@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -36,7 +37,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
 	sharesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
-	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
@@ -204,7 +205,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
 	sharesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
-	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
@@ -358,7 +359,7 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
 	sharesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
-	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 

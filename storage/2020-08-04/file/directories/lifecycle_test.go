@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -38,12 +39,12 @@ func TestDirectoriesLifeCycle(t *testing.T) {
 		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
 	sharesClient, err := shares.NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
-	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
 	directoriesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
-	if err := client.PrepareWithSharedKeyAuth(directoriesClient.Client, testData); err != nil {
+	if err := client.PrepareWithSharedKeyAuth(directoriesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
