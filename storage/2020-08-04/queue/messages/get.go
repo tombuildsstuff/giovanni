@@ -69,7 +69,7 @@ func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp
 	}
 
 	if resp.HttpResponse != nil {
-		if err = resp.HttpResponse.Unmarshal(&resp.QueueMessages); err != nil {
+		if err = resp.HttpResponse.Unmarshal(&resp); err != nil {
 			return resp, fmt.Errorf("unmarshalling response: %+v", err)
 		}
 	}

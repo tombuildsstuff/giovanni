@@ -1,9 +1,13 @@
 package queues
 
 import (
+	"bytes"
 	"context"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -36,10 +40,14 @@ func (c Client) SetServiceProperties(ctx context.Context, input SetStorageServic
 		return
 	}
 
-	err = req.Marshal(&input.properties)
+	marshalledProps, err := xml.Marshal(&input.properties)
 	if err != nil {
 		return resp, fmt.Errorf("marshalling request: %v", err)
 	}
+	body := xml.Header + string(marshalledProps)
+	req.Body = io.NopCloser(bytes.NewReader([]byte(body)))
+	req.ContentLength = int64(len(body))
+	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {

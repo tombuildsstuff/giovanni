@@ -1,8 +1,11 @@
 package messages
 
 import (
+	"bytes"
 	"context"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -46,9 +49,9 @@ func (c Client) Update(ctx context.Context, queueName string, messageID string, 
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",
 		ExpectedStatusCodes: []int{
-			http.StatusCreated,
+			http.StatusNoContent,
 		},
-		HttpMethod: http.MethodPost,
+		HttpMethod: http.MethodPut,
 		OptionsObject: updateOptions{
 			input: input,
 		},
@@ -61,12 +64,17 @@ func (c Client) Update(ctx context.Context, queueName string, messageID string, 
 		return
 	}
 
-	err = req.Marshal(QueueMessage{
+	marshalledMsg, err := xml.Marshal(QueueMessage{
 		MessageText: input.Message,
 	})
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %+v", err)
+		return resp, fmt.Errorf("marshalling request: %v", err)
 	}
+
+	body := xml.Header + string(marshalledMsg)
+	req.Body = io.NopCloser(bytes.NewReader([]byte(body)))
+	req.ContentLength = int64(len(body))
+	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {

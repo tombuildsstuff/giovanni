@@ -55,7 +55,7 @@ func (c Client) Peek(ctx context.Context, queueName string, input PeekInput) (re
 	}
 
 	if resp.HttpResponse != nil {
-		if err = resp.HttpResponse.Unmarshal(&resp.QueueMessages); err != nil {
+		if err = resp.HttpResponse.Unmarshal(&resp); err != nil {
 			return resp, fmt.Errorf("unmarshalling response: %+v", err)
 		}
 	}
