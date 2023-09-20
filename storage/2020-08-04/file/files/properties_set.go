@@ -158,7 +158,7 @@ func (s SetPropertiesOptions) ToHeaders() *client.Headers {
 	}
 
 	if len(s.input.MetaData) > 0 {
-		headers.Merge(metadata.SetIntoHeaders(s.input.MetaData))
+		headers.Merge(metadata.SetMetaDataHeaders(s.input.MetaData))
 	}
 
 	return headers

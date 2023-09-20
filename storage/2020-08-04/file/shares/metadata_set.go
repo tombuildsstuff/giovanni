@@ -66,7 +66,7 @@ type SetMetaDataOptions struct {
 }
 
 func (s SetMetaDataOptions) ToHeaders() *client.Headers {
-	headers := metadata.SetIntoHeaders(s.metaData)
+	headers := metadata.SetMetaDataHeaders(s.metaData)
 	return &headers
 }
 

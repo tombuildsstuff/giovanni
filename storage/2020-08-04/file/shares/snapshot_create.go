@@ -78,7 +78,7 @@ type snapShotCreateOptions struct {
 }
 
 func (s snapShotCreateOptions) ToHeaders() *client.Headers {
-	headers := metadata.SetIntoHeaders(s.metaData)
+	headers := metadata.SetMetaDataHeaders(s.metaData)
 	return &headers
 }
 

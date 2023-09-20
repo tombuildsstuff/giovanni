@@ -85,7 +85,7 @@ func (c CreateOptions) ToHeaders() *client.Headers {
 	headers := &client.Headers{}
 
 	if len(c.input.MetaData) > 0 {
-		headers.Merge(metadata.SetIntoHeaders(c.input.MetaData))
+		headers.Merge(metadata.SetMetaDataHeaders(c.input.MetaData))
 	}
 
 	var coalesceDate = func(input *time.Time, defaultVal string) string {

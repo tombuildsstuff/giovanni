@@ -73,7 +73,7 @@ func (s SetMetaDataOptions) ToHeaders() *client.Headers {
 	headers := &client.Headers{}
 
 	if len(s.metaData) > 0 {
-		headers.Merge(metadata.SetIntoHeaders(s.metaData))
+		headers.Merge(metadata.SetMetaDataHeaders(s.metaData))
 	}
 	return headers
 }

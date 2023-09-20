@@ -102,7 +102,7 @@ type CopyOptions struct {
 func (c CopyOptions) ToHeaders() *client.Headers {
 	headers := &client.Headers{}
 	if len(c.input.MetaData) > 0 {
-		headers.Merge(metadata.SetIntoHeaders(c.input.MetaData))
+		headers.Merge(metadata.SetMetaDataHeaders(c.input.MetaData))
 	}
 	headers.Append("x-ms-copy-source", c.input.CopySource)
 	return headers
