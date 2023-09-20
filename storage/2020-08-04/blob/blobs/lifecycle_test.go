@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -38,14 +39,26 @@ func TestLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
 	}
-	containersClient := containers.NewWithEnvironment(client.AutoRestEnvironment)
-	containersClient.Client = client.PrepareWithAuthorizer(containersClient.Client, storageAuth)
 
-	_, err = containersClient.Create(ctx, accountName, containerName, containers.CreateInput{})
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
+	}
+
+	containersClient, err := containers.NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", testData.StorageAccountName, *domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+
+	if err := client.PrepareWithSharedKeyAuth(containersClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
+
+	_, err = containersClient.Create(ctx, containerName, containers.CreateInput{})
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error creating: %s", err))
 	}
-	defer containersClient.Delete(ctx, accountName, containerName)
+	defer containersClient.Delete(ctx, containerName)
 
 	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
 	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
@@ -79,13 +92,15 @@ func TestLifecycle(t *testing.T) {
 
 	t.Logf("[DEBUG] Checking it's returned in the List API..")
 	listInput := containers.ListBlobsInput{}
-	listResult, err := containersClient.ListBlobs(ctx, accountName, containerName, listInput)
+	listResult, err := containersClient.ListBlobs(ctx, containerName, listInput)
 	if err != nil {
 		t.Fatalf("Error listing blobs: %s", err)
 	}
 
-	if len(listResult.Blobs.Blobs) != 1 {
-		t.Fatalf("Expected there to be 1 blob in the container but got %d", len(listResult.Blobs.Blobs))
+	if model := listResult.Model; model != nil {
+		if len(model.Blobs.Blobs) != 1 {
+			t.Fatalf("Expected there to be 1 blob in the container but got %d", len(model.Blobs.Blobs))
+		}
 	}
 
 	t.Logf("[DEBUG] Setting MetaData..")
