@@ -69,7 +69,7 @@ func (c createOptions) ToHeaders() *client.Headers {
 	headers := &client.Headers{}
 
 	if len(c.metadata) > 0 {
-		headers.Merge(metadata.SetIntoHeaders(c.metadata))
+		headers.Merge(metadata.SetMetaDataHeaders(c.metadata))
 	}
 	return headers
 }

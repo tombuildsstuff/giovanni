@@ -5,11 +5,11 @@ import (
 )
 
 type StorageQueue interface {
-	Delete(ctx context.Context, queueName string) (resp DeleteResponse, err error)
-	GetMetaData(ctx context.Context, queueName string) (resp GetMetaDataResponse, err error)
-	SetMetaData(ctx context.Context, queueName string, input SetMetaDataInput) (resp SetMetaDataResponse, err error)
-	Create(ctx context.Context, queueName string, input CreateInput) (resp CreateResponse, err error)
+	Delete(ctx context.Context, queueName string) (DeleteResponse, error)
+	GetMetaData(ctx context.Context, queueName string) (GetMetaDataResponse, error)
+	SetMetaData(ctx context.Context, queueName string, input SetMetaDataInput) (SetMetaDataResponse, error)
+	Create(ctx context.Context, queueName string, input CreateInput) (CreateResponse, error)
 	GetResourceManagerID(subscriptionID, resourceGroup, accountName, queueName string) string
-	SetServiceProperties(ctx context.Context, input SetStorageServicePropertiesInput) (resp SetStorageServicePropertiesResponse, err error)
-	GetServiceProperties(ctx context.Context) (resp StorageServicePropertiesResponse, err error)
+	SetServiceProperties(ctx context.Context, input SetStorageServicePropertiesInput) (SetStorageServicePropertiesResponse, error)
+	GetServiceProperties(ctx context.Context) (StorageServicePropertiesResponse, error)
 }
