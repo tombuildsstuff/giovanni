@@ -42,7 +42,7 @@ type PageRange struct {
 }
 
 // GetPageRanges returns the list of valid page ranges for a page blob or snapshot of a page blob.
-func (c Client) GetPageRanges(ctx context.Context, accountName, containerName, blobName string, input GetPageRangesInput) (resp GetPageRangesResponse, err error) {
+func (c Client) GetPageRanges(ctx context.Context, containerName, blobName string, input GetPageRangesInput) (resp GetPageRangesResponse, err error) {
 
 	if containerName == "" {
 		return resp, fmt.Errorf("`containerName` cannot be an empty string")
