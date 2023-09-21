@@ -5,20 +5,12 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/hashicorp/go-azure-sdk/sdk/client"
 )
-
-type CopyAndWaitResult struct {
-	HttpResponse *client.Response
-
-	CopyID string
-}
 
 const DefaultCopyPollDuration = 15 * time.Second
 
 // CopyAndWait is a convenience method which doesn't exist in the API, which copies the file and then waits for the copy to complete
-func (c Client) CopyAndWait(ctx context.Context, accountName, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (resp CopyResponse, err error) {
+func (c Client) CopyAndWait(ctx context.Context, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (resp CopyResponse, err error) {
 	copy, e := c.Copy(ctx, shareName, path, fileName, input)
 	if err != nil {
 		resp.HttpResponse = copy.HttpResponse
