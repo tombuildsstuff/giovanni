@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
-type setAclResponse struct {
+type SetAclResponse struct {
 	HttpResponse *client.Response
 }
 
@@ -25,7 +25,7 @@ type SetAclInput struct {
 }
 
 // SetACL sets the specified Access Control List on the specified Storage Share
-func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput) (resp setAclResponse, err error) {
+func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput) (resp SetAclResponse, err error) {
 
 	if shareName == "" {
 		return resp, fmt.Errorf("`shareName` cannot be an empty string")

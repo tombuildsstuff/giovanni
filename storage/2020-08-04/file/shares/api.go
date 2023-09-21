@@ -5,7 +5,7 @@ import (
 )
 
 type StorageShare interface {
-	SetACL(ctx context.Context, shareName string, input SetAclInput) (setAclResponse, error)
+	SetACL(ctx context.Context, shareName string, input SetAclInput) (SetAclResponse, error)
 	GetSnapshot(ctx context.Context, shareName string, input GetSnapshotPropertiesInput) (GetSnapshotPropertiesResponse, error)
 	GetStats(ctx context.Context, shareName string) (GetStatsResponse, error)
 	GetACL(ctx context.Context, shareName string) (GetACLResult, error)
