@@ -58,7 +58,7 @@ func (c Client) AcquireLease(ctx context.Context, containerName, blobName string
 
 	opts := client.RequestOptions{
 		ExpectedStatusCodes: []int{
-			http.StatusAccepted,
+			http.StatusCreated,
 		},
 		HttpMethod: http.MethodPut,
 		OptionsObject: acquireLeaseOptions{

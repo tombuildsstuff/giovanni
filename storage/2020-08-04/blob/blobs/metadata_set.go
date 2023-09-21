@@ -78,7 +78,7 @@ func (s setMetadataOptions) ToHeaders() *client.Headers {
 	if s.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *s.input.LeaseID)
 	}
-	headers.Merge(metadata.SetIntoHeaders(s.input.MetaData))
+	headers.Merge(metadata.SetMetaDataHeaders(s.input.MetaData))
 	return headers
 }
 

@@ -129,7 +129,7 @@ func (s snapshotOptions) ToHeaders() *client.Headers {
 		headers.Append("If-None-Match", *s.input.IfNoneMatch)
 	}
 
-	headers.Merge(metadata.SetIntoHeaders(s.input.MetaData))
+	headers.Merge(metadata.SetMetaDataHeaders(s.input.MetaData))
 	return headers
 }
 

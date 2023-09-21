@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -35,11 +34,6 @@ func TestLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
-	}
-
 	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
 	if !ok {
 		t.Fatalf("storage didn't return a domain suffix for this environment")
@@ -59,11 +53,6 @@ func TestLifecycle(t *testing.T) {
 		t.Fatal(fmt.Errorf("error creating: %s", err))
 	}
 	defer containersClient.Delete(ctx, containerName)
-
-	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
-	if !ok {
-		t.Fatalf("storage didn't return a domain suffix for this environment")
-	}
 
 	blobClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", testData.StorageAccountName, *domainSuffix))
 	if err != nil {

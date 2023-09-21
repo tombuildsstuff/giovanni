@@ -116,7 +116,7 @@ func (p putBlockBlobOptions) ToHeaders() *client.Headers {
 		headers.Append("Content-Length", strconv.Itoa(len(*p.input.Content)))
 	}
 
-	headers.Merge(metadata.SetIntoHeaders(p.input.MetaData))
+	headers.Merge(metadata.SetMetaDataHeaders(p.input.MetaData))
 
 	return headers
 }

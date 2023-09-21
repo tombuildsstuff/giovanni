@@ -57,6 +57,10 @@ func TestAppendBlobLifecycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
+	if err := client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
+
 	t.Logf("[DEBUG] Putting Append Blob..")
 	if _, err := blobClient.PutAppendBlob(ctx, containerName, fileName, PutAppendBlobInput{}); err != nil {
 		t.Fatalf("Error putting append blob: %s", err)

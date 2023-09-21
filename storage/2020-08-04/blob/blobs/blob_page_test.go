@@ -57,6 +57,10 @@ func TestPageBlobLifecycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
+	if err := client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
+
 	t.Logf("[DEBUG] Putting Page Blob..")
 	fileSize := int64(10240000)
 	if _, err := blobClient.PutPageBlob(ctx, containerName, fileName, PutPageBlobInput{

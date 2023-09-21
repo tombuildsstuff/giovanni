@@ -126,7 +126,7 @@ func (p putBlockListOptions) ToHeaders() *client.Headers {
 		headers.Append("x-ms-lease-id", *p.input.LeaseID)
 	}
 
-	headers.Merge(metadata.SetIntoHeaders(p.input.MetaData))
+	headers.Merge(metadata.SetMetaDataHeaders(p.input.MetaData))
 
 	return headers
 }

@@ -216,7 +216,7 @@ func (c copyOptions) ToHeaders() *client.Headers {
 		headers.Append("x-ms-source-if-unmodified-since", *c.input.SourceIfUnmodifiedSince)
 	}
 
-	headers.Merge(metadata.SetIntoHeaders(c.input.MetaData))
+	headers.Merge(metadata.SetMetaDataHeaders(c.input.MetaData))
 
 	return headers
 }

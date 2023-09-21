@@ -1,8 +1,10 @@
 package blobs
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -89,6 +91,12 @@ func (c Client) AppendBlock(ctx context.Context, containerName, blobName string,
 		return
 	}
 
+	if input.Content != nil {
+		req.Body = io.NopCloser(bytes.NewReader(*input.Content))
+	}
+
+	req.ContentLength = int64(len(*input.Content))
+
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
@@ -136,7 +144,7 @@ func (a appendBlockOptions) ToHeaders() *client.Headers {
 		headers.Append("x-ms-lease-id", *a.input.LeaseID)
 	}
 	if a.input.Content != nil {
-		headers.Append("Content-Length", string(len(*a.input.Content)))
+		headers.Append("Content-Length", strconv.Itoa(len(*a.input.Content)))
 	}
 	return headers
 }
