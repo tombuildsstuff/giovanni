@@ -84,7 +84,7 @@ func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName stri
 	if resp.HttpResponse != nil {
 		bytes, err := io.ReadAll(resp.HttpResponse.Body)
 		if err != nil {
-			return resp, fmt.Errorf("reading response body")
+			return resp, fmt.Errorf("reading response body: %v", err)
 		}
 		resp.Contents = bytes
 	}
