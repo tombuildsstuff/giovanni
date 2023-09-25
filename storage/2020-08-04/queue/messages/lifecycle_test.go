@@ -91,7 +91,7 @@ func TestLifeCycle(t *testing.T) {
 		}
 	}
 
-	peakedMessages, err := messagesClient.Peek(ctx, queueName, PeekInput{numberOfMessages: 3})
+	peakedMessages, err := messagesClient.Peek(ctx, queueName, PeekInput{NumberOfMessages: 3})
 	if err != nil {
 		t.Fatalf("Error peaking messages: %s", err)
 	}
@@ -100,7 +100,7 @@ func TestLifeCycle(t *testing.T) {
 		t.Logf("Message: %q", v.MessageId)
 	}
 
-	retrievedMessages, err := messagesClient.Get(ctx, queueName, GetInput{numberOfMessages: 6})
+	retrievedMessages, err := messagesClient.Get(ctx, queueName, GetInput{NumberOfMessages: 6})
 	if err != nil {
 		t.Fatalf("Error retrieving messages: %s", err)
 	}
@@ -108,7 +108,7 @@ func TestLifeCycle(t *testing.T) {
 	for _, v := range *retrievedMessages.QueueMessages {
 		t.Logf("Message: %q", v.MessageId)
 
-		_, err = messagesClient.Delete(ctx, queueName, v.MessageId, DeleteInput{popReceipt: v.PopReceipt})
+		_, err = messagesClient.Delete(ctx, queueName, v.MessageId, DeleteInput{PopReceipt: v.PopReceipt})
 		if err != nil {
 			t.Fatalf("Error deleting message from queue: %s", err)
 		}

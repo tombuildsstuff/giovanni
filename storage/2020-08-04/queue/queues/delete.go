@@ -31,7 +31,7 @@ func (c Client) Delete(ctx context.Context, queueName string) (resp DeleteRespon
 		},
 		HttpMethod:    http.MethodDelete,
 		OptionsObject: nil,
-		Path:          queueName,
+		Path:          fmt.Sprintf("/%s", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

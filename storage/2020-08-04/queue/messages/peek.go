@@ -12,7 +12,7 @@ import (
 )
 
 type PeekInput struct {
-	numberOfMessages int
+	NumberOfMessages int
 }
 
 // Peek retrieves one or more messages from the front of the queue, but doesn't alter the visibility of the messages
@@ -26,8 +26,8 @@ func (c Client) Peek(ctx context.Context, queueName string, input PeekInput) (re
 		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
-	if input.numberOfMessages < 1 || input.numberOfMessages > 32 {
-		return resp, fmt.Errorf("`numberOfMessages` must be between 1 and 32")
+	if input.NumberOfMessages < 1 || input.NumberOfMessages > 32 {
+		return resp, fmt.Errorf("`input.NumberOfMessages` must be between 1 and 32")
 	}
 
 	opts := client.RequestOptions{
@@ -37,7 +37,7 @@ func (c Client) Peek(ctx context.Context, queueName string, input PeekInput) (re
 		},
 		HttpMethod: http.MethodGet,
 		OptionsObject: peekOptions{
-			numberOfMessages: input.numberOfMessages,
+			numberOfMessages: input.NumberOfMessages,
 		},
 		Path: fmt.Sprintf("%s/messages", queueName),
 	}

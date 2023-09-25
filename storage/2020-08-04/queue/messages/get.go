@@ -17,7 +17,7 @@ type GetInput struct {
 	// The new value must be larger than or equal to 0, and cannot be larger than 7 days.
 	VisibilityTimeout *int
 
-	numberOfMessages int
+	NumberOfMessages int
 }
 
 type GetResponse struct {
@@ -32,8 +32,8 @@ func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp
 	if strings.ToLower(queueName) != queueName {
 		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
-	if input.numberOfMessages < 1 || input.numberOfMessages > 32 {
-		return resp, fmt.Errorf("`input.numberOfMessages` must be between 1 and 32")
+	if input.NumberOfMessages < 1 || input.NumberOfMessages > 32 {
+		return resp, fmt.Errorf("`input.NumberOfMessages` must be between 1 and 32")
 	}
 	if input.VisibilityTimeout != nil {
 		t := *input.VisibilityTimeout
@@ -51,7 +51,7 @@ func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp
 		HttpMethod: http.MethodGet,
 		OptionsObject: getOptions{
 			visibilityTimeout: input.VisibilityTimeout,
-			numberOfMessages:  input.numberOfMessages,
+			numberOfMessages:  input.NumberOfMessages,
 		},
 		Path: fmt.Sprintf("%s/messages", queueName),
 	}

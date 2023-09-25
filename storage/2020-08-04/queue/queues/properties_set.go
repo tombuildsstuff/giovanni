@@ -18,7 +18,7 @@ type SetStorageServicePropertiesResponse struct {
 }
 
 type SetStorageServicePropertiesInput struct {
-	properties StorageServiceProperties
+	Properties StorageServiceProperties
 }
 
 // SetServiceProperties sets the properties for this queue
@@ -40,7 +40,7 @@ func (c Client) SetServiceProperties(ctx context.Context, input SetStorageServic
 		return
 	}
 
-	marshalledProps, err := xml.Marshal(&input.properties)
+	marshalledProps, err := xml.Marshal(&input.Properties)
 	if err != nil {
 		return resp, fmt.Errorf("marshalling request: %v", err)
 	}

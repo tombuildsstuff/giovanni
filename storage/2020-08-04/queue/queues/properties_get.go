@@ -9,13 +9,13 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
-type StorageServicePropertiesResponse struct {
+type GetStorageServicePropertiesResponse struct {
 	StorageServiceProperties
 	HttpResponse *client.Response
 }
 
 // GetServiceProperties gets the properties for this queue
-func (c Client) GetServiceProperties(ctx context.Context) (resp StorageServicePropertiesResponse, err error) {
+func (c Client) GetServiceProperties(ctx context.Context) (resp GetStorageServicePropertiesResponse, err error) {
 
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",

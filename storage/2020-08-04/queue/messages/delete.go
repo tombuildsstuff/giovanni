@@ -15,7 +15,7 @@ type DeleteResponse struct {
 }
 
 type DeleteInput struct {
-	popReceipt string
+	PopReceipt string
 }
 
 // Delete deletes a specific message
@@ -33,8 +33,8 @@ func (c Client) Delete(ctx context.Context, queueName, messageID string, input D
 		return resp, fmt.Errorf("`messageID` cannot be an empty string")
 	}
 
-	if input.popReceipt == "" {
-		return resp, fmt.Errorf("`input.popReceipt` cannot be an empty string")
+	if input.PopReceipt == "" {
+		return resp, fmt.Errorf("`input.PopReceipt` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -44,7 +44,7 @@ func (c Client) Delete(ctx context.Context, queueName, messageID string, input D
 		},
 		HttpMethod: http.MethodDelete,
 		OptionsObject: deleteOptions{
-			popReceipt: input.popReceipt,
+			popReceipt: input.PopReceipt,
 		},
 		Path: fmt.Sprintf("%s/messages/%s", queueName, messageID),
 	}

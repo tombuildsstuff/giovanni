@@ -147,7 +147,7 @@ func TestQueuesLifecycle(t *testing.T) {
 			},
 		},
 	}
-	_, err = queuesClient.SetServiceProperties(ctx, SetStorageServicePropertiesInput{properties: props})
+	_, err = queuesClient.SetServiceProperties(ctx, SetStorageServicePropertiesInput{Properties: props})
 	if err != nil {
 		t.Fatalf("SetServiceProperties failed: %s", err)
 	}
@@ -223,7 +223,7 @@ func TestQueuesLifecycle(t *testing.T) {
 		},
 	}
 
-	_, err = queuesClient.SetServiceProperties(ctx, SetStorageServicePropertiesInput{properties: props2})
+	_, err = queuesClient.SetServiceProperties(ctx, SetStorageServicePropertiesInput{Properties: props2})
 	if err != nil {
 		t.Fatalf("SetServiceProperties failed: %s", err)
 	}
