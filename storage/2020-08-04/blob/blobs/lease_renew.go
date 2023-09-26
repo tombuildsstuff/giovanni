@@ -15,7 +15,7 @@ type RenewLeaseResponse struct {
 }
 
 type RenewLeaseInput struct {
-	leaseID string
+	LeaseID string
 }
 
 func (c Client) RenewLease(ctx context.Context, containerName, blobName string, input RenewLeaseInput) (resp RenewLeaseResponse, err error) {
@@ -32,8 +32,8 @@ func (c Client) RenewLease(ctx context.Context, containerName, blobName string, 
 		return resp, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
-	if input.leaseID == "" {
-		return resp, fmt.Errorf("`leaseID` cannot be an empty string")
+	if input.LeaseID == "" {
+		return resp, fmt.Errorf("`input.LeaseID` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -42,7 +42,7 @@ func (c Client) RenewLease(ctx context.Context, containerName, blobName string, 
 		},
 		HttpMethod: http.MethodPut,
 		OptionsObject: renewLeaseOptions{
-			leaseID: input.leaseID,
+			leaseID: input.LeaseID,
 		},
 		Path: fmt.Sprintf("/%s/%s", containerName, blobName),
 	}

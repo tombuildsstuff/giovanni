@@ -45,11 +45,11 @@ func (c Client) PutBlockBlob(ctx context.Context, containerName, blobName string
 	}
 
 	if input.Content != nil && len(*input.Content) == 0 {
-		return resp, fmt.Errorf("`p.input.Content` must either be nil or not empty")
+		return resp, fmt.Errorf("`input.Content` must either be nil or not empty")
 	}
 
 	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf(fmt.Sprintf("`p.input.MetaData` is not valid: %s.", err))
+		return resp, fmt.Errorf(fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
 	}
 
 	opts := client.RequestOptions{

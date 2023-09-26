@@ -15,7 +15,7 @@ type ReleaseLeaseResponse struct {
 }
 
 type ReleaseLeaseInput struct {
-	leaseID string
+	LeaseID string
 }
 
 // ReleaseLease releases a lock based on the Lease ID.
@@ -33,8 +33,8 @@ func (c Client) ReleaseLease(ctx context.Context, containerName, blobName string
 		return resp, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
-	if input.leaseID == "" {
-		return resp, fmt.Errorf("`leaseID` cannot be an empty string")
+	if input.LeaseID == "" {
+		return resp, fmt.Errorf("`input.LeaseID` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -43,7 +43,7 @@ func (c Client) ReleaseLease(ctx context.Context, containerName, blobName string
 		},
 		HttpMethod: http.MethodPut,
 		OptionsObject: releaseLeaseOptions{
-			leaseID: input.leaseID,
+			leaseID: input.LeaseID,
 		},
 		Path: fmt.Sprintf("/%s/%s", containerName, blobName),
 	}

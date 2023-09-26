@@ -95,7 +95,7 @@ func TestLeaseLifecycle(t *testing.T) {
 	t.Logf("[DEBUG] New Lease ID: %q", changeLeaseResult.LeaseID)
 
 	t.Logf("[DEBUG] Releasing Lease..")
-	if _, err := blobClient.ReleaseLease(ctx, containerName, fileName, ReleaseLeaseInput{leaseID: changeLeaseResult.LeaseID}); err != nil {
+	if _, err := blobClient.ReleaseLease(ctx, containerName, fileName, ReleaseLeaseInput{LeaseID: changeLeaseResult.LeaseID}); err != nil {
 		t.Fatalf("Error releasing lease: %s", err)
 	}
 
@@ -110,7 +110,7 @@ func TestLeaseLifecycle(t *testing.T) {
 	t.Logf("[DEBUG] Lease ID: %q", leaseInfo.LeaseID)
 
 	t.Logf("[DEBUG] Renewing lease..")
-	if _, err := blobClient.RenewLease(ctx, containerName, fileName, RenewLeaseInput{leaseID: leaseInfo.LeaseID}); err != nil {
+	if _, err := blobClient.RenewLease(ctx, containerName, fileName, RenewLeaseInput{LeaseID: leaseInfo.LeaseID}); err != nil {
 		t.Fatalf("Error renewing lease: %s", err)
 	}
 

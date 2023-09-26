@@ -83,6 +83,7 @@ func (c Client) PutPageUpdate(ctx context.Context, containerName, blobName strin
 	}
 
 	req.Body = io.NopCloser(bytes.NewReader(input.Content))
+	req.ContentLength = int64(len(input.Content))
 
 	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {

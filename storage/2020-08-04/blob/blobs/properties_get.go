@@ -231,7 +231,6 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
 					return
 				}
-
 				resp.AccessTierInferred = b
 			}
 
@@ -240,7 +239,6 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 				if innerErr != nil {
 					err = fmt.Errorf("error parsing %q as an integer: %s", v, innerErr)
 				}
-
 				resp.ContentLength = int64(i)
 			}
 
@@ -250,7 +248,6 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
 					return
 				}
-
 				resp.IncrementalCopy = b
 			}
 
@@ -260,7 +257,6 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
 					return
 				}
-
 				resp.IncrementalCopy = b
 			}
 		}
