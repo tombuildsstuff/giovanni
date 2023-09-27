@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -76,7 +75,7 @@ func TestCopyFromExistingFile(t *testing.T) {
 
 	t.Logf("[DEBUG] Duplicating that file..")
 	copiedInput := CopyInput{
-		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetBlobEndpoint(baseUri, accountName), containerName, fileName),
+		CopySource: fmt.Sprintf("%s/%s/%s", baseUri, containerName, fileName),
 	}
 	if err := blobClient.CopyAndWait(ctx, containerName, copiedFileName, copiedInput, refreshInterval); err != nil {
 		t.Fatalf("Error duplicating file: %s", err)

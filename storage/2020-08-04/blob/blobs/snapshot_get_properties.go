@@ -43,9 +43,9 @@ func (c Client) GetSnapshotProperties(ctx context.Context, containerName, blobNa
 
 	opts := client.RequestOptions{
 		ExpectedStatusCodes: []int{
-			http.StatusCreated,
+			http.StatusOK,
 		},
-		HttpMethod: http.MethodPut,
+		HttpMethod: http.MethodHead,
 		OptionsObject: snapshotGetPropertiesOptions{
 			input: input,
 		},
