@@ -43,7 +43,7 @@ func (c Client) Get(ctx context.Context, shareName, path string) (resp GetRespon
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: directoriesOptions{},
-		Path:          fmt.Sprintf("%s/%s", shareName, path),
+		Path:          fmt.Sprintf("/%s/%s", shareName, path),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

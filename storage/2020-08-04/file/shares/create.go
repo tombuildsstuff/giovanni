@@ -67,7 +67,7 @@ func (c Client) Create(ctx context.Context, shareName string, input CreateInput)
 		OptionsObject: CreateOptions{
 			input: input,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {

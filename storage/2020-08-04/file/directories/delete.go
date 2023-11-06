@@ -36,7 +36,7 @@ func (c Client) Delete(ctx context.Context, shareName, path string) (resp Delete
 		},
 		HttpMethod:    http.MethodDelete,
 		OptionsObject: directoriesOptions{},
-		Path:          fmt.Sprintf("%s/%s", shareName, path),
+		Path:          fmt.Sprintf("/%s/%s", shareName, path),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

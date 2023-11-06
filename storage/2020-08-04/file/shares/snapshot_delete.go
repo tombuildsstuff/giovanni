@@ -38,7 +38,7 @@ func (c Client) DeleteSnapshot(ctx context.Context, accountName, shareName strin
 		OptionsObject: snapShotDeleteOptions{
 			shareSnapShot: shareSnapshot,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -44,7 +44,7 @@ func (c Client) GetSnapshot(ctx context.Context, shareName string, input GetSnap
 		OptionsObject: snapShotGetOptions{
 			snapshotShare: input.snapshotShare,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

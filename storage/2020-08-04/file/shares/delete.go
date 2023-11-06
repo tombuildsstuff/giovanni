@@ -37,7 +37,7 @@ func (c Client) Delete(ctx context.Context, shareName string, input DeleteInput)
 		OptionsObject: DeleteOptions{
 			deleteSnapshots: input.DeleteSnapshots,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {

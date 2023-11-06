@@ -66,7 +66,7 @@ func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName stri
 		OptionsObject: GetByteRangeOptions{
 			input: input,
 		},
-		Path: fmt.Sprintf("%s/%s%s", shareName, path, fileName),
+		Path: fmt.Sprintf("/%s/%s%s", shareName, path, fileName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -51,7 +51,7 @@ func (c Client) ListRanges(ctx context.Context, shareName, path, fileName string
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: ListRangeOptions{},
-		Path:          fmt.Sprintf("%s/%s%s", shareName, path, fileName),
+		Path:          fmt.Sprintf("/%s/%s%s", shareName, path, fileName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

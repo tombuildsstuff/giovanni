@@ -37,6 +37,7 @@ func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, i
 		return
 	}
 
+	resp.HttpResponse = file.HttpResponse
 	length := *file.ContentLength
 	chunkSize := int64(4 * 1024 * 1024) // 4MB
 

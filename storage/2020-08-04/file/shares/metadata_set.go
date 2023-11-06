@@ -43,7 +43,7 @@ func (c Client) SetMetaData(ctx context.Context, shareName string, input SetMeta
 		OptionsObject: SetMetaDataOptions{
 			metaData: input.MetaData,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -33,7 +33,7 @@ func (c Client) GetACL(ctx context.Context, shareName string) (resp GetACLResult
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: getAclOptions{},
-		Path:          shareName,
+		Path:          fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

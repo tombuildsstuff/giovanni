@@ -50,7 +50,7 @@ func (c Client) AbortCopy(ctx context.Context, shareName, path, fileName string,
 		OptionsObject: CopyAbortOptions{
 			copyId: input.copyID,
 		},
-		Path: fmt.Sprintf("%s/%s%s", shareName, path, fileName),
+		Path: fmt.Sprintf("/%s/%s%s", shareName, path, fileName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

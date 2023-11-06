@@ -38,7 +38,7 @@ func (c Client) GetMetaData(ctx context.Context, shareName, path string) (resp G
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: GetMetaDataOptions{},
-		Path:          fmt.Sprintf("%s/%s", shareName, path),
+		Path:          fmt.Sprintf("/%s/%s", shareName, path),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

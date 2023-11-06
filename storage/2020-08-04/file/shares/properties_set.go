@@ -44,7 +44,7 @@ func (c Client) SetProperties(ctx context.Context, shareName string, properties 
 		OptionsObject: SetPropertiesOptions{
 			input: properties,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -70,7 +70,7 @@ func (c Client) Copy(ctx context.Context, shareName, path, fileName string, inpu
 		OptionsObject: CopyOptions{
 			input: input,
 		},
-		Path: fmt.Sprintf("%s/%s%s", shareName, path, fileName),
+		Path: fmt.Sprintf("/%s/%s%s", shareName, path, fileName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

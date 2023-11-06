@@ -37,7 +37,7 @@ func (c Client) GetProperties(ctx context.Context, shareName string) (resp GetPr
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: sharesOptions{},
-		Path:          shareName,
+		Path:          fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

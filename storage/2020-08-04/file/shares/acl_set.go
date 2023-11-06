@@ -42,7 +42,7 @@ func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput)
 		},
 		HttpMethod:    http.MethodPut,
 		OptionsObject: setAclOptions{},
-		Path:          shareName,
+		Path:          fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -50,7 +50,7 @@ func (c Client) CreateSnapshot(ctx context.Context, shareName string, input Crea
 		OptionsObject: snapShotCreateOptions{
 			metaData: input.MetaData,
 		},
-		Path: shareName,
+		Path: fmt.Sprintf("/%s", shareName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)
