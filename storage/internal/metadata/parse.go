@@ -8,9 +8,9 @@ import (
 // ParseFromHeaders parses the meta data from the headers
 func ParseFromHeaders(headers http.Header) map[string]string {
 	metaData := make(map[string]string, 0)
+	prefix := "x-ms-meta-"
 	for k, v := range headers {
 		key := strings.ToLower(k)
-		prefix := "x-ms-meta-"
 		if !strings.HasPrefix(key, prefix) {
 			continue
 		}

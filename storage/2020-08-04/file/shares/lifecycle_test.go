@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -32,30 +32,32 @@ func TestSharesLifecycle(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+	sharesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	tier := CoolAccessTier
 	input := CreateInput{
 		QuotaInGB:  1,
 		AccessTier: &tier,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
 
-	snapshot, err := sharesClient.CreateSnapshot(ctx, accountName, shareName, CreateSnapshotInput{})
+	snapshot, err := sharesClient.CreateSnapshot(ctx, shareName, CreateSnapshotInput{})
 	if err != nil {
 		t.Fatalf("Error taking snapshot: %s", err)
 	}
 	t.Logf("Snapshot Date Time: %s", snapshot.SnapshotDateTime)
 
-	snapshotDetails, err := sharesClient.GetSnapshot(ctx, accountName, shareName, snapshot.SnapshotDateTime)
+	snapshotDetails, err := sharesClient.GetSnapshot(ctx, shareName, GetSnapshotPropertiesInput{snapshotShare: snapshot.SnapshotDateTime})
 	if err != nil {
 		t.Fatalf("Error retrieving snapshot: %s", err)
 	}
@@ -67,7 +69,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("Error deleting snapshot: %s", err)
 	}
 
-	stats, err := sharesClient.GetStats(ctx, accountName, shareName)
+	stats, err := sharesClient.GetStats(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving stats: %s", err)
 	}
@@ -76,7 +78,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("Expected `stats.ShareUsageBytes` to be 0 but got: %d", stats.ShareUsageBytes)
 	}
 
-	share, err := sharesClient.GetProperties(ctx, accountName, shareName)
+	share, err := sharesClient.GetProperties(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
@@ -96,12 +98,12 @@ func TestSharesLifecycle(t *testing.T) {
 		AccessTier: &newTier,
 		QuotaInGb:  &quota,
 	}
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, props)
+	_, err = sharesClient.SetProperties(ctx, shareName, props)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
 
-	share, err = sharesClient.GetProperties(ctx, accountName, shareName)
+	share, err = sharesClient.GetProperties(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
@@ -116,12 +118,13 @@ func TestSharesLifecycle(t *testing.T) {
 	updatedMetaData := map[string]string{
 		"hello": "world",
 	}
-	_, err = sharesClient.SetMetaData(ctx, accountName, shareName, updatedMetaData)
+
+	_, err = sharesClient.SetMetaData(ctx, shareName, SetMetaDataInput{MetaData: updatedMetaData})
 	if err != nil {
 		t.Fatalf("Erorr setting metadata: %s", err)
 	}
 
-	result, err := sharesClient.GetMetaData(ctx, accountName, shareName)
+	result, err := sharesClient.GetMetaData(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving metadata: %s", err)
 	}
@@ -133,7 +136,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("Expected metadata to be 1 item but got: %s", result.MetaData)
 	}
 
-	acls, err := sharesClient.GetACL(ctx, accountName, shareName)
+	acls, err := sharesClient.GetACL(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving ACL's: %s", err)
 	}
@@ -159,12 +162,12 @@ func TestSharesLifecycle(t *testing.T) {
 			},
 		},
 	}
-	_, err = sharesClient.SetACL(ctx, accountName, shareName, updatedAcls)
+	_, err = sharesClient.SetACL(ctx, shareName, SetAclInput{SignedIdentifiers: updatedAcls})
 	if err != nil {
 		t.Fatalf("Error setting ACL's: %s", err)
 	}
 
-	acls, err = sharesClient.GetACL(ctx, accountName, shareName)
+	acls, err = sharesClient.GetACL(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving ACL's: %s", err)
 	}
@@ -172,7 +175,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("Expected 2 identifiers but got %d", len(acls.SignedIdentifiers))
 	}
 
-	_, err = sharesClient.Delete(ctx, accountName, shareName, false)
+	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{DeleteSnapshots: false})
 	if err != nil {
 		t.Fatalf("Error deleting Share: %s", err)
 	}
@@ -197,28 +200,30 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+	sharesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	input := CreateInput{
 		QuotaInGB: 1001,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
 
-	snapshot, err := sharesClient.CreateSnapshot(ctx, accountName, shareName, CreateSnapshotInput{})
+	snapshot, err := sharesClient.CreateSnapshot(ctx, shareName, CreateSnapshotInput{})
 	if err != nil {
 		t.Fatalf("Error taking snapshot: %s", err)
 	}
 	t.Logf("Snapshot Date Time: %s", snapshot.SnapshotDateTime)
 
-	snapshotDetails, err := sharesClient.GetSnapshot(ctx, accountName, shareName, snapshot.SnapshotDateTime)
+	snapshotDetails, err := sharesClient.GetSnapshot(ctx, shareName, GetSnapshotPropertiesInput{snapshotShare: snapshot.SnapshotDateTime})
 	if err != nil {
 		t.Fatalf("Error retrieving snapshot: %s", err)
 	}
@@ -230,7 +235,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Error deleting snapshot: %s", err)
 	}
 
-	stats, err := sharesClient.GetStats(ctx, accountName, shareName)
+	stats, err := sharesClient.GetStats(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving stats: %s", err)
 	}
@@ -239,7 +244,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Expected `stats.ShareUsageBytes` to be 0 but got: %d", stats.ShareUsageBytes)
 	}
 
-	share, err := sharesClient.GetProperties(ctx, accountName, shareName)
+	share, err := sharesClient.GetProperties(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
@@ -251,12 +256,12 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	props := ShareProperties{
 		QuotaInGb: &newQuota,
 	}
-	_, err = sharesClient.SetProperties(ctx, accountName, shareName, props)
+	_, err = sharesClient.SetProperties(ctx, shareName, props)
 	if err != nil {
 		t.Fatalf("Error updating quota: %s", err)
 	}
 
-	share, err = sharesClient.GetProperties(ctx, accountName, shareName)
+	share, err = sharesClient.GetProperties(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
@@ -267,12 +272,13 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 	updatedMetaData := map[string]string{
 		"hello": "world",
 	}
-	_, err = sharesClient.SetMetaData(ctx, accountName, shareName, updatedMetaData)
+
+	_, err = sharesClient.SetMetaData(ctx, shareName, SetMetaDataInput{MetaData: updatedMetaData})
 	if err != nil {
 		t.Fatalf("Erorr setting metadata: %s", err)
 	}
 
-	result, err := sharesClient.GetMetaData(ctx, accountName, shareName)
+	result, err := sharesClient.GetMetaData(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving metadata: %s", err)
 	}
@@ -284,7 +290,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Expected metadata to be 1 item but got: %s", result.MetaData)
 	}
 
-	acls, err := sharesClient.GetACL(ctx, accountName, shareName)
+	acls, err := sharesClient.GetACL(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving ACL's: %s", err)
 	}
@@ -310,12 +316,12 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 			},
 		},
 	}
-	_, err = sharesClient.SetACL(ctx, accountName, shareName, updatedAcls)
+	_, err = sharesClient.SetACL(ctx, shareName, SetAclInput{SignedIdentifiers: updatedAcls})
 	if err != nil {
 		t.Fatalf("Error setting ACL's: %s", err)
 	}
 
-	acls, err = sharesClient.GetACL(ctx, accountName, shareName)
+	acls, err = sharesClient.GetACL(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving ACL's: %s", err)
 	}
@@ -323,7 +329,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Expected 2 identifiers but got %d", len(acls.SignedIdentifiers))
 	}
 
-	_, err = sharesClient.Delete(ctx, accountName, shareName, false)
+	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{DeleteSnapshots: false})
 	if err != nil {
 		t.Fatalf("Error deleting Share: %s", err)
 	}
@@ -348,23 +354,25 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	sharesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+	sharesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	input := CreateInput{
 		QuotaInGB:       1000,
 		EnabledProtocol: NFS,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
 
-	share, err := sharesClient.GetProperties(ctx, accountName, shareName)
+	share, err := sharesClient.GetProperties(ctx, shareName)
 	if err != nil {
 		t.Fatalf("Error retrieving share: %s", err)
 	}
@@ -372,7 +380,7 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 		t.Fatalf(`Expected enabled protocol to be "NFS" but got: %q`, share.EnabledProtocol)
 	}
 
-	_, err = sharesClient.Delete(ctx, accountName, shareName, false)
+	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{DeleteSnapshots: false})
 	if err != nil {
 		t.Fatalf("Error deleting Share: %s", err)
 	}

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
 	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -33,24 +33,28 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
-	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+	sharesClient, err := shares.NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	input := shares.CreateInput{
 		QuotaInGB: 10,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, shares.DeleteInput{DeleteSnapshots: false})
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
+	filesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(filesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	copiedFileName := "ubuntu.iso"
 	copyInput := CopyInput{
@@ -58,13 +62,13 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Copy And Waiting..")
-	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", copiedFileName, copyInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, copyInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copy & waiting: %s", err)
 	}
 
 	t.Logf("[DEBUG] Asserting that the file's ready..")
 
-	props, err := filesClient.GetProperties(ctx, accountName, shareName, "", copiedFileName)
+	props, err := filesClient.GetProperties(ctx, shareName, "", copiedFileName)
 	if err != nil {
 		t.Fatalf("Error retrieving file: %s", err)
 	}
@@ -93,24 +97,28 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	}
 	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
-	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
+	if !ok {
+		t.Fatalf("storage didn't return a domain suffix for this environment")
 	}
-	sharesClient := shares.NewWithEnvironment(client.AutoRestEnvironment)
-	sharesClient.Client = client.PrepareWithAuthorizer(sharesClient.Client, storageAuth)
+	sharesClient, err := shares.NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(sharesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	input := shares.CreateInput{
 		QuotaInGB: 10,
 	}
-	_, err = sharesClient.Create(ctx, accountName, shareName, input)
+	_, err = sharesClient.Create(ctx, shareName, input)
 	if err != nil {
 		t.Fatalf("Error creating fileshare: %s", err)
 	}
-	defer sharesClient.Delete(ctx, accountName, shareName, false)
+	defer sharesClient.Delete(ctx, shareName, shares.DeleteInput{DeleteSnapshots: false})
 
-	filesClient := NewWithEnvironment(client.AutoRestEnvironment)
-	filesClient.Client = client.PrepareWithAuthorizer(filesClient.Client, storageAuth)
+	filesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	if err := client.PrepareWithSharedKeyAuth(filesClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	originalFileName := "ubuntu.iso"
 	copiedFileName := "ubuntu-copied.iso"
@@ -118,20 +126,20 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 	t.Logf("[DEBUG] Copy And Waiting the original file..")
-	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", originalFileName, copyInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", originalFileName, copyInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copy & waiting: %s", err)
 	}
 
 	t.Logf("[DEBUG] Now copying that blob..")
 	duplicateInput := CopyInput{
-		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetFileEndpoint(filesClient.BaseURI, accountName), shareName, originalFileName),
+		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetFileEndpoint(*domainSuffix, accountName), shareName, originalFileName),
 	}
-	if _, err := filesClient.CopyAndWait(ctx, accountName, shareName, "", copiedFileName, duplicateInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, duplicateInput, DefaultCopyPollDuration); err != nil {
 		t.Fatalf("Error copying duplicate: %s", err)
 	}
 
 	t.Logf("[DEBUG] Asserting that the file's ready..")
-	props, err := filesClient.GetProperties(ctx, accountName, shareName, "", copiedFileName)
+	props, err := filesClient.GetProperties(ctx, shareName, "", copiedFileName)
 	if err != nil {
 		t.Fatalf("Error retrieving file: %s", err)
 	}
