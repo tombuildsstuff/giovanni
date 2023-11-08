@@ -2,94 +2,84 @@ package messages
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
+type PeekInput struct {
+	// NumberOfMessages specifies the (maximum) number of messages that should be peak'd from the front of the queue.
+	// This can be a maximum of 32.
+	NumberOfMessages int
+}
+
 // Peek retrieves one or more messages from the front of the queue, but doesn't alter the visibility of the messages
-func (client Client) Peek(ctx context.Context, accountName, queueName string, numberOfMessages int) (result QueueMessagesListResult, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Peek", "`accountName` cannot be an empty string.")
-	}
+func (c Client) Peek(ctx context.Context, queueName string, input PeekInput) (resp QueueMessagesListResponse, err error) {
+
 	if queueName == "" {
-		return result, validation.NewError("messages.Client", "Peek", "`queueName` cannot be an empty string.")
+		return resp, fmt.Errorf("`queueName` cannot be an empty string")
 	}
+
 	if strings.ToLower(queueName) != queueName {
-		return result, validation.NewError("messages.Client", "Peek", "`queueName` must be a lower-cased string.")
-	}
-	if numberOfMessages < 1 || numberOfMessages > 32 {
-		return result, validation.NewError("messages.Client", "Peek", "`numberOfMessages` must be between 1 and 32.")
+		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
-	req, err := client.PeekPreparer(ctx, accountName, queueName, numberOfMessages)
+	if input.NumberOfMessages < 1 || input.NumberOfMessages > 32 {
+		return resp, fmt.Errorf("`input.NumberOfMessages` must be between 1 and 32")
+	}
+
+	opts := client.RequestOptions{
+		ContentType: "application/xml; charset=utf-8",
+		ExpectedStatusCodes: []int{
+			http.StatusOK,
+		},
+		HttpMethod: http.MethodGet,
+		OptionsObject: peekOptions{
+			numberOfMessages: input.NumberOfMessages,
+		},
+		Path: fmt.Sprintf("/%s/messages", queueName),
+	}
+
+	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Peek", nil, "Failure preparing request")
+		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
 
-	resp, err := client.PeekSender(req)
+	resp.HttpResponse, err = req.Execute(ctx)
 	if err != nil {
-		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "messages.Client", "Peek", resp, "Failure sending request")
+		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	result, err = client.PeekResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Peek", resp, "Failure responding to request")
-		return
+	if resp.HttpResponse != nil {
+		if err = resp.HttpResponse.Unmarshal(&resp); err != nil {
+			return resp, fmt.Errorf("unmarshalling response: %+v", err)
+		}
 	}
 
 	return
 }
 
-// PeekPreparer prepares the Peek request.
-func (client Client) PeekPreparer(ctx context.Context, accountName, queueName string, numberOfMessages int) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"queueName": autorest.Encode("path", queueName),
-	}
-
-	queryParameters := map[string]interface{}{
-		"numofmessages": autorest.Encode("query", numberOfMessages),
-		"peekonly":      autorest.Encode("query", true),
-	}
-
-	headers := map[string]interface{}{
-		"x-ms-version": APIVersion,
-	}
-
-	preparer := autorest.CreatePreparer(
-		autorest.AsContentType("application/xml; charset=utf-8"),
-		autorest.AsGet(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
-		autorest.WithPathParameters("/{queueName}/messages", pathParameters),
-		autorest.WithQueryParameters(queryParameters),
-		autorest.WithHeaders(headers))
-	return preparer.Prepare((&http.Request{}).WithContext(ctx))
+type peekOptions struct {
+	numberOfMessages int
 }
 
-// PeekSender sends the Peek request. The method will close the
-// http.Response Body if it receives an error.
-func (client Client) PeekSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
+func (p peekOptions) ToHeaders() *client.Headers {
+	return nil
 }
 
-// PeekResponder handles the response to the Peek request. The method always
-// closes the http.Response Body.
-func (client Client) PeekResponder(resp *http.Response) (result QueueMessagesListResult, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		autorest.ByUnmarshallingXML(&result),
-		azure.WithErrorUnlessStatusCode(http.StatusOK),
-		autorest.ByClosing())
-	result.Response = autorest.Response{Response: resp}
+func (p peekOptions) ToOData() *odata.Query {
+	return nil
+}
 
-	return
+func (p peekOptions) ToQuery() *client.QueryParams {
+	out := &client.QueryParams{}
+	out.Append("numofmessages", strconv.Itoa(p.numberOfMessages))
+	out.Append("peekonly", "true")
+	return out
 }

@@ -1,14 +1,17 @@
 package messages
 
 import (
+	"bytes"
 	"context"
+	"encoding/xml"
+	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/validation"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type UpdateInput struct {
@@ -26,90 +29,77 @@ type UpdateInput struct {
 	VisibilityTimeout int
 }
 
+type UpdateResponse struct {
+	HttpResponse *client.Response
+}
+
 // Update updates an existing message based on it's Pop Receipt
-func (client Client) Update(ctx context.Context, accountName, queueName string, messageID string, input UpdateInput) (result autorest.Response, err error) {
-	if accountName == "" {
-		return result, validation.NewError("messages.Client", "Update", "`accountName` cannot be an empty string.")
-	}
+func (c Client) Update(ctx context.Context, queueName string, messageID string, input UpdateInput) (resp UpdateResponse, err error) {
+
 	if queueName == "" {
-		return result, validation.NewError("messages.Client", "Update", "`queueName` cannot be an empty string.")
+		return resp, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 	if strings.ToLower(queueName) != queueName {
-		return result, validation.NewError("messages.Client", "Update", "`queueName` must be a lower-cased string.")
+		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 	if input.PopReceipt == "" {
-		return result, validation.NewError("messages.Client", "Update", "`input.PopReceipt` cannot be an empty string.")
+		return resp, fmt.Errorf("`input.PopReceipt` cannot be an empty string")
 	}
 
-	req, err := client.UpdatePreparer(ctx, accountName, queueName, messageID, input)
+	opts := client.RequestOptions{
+		ContentType: "application/xml; charset=utf-8",
+		ExpectedStatusCodes: []int{
+			http.StatusNoContent,
+		},
+		HttpMethod: http.MethodPut,
+		OptionsObject: updateOptions{
+			input: input,
+		},
+		Path: fmt.Sprintf("/%s/messages/%s", queueName, messageID),
+	}
+
+	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Update", nil, "Failure preparing request")
+		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
 
-	resp, err := client.UpdateSender(req)
-	if err != nil {
-		result = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "messages.Client", "Update", resp, "Failure sending request")
-		return
-	}
-
-	result, err = client.UpdateResponder(resp)
-	if err != nil {
-		err = autorest.NewErrorWithError(err, "messages.Client", "Update", resp, "Failure responding to request")
-		return
-	}
-
-	return
-}
-
-// UpdatePreparer prepares the Update request.
-func (client Client) UpdatePreparer(ctx context.Context, accountName, queueName string, messageID string, input UpdateInput) (*http.Request, error) {
-	pathParameters := map[string]interface{}{
-		"queueName": autorest.Encode("path", queueName),
-		"messageID": autorest.Encode("path", messageID),
-	}
-
-	queryParameters := map[string]interface{}{
-		"popreceipt":        autorest.Encode("query", input.PopReceipt),
-		"visibilitytimeout": autorest.Encode("query", input.VisibilityTimeout),
-	}
-
-	headers := map[string]interface{}{
-		"x-ms-version": APIVersion,
-	}
-
-	body := QueueMessage{
+	marshalledMsg, err := xml.Marshal(QueueMessage{
 		MessageText: input.Message,
+	})
+	if err != nil {
+		return resp, fmt.Errorf("marshalling request: %v", err)
 	}
 
-	preparer := autorest.CreatePreparer(
-		autorest.AsContentType("application/xml; charset=utf-8"),
-		autorest.AsPut(),
-		autorest.WithBaseURL(endpoints.GetQueueEndpoint(client.BaseURI, accountName)),
-		autorest.WithPathParameters("/{queueName}/messages/{messageID}", pathParameters),
-		autorest.WithQueryParameters(queryParameters),
-		autorest.WithXML(body),
-		autorest.WithHeaders(headers))
-	return preparer.Prepare((&http.Request{}).WithContext(ctx))
-}
+	body := xml.Header + string(marshalledMsg)
+	req.Body = io.NopCloser(bytes.NewReader([]byte(body)))
+	req.ContentLength = int64(len(body))
+	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
-// UpdateSender sends the Update request. The method will close the
-// http.Response Body if it receives an error.
-func (client Client) UpdateSender(req *http.Request) (*http.Response, error) {
-	return autorest.SendWithSender(client, req,
-		azure.DoRetryWithRegistration(client.Client))
-}
-
-// UpdateResponder handles the response to the Update request. The method always
-// closes the http.Response Body.
-func (client Client) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
-	err = autorest.Respond(
-		resp,
-		client.ByInspecting(),
-		azure.WithErrorUnlessStatusCode(http.StatusNoContent),
-		autorest.ByClosing())
-	result = autorest.Response{Response: resp}
+	resp.HttpResponse, err = req.Execute(ctx)
+	if err != nil {
+		err = fmt.Errorf("executing request: %+v", err)
+		return
+	}
 
 	return
+}
+
+type updateOptions struct {
+	input UpdateInput
+}
+
+func (u updateOptions) ToHeaders() *client.Headers {
+	return nil
+}
+
+func (u updateOptions) ToOData() *odata.Query {
+	return nil
+}
+
+func (u updateOptions) ToQuery() *client.QueryParams {
+	out := &client.QueryParams{}
+	out.Append("visibilitytimeout", strconv.Itoa(u.input.VisibilityTimeout))
+	out.Append("popreceipt", u.input.PopReceipt)
+	return out
 }
