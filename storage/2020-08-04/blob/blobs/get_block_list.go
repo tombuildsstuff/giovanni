@@ -20,7 +20,7 @@ type GetBlockListResponse struct {
 	HttpResponse *client.Response
 
 	// The size of the blob in bytes
-	ContentLength *int64
+	BlobContentLength *int64
 
 	// The Content Type of the blob
 	ContentType string
@@ -86,7 +86,7 @@ func (c Client) GetBlockList(ctx context.Context, containerName, blobName string
 				}
 
 				i64 := int64(i)
-				resp.ContentLength = &i64
+				resp.BlobContentLength = &i64
 			}
 		}
 		err = resp.HttpResponse.Unmarshal(&resp)

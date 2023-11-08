@@ -67,8 +67,8 @@ func (c Client) GetSnapshotProperties(ctx context.Context, containerName, blobNa
 	if resp.HttpResponse != nil {
 		if resp.HttpResponse.Header != nil {
 			resp.AccessTier = AccessTier(resp.HttpResponse.Header.Get("x-ms-access-tier"))
-			resp.AccessTierChangeTime = resp.HttpResponse.Header.Get(" x-ms-access-tier-change-time")
-			resp.ArchiveStatus = ArchiveStatus(resp.HttpResponse.Header.Get(" x-ms-archive-status"))
+			resp.AccessTierChangeTime = resp.HttpResponse.Header.Get("x-ms-access-tier-change-time")
+			resp.ArchiveStatus = ArchiveStatus(resp.HttpResponse.Header.Get("x-ms-archive-status"))
 			resp.BlobCommittedBlockCount = resp.HttpResponse.Header.Get("x-ms-blob-committed-block-count")
 			resp.BlobSequenceNumber = resp.HttpResponse.Header.Get("x-ms-blob-sequence-number")
 			resp.BlobType = BlobType(resp.HttpResponse.Header.Get("x-ms-blob-type"))
@@ -129,7 +129,7 @@ func (c Client) GetSnapshotProperties(ctx context.Context, containerName, blobNa
 					return
 				}
 
-				resp.IncrementalCopy = b
+				resp.ServerEncrypted = b
 			}
 		}
 	}
