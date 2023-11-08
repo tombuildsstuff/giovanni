@@ -43,7 +43,7 @@ func (c Client) SetMetaData(ctx context.Context, queueName string, input SetMeta
 		OptionsObject: setMetaDataOptions{
 			metadata: input.MetaData,
 		},
-		Path: queueName,
+		Path: fmt.Sprintf("/%s", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

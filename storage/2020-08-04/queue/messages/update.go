@@ -55,7 +55,7 @@ func (c Client) Update(ctx context.Context, queueName string, messageID string, 
 		OptionsObject: updateOptions{
 			input: input,
 		},
-		Path: fmt.Sprintf("%s/messages/%s", queueName, messageID),
+		Path: fmt.Sprintf("/%s/messages/%s", queueName, messageID),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

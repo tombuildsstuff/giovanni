@@ -12,6 +12,8 @@ import (
 )
 
 type PeekInput struct {
+	// NumberOfMessages specifies the (maximum) number of messages that should be peak'd from the front of the queue.
+	// This can be a maximum of 32.
 	NumberOfMessages int
 }
 
@@ -39,7 +41,7 @@ func (c Client) Peek(ctx context.Context, queueName string, input PeekInput) (re
 		OptionsObject: peekOptions{
 			numberOfMessages: input.NumberOfMessages,
 		},
-		Path: fmt.Sprintf("%s/messages", queueName),
+		Path: fmt.Sprintf("/%s/messages", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

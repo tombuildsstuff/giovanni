@@ -51,7 +51,7 @@ func (c Client) Put(ctx context.Context, queueName string, input PutInput) (resp
 		OptionsObject: putOptions{
 			input: input,
 		},
-		Path: fmt.Sprintf("%s/messages", queueName),
+		Path: fmt.Sprintf("/%s/messages", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -43,7 +43,7 @@ func (c Client) Create(ctx context.Context, queueName string, input CreateInput)
 		OptionsObject: createOptions{
 			metadata: input.MetaData,
 		},
-		Path: queueName,
+		Path: fmt.Sprintf("/%s", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -46,7 +46,7 @@ func (c Client) Delete(ctx context.Context, queueName, messageID string, input D
 		OptionsObject: deleteOptions{
 			popReceipt: input.PopReceipt,
 		},
-		Path: fmt.Sprintf("%s/messages/%s", queueName, messageID),
+		Path: fmt.Sprintf("/%s/messages/%s", queueName, messageID),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -35,7 +35,7 @@ func (c Client) GetMetaData(ctx context.Context, queueName string) (resp GetMeta
 		},
 		HttpMethod:    http.MethodGet,
 		OptionsObject: getMetaDataOptions{},
-		Path:          queueName,
+		Path:          fmt.Sprintf("/%s", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

@@ -17,6 +17,8 @@ type GetInput struct {
 	// The new value must be larger than or equal to 0, and cannot be larger than 7 days.
 	VisibilityTimeout *int
 
+	// NumberOfMessages specifies the (maximum) number of messages that should be retrieved from the queue.
+	// This can be a maximum of 32.
 	NumberOfMessages int
 }
 
@@ -53,7 +55,7 @@ func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp
 			visibilityTimeout: input.VisibilityTimeout,
 			numberOfMessages:  input.NumberOfMessages,
 		},
-		Path: fmt.Sprintf("%s/messages", queueName),
+		Path: fmt.Sprintf("/%s/messages", queueName),
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)
