@@ -257,7 +257,7 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
 					return
 				}
-				resp.IncrementalCopy = b
+				resp.ServerEncrypted = b
 			}
 		}
 	}
