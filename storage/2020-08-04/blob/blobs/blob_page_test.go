@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -53,23 +52,25 @@ func TestPageBlobLifecycle(t *testing.T) {
 	}
 	defer containersClient.Delete(ctx, containerName)
 
-	storageAuth, err := autorest.NewSharedKeyAuthorizer(accountName, testData.StorageAccountKey, autorest.SharedKeyLite)
+	blobClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", testData.StorageAccountName, *domainSuffix))
 	if err != nil {
-		t.Fatalf("building SharedKeyAuthorizer: %+v", err)
+		t.Fatalf("building client for environment: %+v", err)
 	}
-	blobClient := NewWithEnvironment(client.AutoRestEnvironment)
-	blobClient.Client = client.PrepareWithAuthorizer(blobClient.Client, storageAuth)
+
+	if err := client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
+		t.Fatalf("adding authorizer to client: %+v", err)
+	}
 
 	t.Logf("[DEBUG] Putting Page Blob..")
 	fileSize := int64(10240000)
-	if _, err := blobClient.PutPageBlob(ctx, accountName, containerName, fileName, PutPageBlobInput{
+	if _, err := blobClient.PutPageBlob(ctx, containerName, fileName, PutPageBlobInput{
 		BlobContentLengthBytes: fileSize,
 	}); err != nil {
 		t.Fatalf("Error putting page blob: %s", err)
 	}
 
 	t.Logf("[DEBUG] Retrieving Properties..")
-	props, err := blobClient.GetProperties(ctx, accountName, containerName, fileName, GetPropertiesInput{})
+	props, err := blobClient.GetProperties(ctx, containerName, fileName, GetPropertiesInput{})
 	if err != nil {
 		t.Fatalf("Error retrieving properties: %s", err)
 	}
@@ -95,13 +96,13 @@ func TestPageBlobLifecycle(t *testing.T) {
 			EndByte:   endByte,
 			Content:   byteArray,
 		}
-		if _, err := blobClient.PutPageUpdate(ctx, accountName, containerName, fileName, putPageInput); err != nil {
+		if _, err := blobClient.PutPageUpdate(ctx, containerName, fileName, putPageInput); err != nil {
 			t.Fatalf("Error putting page: %s", err)
 		}
 	}
 
 	t.Logf("[DEBUG] Deleting..")
-	if _, err := blobClient.Delete(ctx, accountName, containerName, fileName, DeleteInput{}); err != nil {
+	if _, err := blobClient.Delete(ctx, containerName, fileName, DeleteInput{}); err != nil {
 		t.Fatalf("Error deleting: %s", err)
 	}
 }
