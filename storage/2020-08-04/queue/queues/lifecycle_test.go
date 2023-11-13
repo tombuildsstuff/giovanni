@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -27,11 +27,11 @@ func TestQueuesLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	queueName := fmt.Sprintf("queue-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindStorage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storageaccounts.KindStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
+	defer client.DestroyTestResources(ctx, client.SubscriptionId, resourceGroup, accountName)
 
 	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
 	if !ok {
