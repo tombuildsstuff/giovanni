@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/datalakestore/filesystems"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -26,7 +26,7 @@ func TestCreateDirectory(t *testing.T) {
 	fileSystemName := fmt.Sprintf("acctestfs-%s", testhelpers.RandomString())
 	path := "test"
 
-	testData, err := client.BuildTestResourcesWithHns(ctx, resourceGroup, accountName, storage.KindBlobStorage)
+	testData, err := client.BuildTestResourcesWithHns(ctx, resourceGroup, accountName, storageaccounts.KindBlobStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

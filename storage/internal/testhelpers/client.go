@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
-	track1storage "github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	authWrapper "github.com/hashicorp/go-azure-sdk/sdk/auth/autorest"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
@@ -23,7 +24,7 @@ import (
 type Client struct {
 	Environment          environments.Environment
 	ResourceGroupsClient resources.GroupsClient
-	StorageClient        track1storage.AccountsClient
+	StorageAccountClient storageaccounts.StorageAccountsClient
 	SubscriptionId       string
 
 	resourceManagerAuth auth.Authorizer
@@ -41,62 +42,61 @@ type TestResources struct {
 	StorageAccountKey  string
 }
 
-func (c Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind track1storage.Kind) (*TestResources, error) {
+func (c Client) BuildTestResources(ctx context.Context, resourceGroup, name string, kind storageaccounts.Kind) (*TestResources, error) {
 	return c.buildTestResources(ctx, resourceGroup, name, kind, false, "")
 }
-func (c Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind track1storage.Kind) (*TestResources, error) {
+func (c Client) BuildTestResourcesWithHns(ctx context.Context, resourceGroup, name string, kind storageaccounts.Kind) (*TestResources, error) {
 	return c.buildTestResources(ctx, resourceGroup, name, kind, true, "")
 }
-func (c Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind track1storage.Kind, sku track1storage.SkuName) (*TestResources, error) {
+func (c Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, name string, kind storageaccounts.Kind, sku storageaccounts.SkuName) (*TestResources, error) {
 	return c.buildTestResources(ctx, resourceGroup, name, kind, false, sku)
 }
-func (c Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind track1storage.Kind, enableHns bool, sku track1storage.SkuName) (*TestResources, error) {
-	location := pointer.To(os.Getenv("ARM_TEST_LOCATION"))
+func (c Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storageaccounts.Kind, enableHns bool, sku storageaccounts.SkuName) (*TestResources, error) {
+	location := os.Getenv("ARM_TEST_LOCATION")
 	_, err := c.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
-		Location: location,
+		Location: &location,
 	})
+
 	if err != nil {
-		return nil, fmt.Errorf("Error creating Resource Group %q: %s", resourceGroup, err)
+		return nil, fmt.Errorf("error creating Resource Group %q: %s", resourceGroup, err)
 	}
 
-	props := track1storage.AccountPropertiesCreateParameters{}
-	if kind == track1storage.KindBlobStorage {
-		props.AccessTier = track1storage.AccessTierHot
+	props := storageaccounts.StorageAccountPropertiesCreateParameters{}
+	if kind == storageaccounts.KindBlobStorage {
+		props.AccessTier = pointer.To(storageaccounts.AccessTierHot)
 	}
 	if enableHns {
 		props.IsHnsEnabled = &enableHns
 	}
 	if sku == "" {
-		sku = track1storage.SkuNameStandardLRS
+		sku = storageaccounts.SkuNameStandardLRS
 	}
 
-	future, err := c.StorageClient.Create(ctx, resourceGroup, name, track1storage.AccountCreateParameters{
+	id := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
+
+	err = c.StorageAccountClient.CreateThenPoll(ctx, id, storageaccounts.StorageAccountCreateParameters{
 		Location: location,
-		Sku: &track1storage.Sku{
+		Sku: storageaccounts.Sku{
 			Name: sku,
 		},
-		Kind:                              kind,
-		AccountPropertiesCreateParameters: &props,
+		Kind:       kind,
+		Properties: &props,
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("Error creating Account %q (Resource Group %q): %s", name, resourceGroup, err)
+		return nil, fmt.Errorf("error creating Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
-	err = future.WaitForCompletionRef(ctx, c.StorageClient.Client)
+	var options storageaccounts.ListKeysOperationOptions
+	keys, err := c.StorageAccountClient.ListKeys(ctx, id, options)
 	if err != nil {
-		return nil, fmt.Errorf("Error waiting for the creation of Account %q (Resource Group %q): %s", name, resourceGroup, err)
-	}
-
-	keys, err := c.StorageClient.ListKeys(ctx, resourceGroup, name, "")
-	if err != nil {
-		return nil, fmt.Errorf("Error listing keys for Storage Account %q (Resource Group %q): %s", name, resourceGroup, err)
+		return nil, fmt.Errorf("error listing keys for Storage Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
 	// sure we could poll to get around the inconsistency, but where's the fun in that
 	time.Sleep(5 * time.Second)
 
-	accountKeys := *keys.Keys
+	accountKeys := *keys.Model.Keys
 	return &TestResources{
 		ResourceGroup:      resourceGroup,
 		StorageAccountName: name,
@@ -105,19 +105,20 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 }
 
 func (c Client) DestroyTestResources(ctx context.Context, resourceGroup, name string) error {
-	_, err := c.StorageClient.Delete(ctx, resourceGroup, name)
+	accountId := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
+	_, err := c.StorageAccountClient.Delete(ctx, accountId)
 	if err != nil {
-		return fmt.Errorf("Error deleting Account %q (Resource Group %q): %s", name, resourceGroup, err)
+		return fmt.Errorf("error deleting Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
 	future, err := c.ResourceGroupsClient.Delete(ctx, resourceGroup)
 	if err != nil {
-		return fmt.Errorf("Error deleting Resource Group %q: %s", resourceGroup, err)
+		return fmt.Errorf("error deleting Resource Group %q: %s", resourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, c.ResourceGroupsClient.Client)
 	if err != nil {
-		return fmt.Errorf("Error waiting for deletion of Resource Group %q: %s", resourceGroup, err)
+		return fmt.Errorf("error waiting for deletion of Resource Group %q: %s", resourceGroup, err)
 	}
 
 	return nil
@@ -131,10 +132,10 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	environmentName := os.Getenv("ARM_ENVIRONMENT")
 	env, err := environments.FromName(environmentName)
 	if err != nil {
-		return nil, fmt.Errorf("determing environment %q: %+v", environmentName, err)
+		return nil, fmt.Errorf("determining environment %q: %+v", environmentName, err)
 	}
 	if env == nil {
-		return nil, fmt.Errorf("Environment was nil: %s", err)
+		return nil, fmt.Errorf("environment was nil: %s", err)
 	}
 
 	autorestEnv, err := authentication.DetermineEnvironment(environmentName)
@@ -189,12 +190,12 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	}
 
 	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
-	resourceGroupsClient.Client = client.PrepareWithAuthorizer(resourceGroupsClient.Client, client.resourceManagerAuthorizer)
+	resourceGroupsClient.Authorizer = client.resourceManagerAuthorizer
 	client.ResourceGroupsClient = resourceGroupsClient
 
-	storageClient := track1storage.NewAccountsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
-	storageClient.Client = client.PrepareWithAuthorizer(storageClient.Client, client.resourceManagerAuthorizer)
-	client.StorageClient = storageClient
+	storageClient := storageaccounts.NewStorageAccountsClientWithBaseURI(*resourceManagerEndpoint)
+	storageClient.Client.Authorizer = client.resourceManagerAuthorizer
+	client.StorageAccountClient = storageClient
 
 	return &client, nil
 }
@@ -206,17 +207,6 @@ func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
 
 func (c Client) PrepareWithResourceManagerAuth(input *storage.BaseClient) {
 	input.WithAuthorizer(c.storageAuth)
-}
-
-func (c Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
-	return c.PrepareWithAuthorizer(input, c.storageAuthorizer)
-}
-
-func (c Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest.Authorizer) autorest.Client {
-	input.Authorizer = authorizer
-	input.Sender = buildSender()
-	input.SkipResourceProviderRegistration = true
-	return input
 }
 
 func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources, keyType auth.SharedKeyType) error {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
@@ -27,7 +27,7 @@ func TestSnapshotLifecycle(t *testing.T) {
 	containerName := fmt.Sprintf("cont-%d", testhelpers.RandomInt())
 	fileName := "example.txt"
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storageaccounts.KindBlobStorage)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
@@ -26,7 +26,7 @@ func TestContainerLifecycle(t *testing.T) {
 	accountName := fmt.Sprintf("acctestsa%s", testhelpers.RandomString())
 	containerName := fmt.Sprintf("cont-%d", testhelpers.RandomInt())
 
-	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storage.KindBlobStorage)
+	testData, err := client.BuildTestResources(ctx, resourceGroup, accountName, storageaccounts.KindBlobStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestContainerLifecycle(t *testing.T) {
 		AccessLevel: Blob,
 	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("Error updating ACL's: %s", err))
+		t.Fatal(fmt.Errorf("error updating ACL's: %s", err))
 	}
 
 	// give azure some time to replicate
