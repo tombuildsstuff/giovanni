@@ -30,7 +30,7 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.DestroyTestResources(ctx, client.SubscriptionId, resourceGroup, accountName)
+	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
 	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
 	if !ok {
@@ -102,7 +102,7 @@ func TestContainerLifecycle(t *testing.T) {
 
 	// then update the ACL
 	_, err = containersClient.SetAccessControl(ctx, containerName, SetAccessControlInput{
-		AccessLevel: Container,
+		AccessLevel: Blob,
 	})
 	if err != nil {
 		t.Fatal(fmt.Errorf("error updating ACL's: %s", err))

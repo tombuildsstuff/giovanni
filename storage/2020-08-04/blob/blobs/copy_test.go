@@ -31,7 +31,7 @@ func TestCopyFromExistingFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.DestroyTestResources(ctx, client.SubscriptionId, resourceGroup, accountName)
+	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
 	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
 	if !ok {
@@ -126,7 +126,7 @@ func TestCopyFromURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.DestroyTestResources(ctx, client.SubscriptionId, resourceGroup, accountName)
+	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 
 	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
 	if !ok {

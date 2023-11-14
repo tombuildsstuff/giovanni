@@ -104,8 +104,8 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 	}, nil
 }
 
-func (c Client) DestroyTestResources(ctx context.Context, subscriptionId, resourceGroup, name string) error {
-	accountId := commonids.NewStorageAccountID(subscriptionId, resourceGroup, name)
+func (c Client) DestroyTestResources(ctx context.Context, resourceGroup, name string) error {
+	accountId := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
 	_, err := c.StorageAccountClient.Delete(ctx, accountId)
 	if err != nil {
 		return fmt.Errorf("error deleting Account %q (Resource Group %q): %s", name, resourceGroup, err)
@@ -190,11 +190,11 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	}
 
 	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
-	resourceGroupsClient.Client = client.PrepareWithAuthorizer(resourceGroupsClient.Client, client.resourceManagerAuthorizer)
+	resourceGroupsClient.Authorizer = client.resourceManagerAuthorizer
 	client.ResourceGroupsClient = resourceGroupsClient
 
 	storageClient := storageaccounts.NewStorageAccountsClientWithBaseURI(*resourceManagerEndpoint)
-	storageClient.Client = client.PrepareWithAuthorizer(storageClient.Client, client.resourceManagerAuthorizer)
+	storageClient.Client.Authorizer = client.resourceManagerAuthorizer
 	client.StorageAccountClient = storageClient
 
 	return &client, nil
@@ -207,17 +207,6 @@ func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
 
 func (c Client) PrepareWithResourceManagerAuth(input *storage.BaseClient) {
 	input.WithAuthorizer(c.storageAuth)
-}
-
-func (c Client) PrepareWithStorageResourceManagerAuth(input autorest.Client) autorest.Client {
-	return c.PrepareWithAuthorizer(input, c.storageAuthorizer)
-}
-
-func (c Client) PrepareWithAuthorizer(input autorest.Client, authorizer autorest.Authorizer) autorest.Client {
-	input.Authorizer = authorizer
-	input.Sender = buildSender()
-	input.SkipResourceProviderRegistration = true
-	return input
 }
 
 func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources, keyType auth.SharedKeyType) error {

@@ -32,7 +32,7 @@ func TestLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer client.DestroyTestResources(ctx, client.SubscriptionId, resourceGroup, accountName)
+	defer client.DestroyTestResources(ctx, resourceGroup, accountName)
 	domainSuffix, ok := client.Environment.Storage.DomainSuffix()
 	if !ok {
 		t.Fatalf("storage didn't return a domain suffix for this environment")
