@@ -1,6 +1,6 @@
-# Storage API Version 2020-08-04
+# Storage API Version 2023-11-03
 
-The following API's are supported by this SDK - more information about each SDK can be found within the README in each package.
+The following APIs are supported by this SDK - more information about each SDK can be found within the README in each package.
 
 ## Blob Storage
 
