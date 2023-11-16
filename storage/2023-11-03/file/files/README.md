@@ -39,7 +39,7 @@ func Example() error {
 	
     filesClient, err := files.NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, domainSuffix))
 	if err != nil {
-		t.Fatalf("building client for environment: %+v", err)
+		fmt.Errorf("building client for environment: %+v", err)
 	}
     filesClient.Client.WithAuthorizer(auth)
     

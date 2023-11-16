@@ -14,7 +14,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	
     "github.com/hashicorp/go-azure-helpers/authentication"
     "github.com/hashicorp/go-azure-helpers/sender"
@@ -36,7 +35,7 @@ func Example() error {
 	
     fileSystemsClient, err := filesystems.NewWithBaseUri(fmt.Sprintf("https://%s.dfs.%s", accountName, domainSuffix))
 	if err != nil {
-		t.Fatalf("building client for environment: %+v", err)
+		fmt.Errorf("building client for environment: %+v", err)
 	}
 	fileSystemsClient.Client.WithAuthorizer(auth)
 

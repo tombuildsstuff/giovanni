@@ -31,7 +31,7 @@ func Example() error {
 	}
     tablesClient, err := tables.NewWithBaseUri(fmt.Sprintf("https://%s.table.%s", accountName, domainSuffix))
 	if err != nil {
-		t.Fatalf("building client for environment: %+v", err)
+		fmt.Errorf("building client for environment: %+v", err)
 	}
 	tablesClient.Client.WithAuthorizer(auth)
     

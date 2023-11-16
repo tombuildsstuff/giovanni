@@ -32,7 +32,7 @@ func Example() error {
 	
     entitiesClient, err := entities.NewWithBaseUri(fmt.Sprintf("https://%s.table.%s", accountName, domainSuffix))
 	if err != nil {
-		t.Fatalf("building client for environment: %+v", err)
+		fmt.Errorf("building client for environment: %+v", err)
 	}
 	entitiesClient.Client.WithAuthorizer(auth)
     
