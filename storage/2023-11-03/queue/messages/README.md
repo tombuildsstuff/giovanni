@@ -33,7 +33,7 @@ func Example() error {
     
     messagesClient, err  := messages.NewWithBaseUri(fmt.Sprintf("https://%s.queue.%s", accountName, domainSuffix))
 	if err != nil {
-		fmt.Errorf("building client for environment: %+v", err)
+		return fmt.Errorf("building client for environment: %+v", err)
 	}
     messagesClient.Client.WithAuthorizer(auth)
     
