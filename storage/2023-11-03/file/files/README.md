@@ -1,4 +1,4 @@
-## File Storage Files SDK for API version 2020-08-04
+## File Storage Files SDK for API version 2023-11-03
 
 This package allows you to interact with the Files File Storage API
 
@@ -19,10 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
-	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/files"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/file/files"
 )
 
 func Example() error {
@@ -31,14 +30,22 @@ func Example() error {
     shareName := "myshare"
     directoryName := "myfiles"
     fileName := "example.txt"
-    
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
-    filesClient := files.New()
-    filesClient.Client.Authorizer = storageAuth
+	domainSuffix := "core.windows.net"
+
+	auth, err := auth.NewSharedKeyAuthorizer(accountName, storageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
+	
+    filesClient, err := files.NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+    filesClient.Client.WithAuthorizer(auth)
     
     ctx := context.TODO()
     input := files.CreateInput{}
-    if _, err := filesClient.Create(ctx, accountName, shareName, directoryName, fileName, input); err != nil {
+    if _, err := filesClient.Create(ctx, shareName, directoryName, fileName, input); err != nil {
         return fmt.Errorf("Error creating File: %s", err)
     }
     

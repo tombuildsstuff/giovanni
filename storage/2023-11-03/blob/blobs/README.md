@@ -1,4 +1,4 @@
-## Blob Storage Blobs SDK for API version 2020-08-04
+## Blob Storage Blobs SDK for API version 2023-11-03
 
 This package allows you to interact with the Blobs Blob Storage API
 
@@ -17,26 +17,34 @@ import (
 	"fmt"
 	"time"
 	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/blobs"
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/blob/blobs"
 )
 
 func Example() error {
 	accountName := "storageaccount1"
     storageAccountKey := "ABC123...."
     containerName := "mycontainer"
+	domainSuffix := "core.windows.net"
     fileName := "example-large-file.iso"
-    
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
-    blobClient := blobs.New()
-    blobClient.Client.Authorizer = storageAuth
+
+	blobClient, err := blobs.NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", accountName, domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+	
+	auth, err := auth.NewSharedKeyAuthorizer(accountName, storageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
+	blobClient.Client.WithAuthorizer(auth)
     
     ctx := context.TODO()
     copyInput := blobs.CopyInput{
         CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
     }
     refreshInterval := 5 * time.Second
-    if err := blobClient.CopyAndWait(ctx, accountName, containerName, fileName, copyInput, refreshInterval); err != nil {
+    if err := blobClient.CopyAndWait(ctx, containerName, fileName, copyInput, refreshInterval); err != nil {
         return fmt.Errorf("Error copying: %s", err)
     }
     

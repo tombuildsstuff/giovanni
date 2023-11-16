@@ -1,4 +1,4 @@
-## File Storage Directories SDK for API version 2020-08-04
+## File Storage Directories SDK for API version 2023-11-03
 
 This package allows you to interact with the Directories File Storage API
 
@@ -19,10 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
-	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/directories"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/file/directories"
 )
 
 func Example() error {
@@ -30,16 +29,28 @@ func Example() error {
     storageAccountKey := "ABC123...."
     shareName := "myshare"
     directoryName := "myfiles"
-    
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
-    directoriesClient := directories.New()
-    directoriesClient.Client.Authorizer = storageAuth
+	domainSuffix := "core.windows.net"
+
+	auth, err := auth.NewSharedKeyAuthorizer(accountName, storageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
+	
+    directoriesClient, err := directories.NewWithBaseUri(fmt.Sprintf("https://%s.dfs.%s", accountName, domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+    directoriesClient.Client.WithAuthorizer(auth)
     
     ctx := context.TODO()
     metadata := map[string]string{
     	"hello": "world",
     }
-    if _, err := directoriesClient.Create(ctx, accountName, shareName, directoryName, metadata); err != nil {
+	
+	input := directories.CreateDirectoryInput{
+		MetaData: metadata,
+    }
+    if _, err := directoriesClient.Create(ctx, shareName, directoryName, input); err != nil {
         return fmt.Errorf("Error creating Directory: %s", err)
     }
     

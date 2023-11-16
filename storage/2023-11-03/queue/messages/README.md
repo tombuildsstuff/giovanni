@@ -1,4 +1,4 @@
-## Queue Storage Messages SDK for API version 2020-08-04
+## Queue Storage Messages SDK for API version 2023-11-03
 
 This package allows you to interact with the Messages Queue Storage API
 
@@ -15,26 +15,33 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
-	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/queue/messages"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/queue/messages"
 )
 
 func Example() error {
 	accountName := "storageaccount1"
     storageAccountKey := "ABC123...."
     queueName := "myqueue"
+	domainSuffix := "core.windows.net"
+
+	auth, err := auth.NewSharedKeyAuthorizer(accountName, storageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
     
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
-    messagesClient := messages.New()
-    messagesClient.Client.Authorizer = storageAuth
+    messagesClient, err  := messages.NewWithBaseUri(fmt.Sprintf("https://%s.queue.%s", accountName, domainSuffix))
+	if err != nil {
+		t.Fatalf("building client for environment: %+v", err)
+	}
+    messagesClient.Client.WithAuthorizer(auth)
     
     ctx := context.TODO()
     input := messages.PutInput{
     	Message: "<over><message>hello</message></over>",
     }
-    if _, err := messagesClient.Put(ctx, accountName, queueName, input); err != nil {
+    if _, err := messagesClient.Put(ctx, queueName, input); err != nil {
         return fmt.Errorf("Error creating Message: %s", err)
     }
     
