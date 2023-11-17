@@ -1,4 +1,4 @@
-## Blob Storage Container SDK for API version 2020-08-04
+## Blob Storage Container SDK for API version 2023-11-03
 
 This package allows you to interact with the Containers Blob Storage API
 
@@ -17,26 +17,33 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
-	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/containers"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/blob/containers"
 )
 
 func Example() error {
 	accountName := "storageaccount1"
     storageAccountKey := "ABC123...."
     containerName := "mycontainer"
-    
-    storageAuth := autorest.NewSharedKeyLiteAuthorizer(accountName, storageAccountKey)
-    containersClient := containers.New()
-    containersClient.Client.Authorizer = storageAuth
+	domainSuffix := "core.windows.net"
+
+    containersClient, err := containers.NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", accountName, domainSuffix))
+	if err != nil {
+		return fmt.Errorf("building client for environment: %+v", err)
+	}
+
+	auth, err := auth.NewSharedKeyAuthorizer(accountName, storageAccountKey, auth.SharedKey)
+	if err != nil {
+		return fmt.Errorf("building SharedKey authorizer: %+v", err)
+	}
+	containersClient.Client.WithAuthorizer(auth)
     
     ctx := context.TODO()
     createInput := containers.CreateInput{
         AccessLevel: containers.Private,
     }
-    if _, err := containersClient.Create(ctx, accountName, containerName, createInput); err != nil {
+    if _, err := containersClient.Create(ctx, containerName, createInput); err != nil {
         return fmt.Errorf("Error creating Container: %s", err)
     }
     

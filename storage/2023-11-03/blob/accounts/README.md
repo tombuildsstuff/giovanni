@@ -1,4 +1,4 @@
-## Blob Storage Account SDK for API version 2020-08-04
+## Blob Storage Account SDK for API version 2023-11-03
 
 This package allows you to interact with the Accounts Blob Storage API
 
@@ -16,8 +16,7 @@ import (
 	"fmt"
 	"time"
 	
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/accounts"
+	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/blob/accounts"
 )
 
 func Example() error {
