@@ -3,14 +3,13 @@ package blobs
 import (
 	"context"
 	"os"
-	"time"
 )
 
 type StorageBlob interface {
 	AppendBlock(ctx context.Context, containerName string, blobName string, input AppendBlockInput) (AppendBlockResponse, error)
 	Copy(ctx context.Context, containerName string, blobName string, input CopyInput) (CopyResponse, error)
 	AbortCopy(ctx context.Context, containerName string, blobName string, input AbortCopyInput) (CopyAbortResponse, error)
-	CopyAndWait(ctx context.Context, containerName string, blobName string, input CopyInput, pollingInterval time.Duration) error
+	CopyAndWait(ctx context.Context, containerName string, blobName string, input CopyInput) error
 	Delete(ctx context.Context, containerName string, blobName string, input DeleteInput) (DeleteResponse, error)
 	DeleteSnapshot(ctx context.Context, containerName string, blobName string, input DeleteSnapshotInput) (DeleteSnapshotResponse, error)
 	DeleteSnapshots(ctx context.Context, containerName string, blobName string, input DeleteSnapshotsInput) (DeleteSnapshotsResponse, error)

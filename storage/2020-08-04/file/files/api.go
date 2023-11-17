@@ -3,7 +3,6 @@ package files
 import (
 	"context"
 	"os"
-	"time"
 )
 
 type StorageFile interface {
@@ -21,5 +20,5 @@ type StorageFile interface {
 	GetProperties(ctx context.Context, shareName string, path string, fileName string) (GetResponse, error)
 	Delete(ctx context.Context, shareName string, path string, fileName string) (DeleteResponse, error)
 	Create(ctx context.Context, shareName string, path string, fileName string, input CreateInput) (CreateResponse, error)
-	CopyAndWait(ctx context.Context, shareName, path, fileName string, input CopyInput, pollDuration time.Duration) (CopyResponse, error)
+	CopyAndWait(ctx context.Context, shareName, path, fileName string, input CopyInput) (CopyResponse, error)
 }

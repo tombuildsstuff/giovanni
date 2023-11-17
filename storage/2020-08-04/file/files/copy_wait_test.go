@@ -62,7 +62,7 @@ func TestFilesCopyAndWaitFromURL(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Copy And Waiting..")
-	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, copyInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, copyInput); err != nil {
 		t.Fatalf("Error copy & waiting: %s", err)
 	}
 
@@ -126,7 +126,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 	t.Logf("[DEBUG] Copy And Waiting the original file..")
-	if _, err := filesClient.CopyAndWait(ctx, shareName, "", originalFileName, copyInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", originalFileName, copyInput); err != nil {
 		t.Fatalf("Error copy & waiting: %s", err)
 	}
 
@@ -134,7 +134,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	duplicateInput := CopyInput{
 		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetFileEndpoint(*domainSuffix, accountName), shareName, originalFileName),
 	}
-	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, duplicateInput, DefaultCopyPollDuration); err != nil {
+	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, duplicateInput); err != nil {
 		t.Fatalf("Error copying duplicate: %s", err)
 	}
 

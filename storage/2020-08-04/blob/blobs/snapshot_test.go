@@ -67,8 +67,7 @@ func TestSnapshotLifecycle(t *testing.T) {
 		CopySource: "http://releases.ubuntu.com/14.04/ubuntu-14.04.6-desktop-amd64.iso",
 	}
 
-	refreshInterval := 5 * time.Second
-	if err := blobClient.CopyAndWait(ctx, containerName, fileName, copyInput, refreshInterval); err != nil {
+	if err := blobClient.CopyAndWait(ctx, containerName, fileName, copyInput); err != nil {
 		t.Fatalf("Error copying: %s", err)
 	}
 
