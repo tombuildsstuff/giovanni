@@ -33,7 +33,7 @@ func (p *copyAndWaitPoller) Poll(ctx context.Context) (*pollers.PollResult, erro
 		return nil, fmt.Errorf("retrieving properties (container: %s blob: %s) : %+v", p.containerName, p.blobName, err)
 	}
 
-	if strings.EqualFold(string(props.CopyStatus), "success") {
+	if strings.EqualFold(string(props.CopyStatus), string(Success)) {
 		return &pollers.PollResult{
 			Status:       pollers.PollingStatusSucceeded,
 			PollInterval: 10 * time.Second,
