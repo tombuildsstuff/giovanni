@@ -7,15 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/resources/2023-07-01/resourcegroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
-	authWrapper "github.com/hashicorp/go-azure-sdk/sdk/auth/autorest"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/client/dataplane/storage"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
@@ -23,17 +19,12 @@ import (
 
 type Client struct {
 	Environment          environments.Environment
-	ResourceGroupsClient resources.GroupsClient
-	StorageAccountClient storageaccounts.StorageAccountsClient
+	ResourceGroupsClient *resourcegroups.ResourceGroupsClient
+	StorageAccountClient *storageaccounts.StorageAccountsClient
 	SubscriptionId       string
 
 	resourceManagerAuth auth.Authorizer
 	storageAuth         auth.Authorizer
-
-	resourceManagerAuthorizer autorest.Authorizer
-	storageAuthorizer         autorest.Authorizer
-
-	AutoRestEnvironment azure.Environment
 }
 
 type TestResources struct {
@@ -53,15 +44,18 @@ func (c Client) BuildTestResourcesWithSku(ctx context.Context, resourceGroup, na
 }
 func (c Client) buildTestResources(ctx context.Context, resourceGroup, name string, kind storageaccounts.Kind, enableHns bool, sku storageaccounts.SkuName) (*TestResources, error) {
 	location := os.Getenv("ARM_TEST_LOCATION")
-	_, err := c.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroup, resources.Group{
-		Location: &location,
-	})
-
-	if err != nil {
+	resourceGroupId := commonids.NewResourceGroupID(c.SubscriptionId, resourceGroup)
+	resourceGroupPayload := resourcegroups.ResourceGroup{
+		Location: location,
+	}
+	if _, err := c.ResourceGroupsClient.CreateOrUpdate(ctx, resourceGroupId, resourceGroupPayload); err != nil {
 		return nil, fmt.Errorf("error creating Resource Group %q: %s", resourceGroup, err)
 	}
 
-	props := storageaccounts.StorageAccountPropertiesCreateParameters{}
+	props := storageaccounts.StorageAccountPropertiesCreateParameters{
+		AllowBlobPublicAccess: pointer.To(true),
+		PublicNetworkAccess:   pointer.To(storageaccounts.PublicNetworkAccessEnabled),
+	}
 	if kind == storageaccounts.KindBlobStorage {
 		props.AccessTier = pointer.To(storageaccounts.AccessTierHot)
 	}
@@ -72,25 +66,23 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 		sku = storageaccounts.SkuNameStandardLRS
 	}
 
-	id := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
-
-	err = c.StorageAccountClient.CreateThenPoll(ctx, id, storageaccounts.StorageAccountCreateParameters{
+	payload := storageaccounts.StorageAccountCreateParameters{
 		Location: location,
 		Sku: storageaccounts.Sku{
 			Name: sku,
 		},
 		Kind:       kind,
 		Properties: &props,
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("error creating Account %q (Resource Group %q): %s", name, resourceGroup, err)
+	}
+	storageAccountId := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
+	if err := c.StorageAccountClient.CreateThenPoll(ctx, storageAccountId, payload); err != nil {
+		return nil, fmt.Errorf("error creating %s: %+v", storageAccountId, err)
 	}
 
 	var options storageaccounts.ListKeysOperationOptions
-	keys, err := c.StorageAccountClient.ListKeys(ctx, id, options)
+	keys, err := c.StorageAccountClient.ListKeys(ctx, storageAccountId, options)
 	if err != nil {
-		return nil, fmt.Errorf("error listing keys for Storage Account %q (Resource Group %q): %s", name, resourceGroup, err)
+		return nil, fmt.Errorf("error listing keys for %s: %+v", storageAccountId, err)
 	}
 
 	// sure we could poll to get around the inconsistency, but where's the fun in that
@@ -105,20 +97,14 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 }
 
 func (c Client) DestroyTestResources(ctx context.Context, resourceGroup, name string) error {
-	accountId := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
-	_, err := c.StorageAccountClient.Delete(ctx, accountId)
-	if err != nil {
-		return fmt.Errorf("error deleting Account %q (Resource Group %q): %s", name, resourceGroup, err)
+	storageAccountId := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
+	if _, err := c.StorageAccountClient.Delete(ctx, storageAccountId); err != nil {
+		return fmt.Errorf("error deleting %s: %+v", storageAccountId, err)
 	}
 
-	future, err := c.ResourceGroupsClient.Delete(ctx, resourceGroup)
-	if err != nil {
+	resourceGroupId := commonids.NewResourceGroupID(c.SubscriptionId, resourceGroup)
+	if err := c.ResourceGroupsClient.DeleteThenPoll(ctx, resourceGroupId, resourcegroups.DefaultDeleteOperationOptions()); err != nil {
 		return fmt.Errorf("error deleting Resource Group %q: %s", resourceGroup, err)
-	}
-
-	err = future.WaitForCompletionRef(ctx, c.ResourceGroupsClient.Client)
-	if err != nil {
-		return fmt.Errorf("error waiting for deletion of Resource Group %q: %s", resourceGroup, err)
 	}
 
 	return nil
@@ -136,14 +122,6 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 	}
 	if env == nil {
 		return nil, fmt.Errorf("environment was nil: %s", err)
-	}
-
-	autorestEnv, err := authentication.DetermineEnvironment(environmentName)
-	if err != nil {
-		return nil, fmt.Errorf("determing autorest environment %q: %+v", environmentName, err)
-	}
-	if autorestEnv == nil {
-		return nil, fmt.Errorf("Autorest Environment was nil: %s", err)
 	}
 
 	authConfig := auth.Credentials{
@@ -177,24 +155,20 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 		// internal
 		resourceManagerAuth: resourceManagerAuth,
 		storageAuth:         storageAuthorizer,
-
-		// Legacy / to be removed
-		AutoRestEnvironment:       *autorestEnv,
-		resourceManagerAuthorizer: authWrapper.AutorestAuthorizer(resourceManagerAuth),
-		storageAuthorizer:         authWrapper.AutorestAuthorizer(storageAuthorizer),
 	}
 
-	resourceManagerEndpoint, ok := authConfig.Environment.ResourceManager.Endpoint()
-	if !ok {
-		return nil, fmt.Errorf("Resource Manager Endpoint is not configured for this environment")
+	resourceGroupsClient, err := resourcegroups.NewResourceGroupsClientWithBaseURI(env.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building Resource Groups client: %+v", err)
 	}
-
-	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
-	resourceGroupsClient.Authorizer = client.resourceManagerAuthorizer
+	client.Configure(resourceGroupsClient.Client.Client, client.resourceManagerAuth)
 	client.ResourceGroupsClient = resourceGroupsClient
 
-	storageClient := storageaccounts.NewStorageAccountsClientWithBaseURI(*resourceManagerEndpoint)
-	storageClient.Client.Authorizer = client.resourceManagerAuthorizer
+	storageClient, err := storageaccounts.NewStorageAccountsClientWithBaseURI(env.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building Storage Accounts client: %+v", err)
+	}
+	client.Configure(storageClient.Client.Client, client.resourceManagerAuth)
 	client.StorageAccountClient = storageClient
 
 	return &client, nil
