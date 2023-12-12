@@ -17,6 +17,10 @@ func (c Client) PutFile(ctx context.Context, shareName, path, fileName string, f
 		return fmt.Errorf("error loading file info: %s", err)
 	}
 
+	if fileInfo.Size() == 0 {
+		return fmt.Errorf("file is empty which is not supported")
+	}
+
 	fileSize := fileInfo.Size()
 	chunkSize := 4 * 1024 * 1024 // 4MB
 	if chunkSize > int(fileSize) {
