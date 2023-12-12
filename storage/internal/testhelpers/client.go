@@ -21,8 +21,8 @@ import (
 
 type Client struct {
 	Environment          environments.Environment
-	ResourceGroupsClient resources.GroupsClient
-	StorageAccountClient storageaccounts.StorageAccountsClient
+	ResourceGroupsClient *resources.GroupsClient
+	StorageAccountClient *storageaccounts.StorageAccountsClient
 	SubscriptionId       string
 
 	resourceManagerAuth auth.Authorizer
@@ -178,10 +178,13 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 
 	resourceGroupsClient := resources.NewGroupsClientWithBaseURI(*resourceManagerEndpoint, client.SubscriptionId)
 	resourceGroupsClient.Authorizer = client.resourceManagerAuthorizer
-	client.ResourceGroupsClient = resourceGroupsClient
+	client.ResourceGroupsClient = &resourceGroupsClient
 
-	storageClient := storageaccounts.NewStorageAccountsClientWithBaseURI(*resourceManagerEndpoint)
-	storageClient.Client.Authorizer = client.resourceManagerAuthorizer
+	storageClient, err := storageaccounts.NewStorageAccountsClientWithBaseURI(env.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building client for Storage Accounts: %+v", err)
+	}
+	storageClient.Client.Authorizer = client.resourceManagerAuth
 	client.StorageAccountClient = storageClient
 
 	return &client, nil
