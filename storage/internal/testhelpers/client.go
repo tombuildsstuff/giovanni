@@ -9,8 +9,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
@@ -30,10 +28,8 @@ type Client struct {
 	resourceManagerAuth auth.Authorizer
 	storageAuth         auth.Authorizer
 
+	// TODO: this can be removed once `resources` and `storage` are updated to use `hashicorp/go-azure-sdk`
 	resourceManagerAuthorizer autorest.Authorizer
-	storageAuthorizer         autorest.Authorizer
-
-	AutoRestEnvironment azure.Environment
 }
 
 type TestResources struct {
@@ -61,7 +57,10 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 		return nil, fmt.Errorf("error creating Resource Group %q: %s", resourceGroup, err)
 	}
 
-	props := storageaccounts.StorageAccountPropertiesCreateParameters{}
+	props := storageaccounts.StorageAccountPropertiesCreateParameters{
+		AllowBlobPublicAccess: pointer.To(true),
+		PublicNetworkAccess:   pointer.To(storageaccounts.PublicNetworkAccessEnabled),
+	}
 	if kind == storageaccounts.KindBlobStorage {
 		props.AccessTier = pointer.To(storageaccounts.AccessTierHot)
 	}
@@ -72,18 +71,16 @@ func (c Client) buildTestResources(ctx context.Context, resourceGroup, name stri
 		sku = storageaccounts.SkuNameStandardLRS
 	}
 
-	id := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
-
-	err = c.StorageAccountClient.CreateThenPoll(ctx, id, storageaccounts.StorageAccountCreateParameters{
+	payload := storageaccounts.StorageAccountCreateParameters{
 		Location: location,
 		Sku: storageaccounts.Sku{
 			Name: sku,
 		},
 		Kind:       kind,
 		Properties: &props,
-	})
-
-	if err != nil {
+	}
+	id := commonids.NewStorageAccountID(c.SubscriptionId, resourceGroup, name)
+	if err = c.StorageAccountClient.CreateThenPoll(ctx, id, payload); err != nil {
 		return nil, fmt.Errorf("error creating Account %q (Resource Group %q): %s", name, resourceGroup, err)
 	}
 
@@ -138,14 +135,6 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 		return nil, fmt.Errorf("environment was nil: %s", err)
 	}
 
-	autorestEnv, err := authentication.DetermineEnvironment(environmentName)
-	if err != nil {
-		return nil, fmt.Errorf("determing autorest environment %q: %+v", environmentName, err)
-	}
-	if autorestEnv == nil {
-		return nil, fmt.Errorf("Autorest Environment was nil: %s", err)
-	}
-
 	authConfig := auth.Credentials{
 		Environment:  *env,
 		ClientID:     os.Getenv("ARM_CLIENT_ID"),
@@ -179,9 +168,7 @@ func Build(ctx context.Context, t *testing.T) (*Client, error) {
 		storageAuth:         storageAuthorizer,
 
 		// Legacy / to be removed
-		AutoRestEnvironment:       *autorestEnv,
 		resourceManagerAuthorizer: authWrapper.AutorestAuthorizer(resourceManagerAuth),
-		storageAuthorizer:         authWrapper.AutorestAuthorizer(storageAuthorizer),
 	}
 
 	resourceManagerEndpoint, ok := authConfig.Environment.ResourceManager.Endpoint()
