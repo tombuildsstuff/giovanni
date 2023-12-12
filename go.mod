@@ -1,14 +1,16 @@
 module github.com/tombuildsstuff/giovanni
 
-go 1.19
+go 1.21
+
+toolchain go1.21.3
 
 require (
 	github.com/Azure/azure-sdk-for-go v66.0.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.29
-	github.com/google/uuid v1.1.1
-	github.com/hashicorp/go-azure-helpers v0.63.0
-	github.com/hashicorp/go-azure-sdk v0.20231109.1114643
-	github.com/stretchr/testify v1.8.2
+	github.com/google/uuid v1.4.0
+	github.com/hashicorp/go-azure-helpers v0.64.0
+	github.com/hashicorp/go-azure-sdk v0.20231211.1135715
+	github.com/stretchr/testify v1.8.4
 )
 
 require (
