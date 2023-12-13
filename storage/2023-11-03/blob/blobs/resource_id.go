@@ -1,4 +1,4 @@
-package containers
+package blobs
 
 import (
 	"fmt"
@@ -9,47 +9,45 @@ import (
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/accounts"
 )
 
-// GetResourceManagerResourceID returns the Resource Manager specific
-// ResourceID for a specific Storage Container
-func (c Client) GetResourceManagerResourceID(subscriptionID, resourceGroup, accountName, containerName string) string {
-	fmtStr := "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s/blobServices/default/containers/%s"
-	return fmt.Sprintf(fmtStr, subscriptionID, resourceGroup, accountName, containerName)
-}
-
 // TODO: update this to implement `resourceids.ResourceId` once
 // https://github.com/hashicorp/go-azure-helpers/issues/187 is fixed
-var _ resourceids.Id = ContainerId{}
+var _ resourceids.Id = BlobId{}
 
-type ContainerId struct {
+type BlobId struct {
 	// AccountId specifies the ID of the Storage Account where this Blob exists.
 	AccountId accounts.AccountId
 
 	// ContainerName specifies the name of the Container within this Storage Account where this
 	// Blob exists.
 	ContainerName string
+
+	// BlobName specifies the name of this Blob.
+	BlobName string
 }
 
-func NewContainerID(accountId accounts.AccountId, containerName string) ContainerId {
-	return ContainerId{
+func NewBlobID(accountId accounts.AccountId, containerName, blobName string) BlobId {
+	return BlobId{
 		AccountId:     accountId,
 		ContainerName: containerName,
+		BlobName:      blobName,
 	}
 }
 
-func (b ContainerId) ID() string {
-	return fmt.Sprintf("%s/%s", b.AccountId.ID(), b.ContainerName)
+func (b BlobId) ID() string {
+	return fmt.Sprintf("%s/%s/%s", b.AccountId.ID(), b.ContainerName, b.BlobName)
 }
 
-func (b ContainerId) String() string {
+func (b BlobId) String() string {
 	components := []string{
 		fmt.Sprintf("Account %q", b.AccountId.String()),
+		fmt.Sprintf("Container Name %q", b.ContainerName),
 	}
-	return fmt.Sprintf("Containerr %q (%s)", b.ContainerName, strings.Join(components, " / "))
+	return fmt.Sprintf("Blob %q (%s)", b.BlobName, strings.Join(components, " / "))
 }
 
-// ParseContainerID parses `input` into a Blob ID using a known `domainSuffix`
-func ParseContainerID(input, domainSuffix string) (*ContainerId, error) {
-	// example: https://foo.blob.core.windows.net/Bar
+// ParseBlobID parses `input` into a Blob ID using a known `domainSuffix`
+func ParseBlobID(input, domainSuffix string) (*BlobId, error) {
+	// example: https://foo.blob.core.windows.net/Bar/example.vhd
 	if input == "" {
 		return nil, fmt.Errorf("`input` was empty")
 	}
@@ -70,9 +68,12 @@ func ParseContainerID(input, domainSuffix string) (*ContainerId, error) {
 		return nil, fmt.Errorf("Expected the path to contain segments but got none")
 	}
 
-	containerName := strings.TrimPrefix(uri.Path, "/")
-	return &ContainerId{
+	containerName := segments[0]
+	blobName := strings.TrimPrefix(path, containerName)
+	blobName = strings.TrimPrefix(blobName, "/")
+	return &BlobId{
 		AccountId:     *account,
 		ContainerName: containerName,
+		BlobName:      blobName,
 	}, nil
 }
