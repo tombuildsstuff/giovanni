@@ -21,11 +21,10 @@ func (c Client) GetResourceManagerResourceID(subscriptionID, resourceGroup, acco
 var _ resourceids.Id = ContainerId{}
 
 type ContainerId struct {
-	// AccountId specifies the ID of the Storage Account where this Blob exists.
+	// AccountId specifies the ID of the Storage Account where this Container exists.
 	AccountId accounts.AccountId
 
-	// ContainerName specifies the name of the Container within this Storage Account where this
-	// Blob exists.
+	// ContainerName specifies the name of this Container.
 	ContainerName string
 }
 
@@ -44,10 +43,10 @@ func (b ContainerId) String() string {
 	components := []string{
 		fmt.Sprintf("Account %q", b.AccountId.String()),
 	}
-	return fmt.Sprintf("Containerr %q (%s)", b.ContainerName, strings.Join(components, " / "))
+	return fmt.Sprintf("Container %q (%s)", b.ContainerName, strings.Join(components, " / "))
 }
 
-// ParseContainerID parses `input` into a Blob ID using a known `domainSuffix`
+// ParseContainerID parses `input` into a Container ID using a known `domainSuffix`
 func ParseContainerID(input, domainSuffix string) (*ContainerId, error) {
 	// example: https://foo.blob.core.windows.net/Bar
 	if input == "" {
@@ -70,8 +69,8 @@ func ParseContainerID(input, domainSuffix string) (*ContainerId, error) {
 
 	path := strings.TrimPrefix(uri.Path, "/")
 	segments := strings.Split(path, "/")
-	if len(segments) == 0 {
-		return nil, fmt.Errorf("Expected the path to contain segments but got none")
+	if len(segments) != 1 {
+		return nil, fmt.Errorf("expected the path to contain 1 segment but got %d", len(segments))
 	}
 
 	containerName := strings.TrimPrefix(uri.Path, "/")
