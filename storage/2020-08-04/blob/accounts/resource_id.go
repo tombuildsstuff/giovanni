@@ -12,15 +12,17 @@ import (
 type SubDomainType string
 
 const (
-	BlobSubDomainType  SubDomainType = "blob"
-	FileSubDomainType  SubDomainType = "file"
-	QueueSubDomainType SubDomainType = "queue"
-	TableSubDomainType SubDomainType = "table"
+	BlobSubDomainType          SubDomainType = "blob"
+	DataLakeStoreSubDomainType SubDomainType = "dfs"
+	FileSubDomainType          SubDomainType = "file"
+	QueueSubDomainType         SubDomainType = "queue"
+	TableSubDomainType         SubDomainType = "table"
 )
 
 func PossibleValuesForSubDomainType() []SubDomainType {
 	return []SubDomainType{
 		BlobSubDomainType,
+		DataLakeStoreSubDomainType,
 		FileSubDomainType,
 		QueueSubDomainType,
 		TableSubDomainType,
