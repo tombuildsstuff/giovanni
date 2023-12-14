@@ -1,31 +1,24 @@
-package containers
+package blobs
 
 import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/tombuildsstuff/giovanni/storage/2023-11-03/blob/accounts"
+	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/blob/accounts"
 )
 
-func TestGetResourceManagerResourceID(t *testing.T) {
-	actual := Client{}.GetResourceManagerResourceID("11112222-3333-4444-5555-666677778888", "group1", "account1", "container1")
-	expected := "/subscriptions/11112222-3333-4444-5555-666677778888/resourceGroups/group1/providers/Microsoft.Storage/storageAccounts/account1/blobServices/default/containers/container1"
-	if actual != expected {
-		t.Fatalf("Expected the Resource Manager Resource ID to be %q but got %q", expected, actual)
-	}
-}
-
-func TestParseContainerIDStandard(t *testing.T) {
-	input := "https://example1.blob.core.windows.net/container1"
-	expected := ContainerId{
+func TestParseBlobIDStandard(t *testing.T) {
+	input := "https://example1.blob.core.windows.net/container1/blob1.vhd"
+	expected := BlobId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
 			SubDomainType: accounts.BlobSubDomainType,
 			DomainSuffix:  "core.windows.net",
 		},
 		ContainerName: "container1",
+		BlobName:      "blob1.vhd",
 	}
-	actual, err := ParseContainerID(input, "core.windows.net")
+	actual, err := ParseBlobID(input, "core.windows.net")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -41,11 +34,14 @@ func TestParseContainerIDStandard(t *testing.T) {
 	if actual.ContainerName != expected.ContainerName {
 		t.Fatalf("expected ContainerName to be %q but got %q", expected.ContainerName, actual.ContainerName)
 	}
+	if actual.BlobName != expected.BlobName {
+		t.Fatalf("expected BlobName to be %q but got %q", expected.BlobName, actual.BlobName)
+	}
 }
 
-func TestParseContainerIDInADNSZone(t *testing.T) {
-	input := "https://example1.zone1.blob.storage.azure.net/container1"
-	expected := ContainerId{
+func TestParseBlobIDInADNSZone(t *testing.T) {
+	input := "https://example1.zone1.blob.storage.azure.net/container1/blob1.vhd"
+	expected := BlobId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
 			SubDomainType: accounts.BlobSubDomainType,
@@ -53,8 +49,9 @@ func TestParseContainerIDInADNSZone(t *testing.T) {
 			ZoneName:      pointer.To("zone1"),
 		},
 		ContainerName: "container1",
+		BlobName:      "blob1.vhd",
 	}
-	actual, err := ParseContainerID(input, "storage.azure.net")
+	actual, err := ParseBlobID(input, "storage.azure.net")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -73,11 +70,14 @@ func TestParseContainerIDInADNSZone(t *testing.T) {
 	if actual.ContainerName != expected.ContainerName {
 		t.Fatalf("expected ContainerName to be %q but got %q", expected.ContainerName, actual.ContainerName)
 	}
+	if actual.BlobName != expected.BlobName {
+		t.Fatalf("expected BlobName to be %q but got %q", expected.BlobName, actual.BlobName)
+	}
 }
 
-func TestParseContainerIDInAnEdgeZone(t *testing.T) {
-	input := "https://example1.blob.zone1.edgestorage.azure.net/container1"
-	expected := ContainerId{
+func TestParseBlobIDInAnEdgeZone(t *testing.T) {
+	input := "https://example1.blob.zone1.edgestorage.azure.net/container1/blob1.vhd"
+	expected := BlobId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
 			SubDomainType: accounts.BlobSubDomainType,
@@ -86,8 +86,9 @@ func TestParseContainerIDInAnEdgeZone(t *testing.T) {
 			IsEdgeZone:    true,
 		},
 		ContainerName: "container1",
+		BlobName:      "blob1.vhd",
 	}
-	actual, err := ParseContainerID(input, "edgestorage.azure.net")
+	actual, err := ParseBlobID(input, "edgestorage.azure.net")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -109,10 +110,13 @@ func TestParseContainerIDInAnEdgeZone(t *testing.T) {
 	if actual.ContainerName != expected.ContainerName {
 		t.Fatalf("expected ContainerName to be %q but got %q", expected.ContainerName, actual.ContainerName)
 	}
+	if actual.BlobName != expected.BlobName {
+		t.Fatalf("expected BlobName to be %q but got %q", expected.BlobName, actual.BlobName)
+	}
 }
 
-func TestFormatContainerIDStandard(t *testing.T) {
-	actual := ContainerId{
+func TestFormatBlobIDStandard(t *testing.T) {
+	actual := BlobId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
 			SubDomainType: accounts.BlobSubDomainType,
@@ -120,15 +124,16 @@ func TestFormatContainerIDStandard(t *testing.T) {
 			IsEdgeZone:    false,
 		},
 		ContainerName: "container1",
+		BlobName:      "somefile.vhd",
 	}.ID()
-	expected := "https://example1.blob.core.windows.net/container1"
+	expected := "https://example1.blob.core.windows.net/container1/somefile.vhd"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}
 }
 
-func TestFormatContainerIDInDNSZone(t *testing.T) {
-	actual := ContainerId{
+func TestFormatBlobIDInDNSZone(t *testing.T) {
+	actual := BlobId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
 			ZoneName:      pointer.To("zone2"),
@@ -137,15 +142,16 @@ func TestFormatContainerIDInDNSZone(t *testing.T) {
 			IsEdgeZone:    false,
 		},
 		ContainerName: "container1",
+		BlobName:      "somefile.vhd",
 	}.ID()
-	expected := "https://example1.zone2.blob.storage.azure.net/container1"
+	expected := "https://example1.zone2.blob.storage.azure.net/container1/somefile.vhd"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}
 }
 
-func TestFormatContainerIDInEdgeZone(t *testing.T) {
-	actual := ContainerId{
+func TestFormatBlobIDInEdgeZone(t *testing.T) {
+	actual := BlobId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
 			ZoneName:      pointer.To("zone2"),
@@ -154,8 +160,9 @@ func TestFormatContainerIDInEdgeZone(t *testing.T) {
 			IsEdgeZone:    true,
 		},
 		ContainerName: "container1",
+		BlobName:      "somefile.vhd",
 	}.ID()
-	expected := "https://example1.blob.zone2.edgestorage.azure.net/container1"
+	expected := "https://example1.blob.zone2.edgestorage.azure.net/container1/somefile.vhd"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}

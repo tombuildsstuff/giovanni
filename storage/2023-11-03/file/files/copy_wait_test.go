@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/storage/2023-01-01/storageaccounts"
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/tombuildsstuff/giovanni/storage/2020-08-04/file/shares"
-	"github.com/tombuildsstuff/giovanni/storage/internal/endpoints"
 	"github.com/tombuildsstuff/giovanni/storage/internal/testhelpers"
 )
 
@@ -115,7 +114,8 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 	}
 	defer sharesClient.Delete(ctx, shareName, shares.DeleteInput{DeleteSnapshots: false})
 
-	filesClient, err := NewWithBaseUri(fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix))
+	baseUri := fmt.Sprintf("https://%s.file.%s", accountName, *domainSuffix)
+	filesClient, err := NewWithBaseUri(baseUri)
 	if err := client.PrepareWithSharedKeyAuth(filesClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
@@ -132,7 +132,7 @@ func TestFilesCopyAndWaitFromBlob(t *testing.T) {
 
 	t.Logf("[DEBUG] Now copying that blob..")
 	duplicateInput := CopyInput{
-		CopySource: fmt.Sprintf("%s/%s/%s", endpoints.GetFileEndpoint(*domainSuffix, accountName), shareName, originalFileName),
+		CopySource: fmt.Sprintf("%s/%s/%s", baseUri, shareName, originalFileName),
 	}
 	if _, err := filesClient.CopyAndWait(ctx, shareName, "", copiedFileName, duplicateInput); err != nil {
 		t.Fatalf("Error copying duplicate: %s", err)
