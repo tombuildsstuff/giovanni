@@ -29,7 +29,7 @@ func parseProperties(input string) (*map[string]string, error) {
 		// as such we can't string split on that -_-
 		position := strings.Index(propertyRaw, "=")
 		if position < 0 {
-			return nil, fmt.Errorf("Expected there to be an equals in the key value pair: %q", propertyRaw)
+			return nil, fmt.Errorf("expected an equal sign in the key value pair: %q", propertyRaw)
 		}
 
 		key := propertyRaw[0:position]

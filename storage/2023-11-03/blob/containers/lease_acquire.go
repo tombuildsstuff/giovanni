@@ -18,8 +18,8 @@ type AcquireLeaseInput struct {
 }
 
 type AcquireLeaseResponse struct {
-	HttpResponse *client.Response
-	Model        *AcquireLeaseModel
+	AcquireLeaseModel
+	HttpResponse *http.Response
 }
 
 type AcquireLeaseModel struct {
@@ -27,13 +27,13 @@ type AcquireLeaseModel struct {
 }
 
 // AcquireLease establishes and manages a lock on a container for delete operations.
-func (c Client) AcquireLease(ctx context.Context, containerName string, input AcquireLeaseInput) (resp AcquireLeaseResponse, err error) {
+func (c Client) AcquireLease(ctx context.Context, containerName string, input AcquireLeaseInput) (result AcquireLeaseResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 	// An infinite lease duration is -1 seconds. A non-infinite lease can be between 15 and 60 seconds
 	if input.LeaseDuration != -1 && (input.LeaseDuration <= 15 || input.LeaseDuration >= 60) {
-		return resp, fmt.Errorf("`input.LeaseDuration` must be -1 (infinite), or between 15 and 60 seconds")
+		return result, fmt.Errorf("`input.LeaseDuration` must be -1 (infinite), or between 15 and 60 seconds")
 	}
 
 	opts := client.RequestOptions{
@@ -48,21 +48,25 @@ func (c Client) AcquireLease(ctx context.Context, containerName string, input Ac
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.LeaseID = resp.Header.Get("x-ms-lease-id")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		resp.Model = &AcquireLeaseModel{
-			LeaseID: resp.HttpResponse.Header.Get("x-ms-lease-id"),
-		}
 	}
 
 	return

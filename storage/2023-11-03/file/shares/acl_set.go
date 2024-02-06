@@ -15,7 +15,7 @@ import (
 )
 
 type SetAclResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type SetAclInput struct {
@@ -25,14 +25,15 @@ type SetAclInput struct {
 }
 
 // SetACL sets the specified Access Control List on the specified Storage Share
-func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput) (resp SetAclResponse, err error) {
-
+func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput) (result SetAclResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -53,7 +54,8 @@ func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput)
 
 	b, err := xml.Marshal(&input)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling input: %v", err)
+		err = fmt.Errorf("marshalling input: %+v", err)
+		return
 	}
 	withHeader := xml.Header + string(b)
 	bytesWithHeader := []byte(withHeader)
@@ -61,11 +63,16 @@ func (c Client) SetACL(ctx context.Context, shareName string, input SetAclInput)
 	req.Header.Set("Content-Length", strconv.Itoa(len(bytesWithHeader)))
 	req.Body = io.NopCloser(bytes.NewReader(bytesWithHeader))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
+
 	return
 }
 

@@ -15,14 +15,15 @@ type SetAccessControlInput struct {
 }
 
 type SetAccessControlResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetAccessControl sets the Access Control for a Container without a Lease ID
 // NOTE: The SetAccessControl operation only supports Shared Key authorization.
-func (c Client) SetAccessControl(ctx context.Context, containerName string, input SetAccessControlInput) (resp SetAccessControlResponse, err error) {
+func (c Client) SetAccessControl(ctx context.Context, containerName string, input SetAccessControlInput) (result SetAccessControlResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -37,12 +38,18 @@ func (c Client) SetAccessControl(ctx context.Context, containerName string, inpu
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

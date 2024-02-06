@@ -16,14 +16,15 @@ type GetPropertiesInput struct {
 }
 
 type GetPropertiesResponse struct {
-	HttpResponse *client.Response
-	Model        *ContainerProperties
+	ContainerProperties
+	HttpResponse *http.Response
 }
 
 // GetProperties returns the properties for this Container without a Lease
-func (c Client) GetProperties(ctx context.Context, containerName string, input GetPropertiesInput) (resp GetPropertiesResponse, err error) {
+func (c Client) GetProperties(ctx context.Context, containerName string, input GetPropertiesInput) (result GetPropertiesResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -37,38 +38,43 @@ func (c Client) GetProperties(ctx context.Context, containerName string, input G
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.LeaseStatus = LeaseStatus(resp.Header.Get("x-ms-lease-status"))
+			result.LeaseState = LeaseState(resp.Header.Get("x-ms-lease-state"))
+			if result.LeaseStatus == Locked {
+				duration := LeaseDuration(resp.Header.Get("x-ms-lease-duration"))
+				result.LeaseDuration = &duration
+			}
+
+			// If this header is not returned in the response, the container is private to the account owner.
+			accessLevel := resp.Header.Get("x-ms-blob-public-access")
+			if accessLevel != "" {
+				result.AccessLevel = AccessLevel(accessLevel)
+			} else {
+				result.AccessLevel = Private
+			}
+
+			// we can't necessarily use strconv.ParseBool here since this could be nil (only in some API versions)
+			result.HasImmutabilityPolicy = strings.EqualFold(resp.Header.Get("x-ms-has-immutability-policy"), "true")
+			result.HasLegalHold = strings.EqualFold(resp.Header.Get("x-ms-has-legal-hold"), "true")
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		resp.Model = &ContainerProperties{}
-		resp.Model.LeaseStatus = LeaseStatus(resp.HttpResponse.Header.Get("x-ms-lease-status"))
-		resp.Model.LeaseState = LeaseState(resp.HttpResponse.Header.Get("x-ms-lease-state"))
-		if resp.Model.LeaseStatus == Locked {
-			duration := LeaseDuration(resp.HttpResponse.Header.Get("x-ms-lease-duration"))
-			resp.Model.LeaseDuration = &duration
-		}
-
-		// If this header is not returned in the response, the container is private to the account owner.
-		accessLevel := resp.HttpResponse.Header.Get("x-ms-blob-public-access")
-		if accessLevel != "" {
-			resp.Model.AccessLevel = AccessLevel(accessLevel)
-		} else {
-			resp.Model.AccessLevel = Private
-		}
-
-		// we can't necessarily use strconv.ParseBool here since this could be nil (only in some API versions)
-		resp.Model.HasImmutabilityPolicy = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-has-immutability-policy"), "true")
-		resp.Model.HasLegalHold = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-has-legal-hold"), "true")
-		resp.Model.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
 	}
 
 	return

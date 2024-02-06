@@ -20,22 +20,22 @@ type DeleteEntityInput struct {
 }
 
 type DeleteEntityResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete deletes an existing entity in a table.
-func (c Client) Delete(ctx context.Context, tableName string, input DeleteEntityInput) (resp DeleteEntityResponse, err error) {
+func (c Client) Delete(ctx context.Context, tableName string, input DeleteEntityInput) (result DeleteEntityResponse, err error) {
 
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		return result, fmt.Errorf("`tableName` cannot be an empty string")
 	}
 
 	if input.PartitionKey == "" {
-		return resp, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
 	}
 
 	if input.RowKey == "" {
-		return resp, fmt.Errorf("`input.RowKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.RowKey` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -54,7 +54,11 @@ func (c Client) Delete(ctx context.Context, tableName string, input DeleteEntity
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

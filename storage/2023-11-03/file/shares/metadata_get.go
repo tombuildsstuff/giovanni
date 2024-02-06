@@ -12,18 +12,18 @@ import (
 )
 
 type GetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	MetaData map[string]string
 }
 
 // GetMetaData returns the MetaData associated with the specified Storage Share
-func (c Client) GetMetaData(ctx context.Context, shareName string) (resp GetMetaDataResponse, err error) {
+func (c Client) GetMetaData(ctx context.Context, shareName string) (result GetMetaDataResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		return result, fmt.Errorf("`shareName` cannot be an empty string")
 	}
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		return result, fmt.Errorf("`shareName` must be a lower-cased string")
 	}
 
 	opts := client.RequestOptions{
@@ -42,16 +42,18 @@ func (c Client) GetMetaData(ctx context.Context, shareName string) (resp GetMeta
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
-		}
 	}
 
 	return

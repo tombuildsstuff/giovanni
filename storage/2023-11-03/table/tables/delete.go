@@ -10,13 +10,14 @@ import (
 )
 
 type DeleteTableResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete deletes the specified table and any data it contains.
-func (c Client) Delete(ctx context.Context, tableName string) (resp DeleteTableResponse, err error) {
+func (c Client) Delete(ctx context.Context, tableName string) (result DeleteTableResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		err = fmt.Errorf("`tableName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -35,7 +36,11 @@ func (c Client) Delete(ctx context.Context, tableName string) (resp DeleteTableR
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

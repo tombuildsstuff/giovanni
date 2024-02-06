@@ -11,19 +11,20 @@ import (
 )
 
 type GetACLResult struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	SignedIdentifiers []SignedIdentifier `xml:"SignedIdentifier"`
 }
 
 // GetACL get the Access Control List for the specified Storage Share
-func (c Client) GetACL(ctx context.Context, shareName string) (resp GetACLResult, err error) {
-
+func (c Client) GetACL(ctx context.Context, shareName string) (result GetACLResult, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -42,18 +43,22 @@ func (c Client) GetACL(ctx context.Context, shareName string) (resp GetACLResult
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	if resp.HttpResponse != nil {
-		err = resp.HttpResponse.Unmarshal(&resp)
-		if err != nil {
-			return resp, fmt.Errorf("unmarshalling response: %v", err)
-		}
-	}
 	return
 }
 

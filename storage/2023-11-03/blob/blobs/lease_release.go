@@ -11,7 +11,7 @@ import (
 )
 
 type ReleaseLeaseResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type ReleaseLeaseInput struct {
@@ -19,22 +19,25 @@ type ReleaseLeaseInput struct {
 }
 
 // ReleaseLease releases a lock based on the Lease ID.
-func (c Client) ReleaseLease(ctx context.Context, containerName, blobName string, input ReleaseLeaseInput) (resp ReleaseLeaseResponse, err error) {
-
+func (c Client) ReleaseLease(ctx context.Context, containerName, blobName string, input ReleaseLeaseInput) (result ReleaseLeaseResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.LeaseID == "" {
-		return resp, fmt.Errorf("`input.LeaseID` cannot be an empty string")
+		err = fmt.Errorf("`input.LeaseID` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -54,7 +57,11 @@ func (c Client) ReleaseLease(ctx context.Context, containerName, blobName string
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

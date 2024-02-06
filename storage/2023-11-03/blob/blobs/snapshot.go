@@ -41,7 +41,7 @@ type SnapshotInput struct {
 }
 
 type SnapshotResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// The ETag of the snapshot
 	ETag string
@@ -53,22 +53,25 @@ type SnapshotResponse struct {
 }
 
 // Snapshot captures a Snapshot of a given Blob
-func (c Client) Snapshot(ctx context.Context, containerName, blobName string, input SnapshotInput) (resp SnapshotResponse, err error) {
-
+func (c Client) Snapshot(ctx context.Context, containerName, blobName string, input SnapshotInput) (result SnapshotResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
-	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf(fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
+	if err = metadata.Validate(input.MetaData); err != nil {
+		err = fmt.Errorf(fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -88,15 +91,19 @@ func (c Client) Snapshot(ctx context.Context, containerName, blobName string, in
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.ETag = resp.Header.Get("ETag")
+			result.SnapshotDateTime = resp.Header.Get("x-ms-snapshot")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil && resp.HttpResponse.Header != nil {
-		resp.ETag = resp.HttpResponse.Header.Get("ETag")
-		resp.SnapshotDateTime = resp.HttpResponse.Header.Get("x-ms-snapshot")
 	}
 
 	return

@@ -71,7 +71,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' ..")
-	props, err := pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesInput{action: GetPropertiesActionGetAccessControl})
+	props, err := pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesInput{Action: GetPropertiesActionGetAccessControl})
 	if err != nil {
 		t.Fatal(fmt.Errorf("error getting properties: %s", err))
 	}
@@ -94,7 +94,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' (2) ..")
-	props, err = pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesInput{action: GetPropertiesActionGetAccessControl})
+	props, err = pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesInput{Action: GetPropertiesActionGetAccessControl})
 	if err != nil {
 		t.Fatal(fmt.Errorf("error getting properties (2): %s", err))
 	}
@@ -108,7 +108,7 @@ func TestLifecycle(t *testing.T) {
 	}
 
 	t.Logf("[DEBUG] Getting properties for folder 'test' (3) ..")
-	props, err = pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesInput{action: GetPropertiesActionGetAccessControl})
+	props, err = pathsClient.GetProperties(ctx, fileSystemName, path, GetPropertiesInput{Action: GetPropertiesActionGetAccessControl})
 	if err == nil {
 		t.Fatal(fmt.Errorf("didn't get error getting properties after deleting path (3)"))
 	}

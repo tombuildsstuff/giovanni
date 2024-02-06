@@ -44,7 +44,7 @@ func TestLifecycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
-	if err := client.PrepareWithSharedKeyAuth(containersClient.Client, testData, auth.SharedKey); err != nil {
+	if err = client.PrepareWithSharedKeyAuth(containersClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 
@@ -59,7 +59,7 @@ func TestLifecycle(t *testing.T) {
 		t.Fatalf("building client for environment: %+v", err)
 	}
 
-	if err := client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
+	if err = client.PrepareWithSharedKeyAuth(blobClient.Client, testData, auth.SharedKey); err != nil {
 		t.Fatalf("adding authorizer to client: %+v", err)
 	}
 

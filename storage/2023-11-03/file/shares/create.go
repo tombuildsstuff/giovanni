@@ -36,26 +36,30 @@ type CreateInput struct {
 }
 
 type CreateResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Create creates the specified Storage Share within the specified Storage Account
-func (c Client) Create(ctx context.Context, shareName string, input CreateInput) (resp CreateResponse, err error) {
+func (c Client) Create(ctx context.Context, shareName string, input CreateInput) (result CreateResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if input.QuotaInGB <= 0 || input.QuotaInGB > 102400 {
-		return resp, fmt.Errorf("`input.QuotaInGB` must be greater than 0, and less than/equal to 100TB (102400 GB)")
+		err = fmt.Errorf("`input.QuotaInGB` must be greater than 0, and less than/equal to 100TB (102400 GB)")
+		return
 	}
 
 	if err = metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		err = fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -74,11 +78,17 @@ func (c Client) Create(ctx context.Context, shareName string, input CreateInput)
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
+
 	return
 }
 

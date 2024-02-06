@@ -10,23 +10,26 @@ import (
 )
 
 type DeleteResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete removes the specified empty directory
 // Note that the directory must be empty before it can be deleted.
-func (c Client) Delete(ctx context.Context, shareName, path string) (resp DeleteResponse, err error) {
+func (c Client) Delete(ctx context.Context, shareName, path string) (result DeleteResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if path == "" {
-		return resp, fmt.Errorf("`path` cannot be an empty string")
+		err = fmt.Errorf("`path` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -45,7 +48,11 @@ func (c Client) Delete(ctx context.Context, shareName, path string) (resp Delete
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

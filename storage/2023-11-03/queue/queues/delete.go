@@ -10,18 +10,18 @@ import (
 )
 
 type DeleteResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete deletes the specified Queue within the specified Storage Account
-func (c Client) Delete(ctx context.Context, queueName string) (resp DeleteResponse, err error) {
+func (c Client) Delete(ctx context.Context, queueName string) (result DeleteResponse, err error) {
 
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
 	opts := client.RequestOptions{
@@ -40,7 +40,11 @@ func (c Client) Delete(ctx context.Context, queueName string) (resp DeleteRespon
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

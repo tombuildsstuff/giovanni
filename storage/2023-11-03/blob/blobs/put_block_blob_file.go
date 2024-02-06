@@ -11,7 +11,7 @@ import (
 func (c Client) PutBlockBlobFromFile(ctx context.Context, containerName, blobName string, file *os.File, input PutBlockBlobInput) error {
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("error loading file info: %s", err)
+		return fmt.Errorf("loading file info: %s", err)
 	}
 
 	fileSize := fileInfo.Size()
@@ -20,14 +20,14 @@ func (c Client) PutBlockBlobFromFile(ctx context.Context, containerName, blobNam
 	_, err = file.ReadAt(bytes, 0)
 	if err != nil {
 		if err != io.EOF {
-			return fmt.Errorf("Error reading bytes: %s", err)
+			return fmt.Errorf("reading bytes: %s", err)
 		}
 	}
 
 	input.Content = &bytes
 
 	if _, err = c.PutBlockBlob(ctx, containerName, blobName, input); err != nil {
-		return fmt.Errorf("error putting bytes: %s", err)
+		return fmt.Errorf("putting bytes: %s", err)
 	}
 
 	return nil

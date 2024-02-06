@@ -30,7 +30,7 @@ func Example() error {
 
 	blobClient, err := blobs.NewWithBaseUri(fmt.Sprintf("https://%s.blob.%s", accountName, domainSuffix))
 	if err != nil {
-		return fmt.Errorf("building client for environment: %+v", err)
+		return fmt.Errorf("building client for environment: %v", err)
 	}
 	
 	auth, err := auth.NewSharedKeyAuthorizer(accountName, storageAccountKey, auth.SharedKey)

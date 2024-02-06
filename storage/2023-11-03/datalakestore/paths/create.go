@@ -19,14 +19,14 @@ type CreateInput struct {
 }
 
 type CreateResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Create creates a Data Lake Store Gen2 Path within a Storage Account
-func (c Client) Create(ctx context.Context, fileSystemName string, path string, input CreateInput) (resp CreateResponse, err error) {
+func (c Client) Create(ctx context.Context, fileSystemName string, path string, input CreateInput) (result CreateResponse, err error) {
 
 	if fileSystemName == "" {
-		return resp, fmt.Errorf("`fileSystemName` cannot be an empty string")
+		return result, fmt.Errorf("`fileSystemName` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -46,12 +46,17 @@ func (c Client) Create(ctx context.Context, fileSystemName string, path string, 
 
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
-		return resp, err
+		return result, err
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
-		return resp, err
+		return result, err
 	}
 
 	return

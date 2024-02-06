@@ -11,11 +11,11 @@ import (
 
 type GetStorageServicePropertiesResponse struct {
 	StorageServiceProperties
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // GetServiceProperties gets the properties for this queue
-func (c Client) GetServiceProperties(ctx context.Context) (resp GetStorageServicePropertiesResponse, err error) {
+func (c Client) GetServiceProperties(ctx context.Context) (result GetStorageServicePropertiesResponse, err error) {
 
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",
@@ -33,17 +33,20 @@ func (c Client) GetServiceProperties(ctx context.Context) (resp GetStorageServic
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		err = resp.HttpResponse.Unmarshal(&resp)
-		if err != nil {
-			return resp, fmt.Errorf("unmarshalling respnse: %v", err)
-		}
 	}
 
 	return

@@ -11,7 +11,7 @@ import (
 )
 
 type ListRangesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	Ranges []Range `xml:"Range"`
 }
@@ -22,22 +22,25 @@ type Range struct {
 }
 
 // ListRanges returns the list of valid ranges for the specified File.
-func (c Client) ListRanges(ctx context.Context, shareName, path, fileName string) (resp ListRangesResponse, err error) {
-
+func (c Client) ListRanges(ctx context.Context, shareName, path, fileName string) (result ListRangesResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if path == "" {
-		return resp, fmt.Errorf("`path` cannot be an empty string")
+		err = fmt.Errorf("`path` cannot be an empty string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if path != "" {
@@ -60,14 +63,20 @@ func (c Client) ListRanges(ctx context.Context, shareName, path, fileName string
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		resp.HttpResponse.Unmarshal(&resp)
 	}
 
 	return

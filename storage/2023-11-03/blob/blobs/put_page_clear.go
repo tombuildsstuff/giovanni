@@ -18,30 +18,34 @@ type PutPageClearInput struct {
 }
 
 type PutPageClearResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // PutPageClear clears a range of pages within a page blob.
-func (c Client) PutPageClear(ctx context.Context, containerName, blobName string, input PutPageClearInput) (resp PutPageClearResponse, err error) {
-
+func (c Client) PutPageClear(ctx context.Context, containerName, blobName string, input PutPageClearInput) (result PutPageClearResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.StartByte < 0 {
-		return resp, fmt.Errorf("`input.StartByte` must be greater than or equal to 0")
+		err = fmt.Errorf("`input.StartByte` must be greater than or equal to 0")
+		return
 	}
 
 	if input.EndByte <= 0 {
-		return resp, fmt.Errorf("`input.EndByte` must be greater than 0")
+		err = fmt.Errorf("`input.EndByte` must be greater than 0")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -61,7 +65,11 @@ func (c Client) PutPageClear(ctx context.Context, containerName, blobName string
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

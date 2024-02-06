@@ -19,8 +19,9 @@ type ListBlobsInput struct {
 }
 
 type ListBlobsResponse struct {
-	HttpResponse *client.Response
-	Model        *ListBlobsResult
+	ListBlobsResult
+
+	HttpResponse *http.Response
 }
 
 type ListBlobsResult struct {
@@ -80,12 +81,14 @@ type BlobPrefix struct {
 }
 
 // ListBlobs lists the blobs matching the specified query within the specified Container
-func (c Client) ListBlobs(ctx context.Context, containerName string, input ListBlobsInput) (resp ListBlobsResponse, err error) {
+func (c Client) ListBlobs(ctx context.Context, containerName string, input ListBlobsInput) (result ListBlobsResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 	if input.MaxResults != nil && (*input.MaxResults <= 0 || *input.MaxResults > 5000) {
-		return resp, fmt.Errorf("`input.MaxResults` can either be nil or between 0 and 5000")
+		err = fmt.Errorf("`input.MaxResults` can either be nil or between 0 and 5000")
+		return
 	}
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",
@@ -102,22 +105,27 @@ func (c Client) ListBlobs(ctx context.Context, containerName string, input ListB
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if err = resp.HttpResponse.Unmarshal(&resp.Model); err != nil {
-			err = fmt.Errorf("unmarshaling response: %+v", err)
-			return
-		}
 	}
 
 	return

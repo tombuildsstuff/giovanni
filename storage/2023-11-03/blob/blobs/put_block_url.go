@@ -20,31 +20,35 @@ type PutBlockFromURLInput struct {
 }
 
 type PutBlockFromURLResponse struct {
-	HttpResponse *client.Response
 	ContentMD5   string
+	HttpResponse *http.Response
 }
 
 // PutBlockFromURL creates a new block to be committed as part of a blob where the contents are read from a URL
-func (c Client) PutBlockFromURL(ctx context.Context, containerName, blobName string, input PutBlockFromURLInput) (resp PutBlockFromURLResponse, err error) {
-
+func (c Client) PutBlockFromURL(ctx context.Context, containerName, blobName string, input PutBlockFromURLInput) (result PutBlockFromURLResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.BlockID == "" {
-		return resp, fmt.Errorf("`input.BlockID` cannot be an empty string")
+		err = fmt.Errorf("`input.BlockID` cannot be an empty string")
+		return
 	}
 
 	if input.CopySource == "" {
-		return resp, fmt.Errorf("`input.CopySource` cannot be an empty string")
+		err = fmt.Errorf("`input.CopySource` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -64,16 +68,18 @@ func (c Client) PutBlockFromURL(ctx context.Context, containerName, blobName str
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.ContentMD5 = resp.Header.Get("Content-MD5")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.ContentMD5 = resp.HttpResponse.Header.Get("Content-MD5")
-		}
 	}
 
 	return

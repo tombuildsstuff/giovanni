@@ -24,14 +24,14 @@ type SetAccessControlInput struct {
 }
 
 type SetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetProperties sets the access control properties for a Data Lake Store Gen2 Path within a Storage Account File System
-func (c Client) SetAccessControl(ctx context.Context, fileSystemName string, path string, input SetAccessControlInput) (resp SetPropertiesResponse, err error) {
-
+func (c Client) SetAccessControl(ctx context.Context, fileSystemName string, path string, input SetAccessControlInput) (result SetPropertiesResponse, err error) {
 	if fileSystemName == "" {
-		return resp, fmt.Errorf("`fileSystemName` cannot be an empty string")
+		err = fmt.Errorf("`fileSystemName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -50,13 +50,17 @@ func (c Client) SetAccessControl(ctx context.Context, fileSystemName string, pat
 
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
-		return resp, err
+		return result, err
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
-		return resp, err
+		return result, err
 	}
 
 	return

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// ParseFromHeaders parses the meta data from the headers
+// ParseFromHeaders parses the metadata from the headers
 func ParseFromHeaders(headers http.Header) map[string]string {
 	metaData := make(map[string]string, 0)
 	prefix := "x-ms-meta-"

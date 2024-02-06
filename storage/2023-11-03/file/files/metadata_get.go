@@ -3,32 +3,35 @@ package files
 import (
 	"context"
 	"fmt"
+	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 	"net/http"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 type GetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	MetaData map[string]string
 }
 
 // GetMetaData returns the MetaData for the specified File.
-func (c Client) GetMetaData(ctx context.Context, shareName, path, fileName string) (resp GetMetaDataResponse, err error) {
+func (c Client) GetMetaData(ctx context.Context, shareName, path, fileName string) (result GetMetaDataResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if path != "" {
@@ -51,16 +54,18 @@ func (c Client) GetMetaData(ctx context.Context, shareName, path, fileName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
-		}
 	}
 
 	return

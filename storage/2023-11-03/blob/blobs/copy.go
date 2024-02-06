@@ -106,29 +106,28 @@ type CopyInput struct {
 }
 
 type CopyResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	CopyID     string
 	CopyStatus string
 }
 
 // Copy copies a blob to a destination within the storage account asynchronously.
-func (c Client) Copy(ctx context.Context, containerName, blobName string, input CopyInput) (resp CopyResponse, err error) {
-
+func (c Client) Copy(ctx context.Context, containerName, blobName string, input CopyInput) (result CopyResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		return result, fmt.Errorf("`containerName` must be a lower-cased string")
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		return result, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
 	if input.CopySource == "" {
-		return resp, fmt.Errorf("`input.CopySource` cannot be an empty string")
+		return result, fmt.Errorf("`input.CopySource` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -148,17 +147,19 @@ func (c Client) Copy(ctx context.Context, containerName, blobName string, input 
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.CopyID = resp.Header.Get("x-ms-copy-id")
+			result.CopyStatus = resp.Header.Get("x-ms-copy-status")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.CopyID = resp.HttpResponse.Header.Get("x-ms-copy-id")
-			resp.CopyStatus = resp.HttpResponse.Header.Get("x-ms-copy-status")
-		}
 	}
 
 	return

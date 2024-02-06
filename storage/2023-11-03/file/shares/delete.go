@@ -11,7 +11,7 @@ import (
 )
 
 type DeleteResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type DeleteInput struct {
@@ -19,13 +19,15 @@ type DeleteInput struct {
 }
 
 // Delete deletes the specified Storage Share from within a Storage Account
-func (c Client) Delete(ctx context.Context, shareName string, input DeleteInput) (resp DeleteResponse, err error) {
+func (c Client) Delete(ctx context.Context, shareName string, input DeleteInput) (result DeleteResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -45,7 +47,11 @@ func (c Client) Delete(ctx context.Context, shareName string, input DeleteInput)
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

@@ -9,14 +9,15 @@ import (
 )
 
 type DeleteResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete marks the specified container for deletion.
 // The container and any blobs contained within it are later deleted during garbage collection.
-func (c Client) Delete(ctx context.Context, containerName string) (resp DeleteResponse, err error) {
+func (c Client) Delete(ctx context.Context, containerName string) (result DeleteResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -28,12 +29,18 @@ func (c Client) Delete(ctx context.Context, containerName string) (resp DeleteRe
 		OptionsObject: containerOptions{},
 		Path:          fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

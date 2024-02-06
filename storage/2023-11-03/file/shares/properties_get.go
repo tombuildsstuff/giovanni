@@ -3,16 +3,16 @@ package shares
 import (
 	"context"
 	"fmt"
+	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
-	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 type GetPropertiesResult struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	MetaData        map[string]string
 	QuotaInGB       int
@@ -21,13 +21,15 @@ type GetPropertiesResult struct {
 }
 
 // GetProperties returns the properties about the specified Storage Share
-func (c Client) GetProperties(ctx context.Context, shareName string) (resp GetPropertiesResult, err error) {
+func (c Client) GetProperties(ctx context.Context, shareName string) (result GetPropertiesResult, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -46,36 +48,39 @@ func (c Client) GetProperties(ctx context.Context, shareName string) (resp GetPr
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
-	if err != nil {
-		err = fmt.Errorf("executing request: %+v", err)
-		return
-	}
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
 
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
+		if resp.Header != nil {
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
 
-			quotaRaw := resp.HttpResponse.Header.Get("x-ms-share-quota")
+			quotaRaw := resp.Header.Get("x-ms-share-quota")
 			if quotaRaw != "" {
 				quota, e := strconv.Atoi(quotaRaw)
 				if e != nil {
-					return resp, fmt.Errorf("error converting %q to an integer: %s", quotaRaw, err)
+					err = fmt.Errorf("error converting %q to an integer: %s", quotaRaw, err)
+					return
 				}
-				resp.QuotaInGB = quota
+				result.QuotaInGB = quota
 			}
 
 			protocol := SMB
-			if protocolRaw := resp.HttpResponse.Header.Get("x-ms-enabled-protocols"); protocolRaw != "" {
+			if protocolRaw := resp.Header.Get("x-ms-enabled-protocols"); protocolRaw != "" {
 				protocol = ShareProtocol(protocolRaw)
 			}
 
-			if accessTierRaw := resp.HttpResponse.Header.Get("x-ms-access-tier"); accessTierRaw != "" {
+			if accessTierRaw := resp.Header.Get("x-ms-access-tier"); accessTierRaw != "" {
 				tier := AccessTier(accessTierRaw)
-				resp.AccessTier = &tier
+				result.AccessTier = &tier
 			}
-			resp.EnabledProtocol = protocol
+			result.EnabledProtocol = protocol
 		}
+	}
+	if err != nil {
+		err = fmt.Errorf("executing request: %+v", err)
+		return
 	}
 
 	return

@@ -46,7 +46,7 @@ type AppendBlockInput struct {
 }
 
 type AppendBlockResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	BlobAppendOffset        string
 	BlobCommittedBlockCount int64
@@ -56,22 +56,25 @@ type AppendBlockResponse struct {
 }
 
 // AppendBlock commits a new block of data to the end of an existing append blob.
-func (c Client) AppendBlock(ctx context.Context, containerName, blobName string, input AppendBlockInput) (resp AppendBlockResponse, err error) {
-
+func (c Client) AppendBlock(ctx context.Context, containerName, blobName string, input AppendBlockInput) (result AppendBlockResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.Content != nil && len(*input.Content) > (4*1024*1024) {
-		return resp, fmt.Errorf("`input.Content` must be at most 4MB")
+		err = fmt.Errorf("`input.Content` must be at most 4MB")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -97,29 +100,30 @@ func (c Client) AppendBlock(ctx context.Context, containerName, blobName string,
 
 	req.ContentLength = int64(len(*input.Content))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.BlobAppendOffset = resp.Header.Get("x-ms-blob-append-offset")
+			result.ContentMD5 = resp.Header.Get("Content-MD5")
+			result.ETag = resp.Header.Get("ETag")
+			result.LastModified = resp.Header.Get("Last-Modified")
+
+			if v := resp.Header.Get("x-ms-blob-committed-block-count"); v != "" {
+				i, innerErr := strconv.Atoi(v)
+				if innerErr != nil {
+					err = fmt.Errorf("parsing `x-ms-blob-committed-block-count` header value %q: %+v", v, innerErr)
+					return
+				}
+				result.BlobCommittedBlockCount = int64(i)
+			}
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.BlobAppendOffset = resp.HttpResponse.Header.Get("x-ms-blob-append-offset")
-			resp.ContentMD5 = resp.HttpResponse.Header.Get("Content-MD5")
-			resp.ETag = resp.HttpResponse.Header.Get("ETag")
-			resp.LastModified = resp.HttpResponse.Header.Get("Last-Modified")
-
-			if v := resp.HttpResponse.Header.Get("x-ms-blob-committed-block-count"); v != "" {
-				i, innerErr := strconv.Atoi(v)
-				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as an integer: %s", v, innerErr)
-					return
-				}
-				resp.BlobCommittedBlockCount = int64(i)
-			}
-
-		}
 	}
 
 	return

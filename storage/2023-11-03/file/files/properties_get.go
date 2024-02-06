@@ -3,16 +3,16 @@ package files
 import (
 	"context"
 	"fmt"
+	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
-	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 type GetResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	CacheControl          string
 	ContentDisposition    string
@@ -33,17 +33,20 @@ type GetResponse struct {
 }
 
 // GetProperties returns the Properties for the specified file
-func (c Client) GetProperties(ctx context.Context, shareName, path, fileName string) (resp GetResponse, err error) {
+func (c Client) GetProperties(ctx context.Context, shareName, path, fileName string) (result GetResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if path != "" {
@@ -66,39 +69,43 @@ func (c Client) GetProperties(ctx context.Context, shareName, path, fileName str
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.CacheControl = resp.Header.Get("Cache-Control")
+			result.ContentDisposition = resp.Header.Get("Content-Disposition")
+			result.ContentEncoding = resp.Header.Get("Content-Encoding")
+			result.ContentLanguage = resp.Header.Get("Content-Language")
+			result.ContentMD5 = resp.Header.Get("Content-MD5")
+			result.ContentType = resp.Header.Get("Content-Type")
+			result.CopyCompletionTime = resp.Header.Get("x-ms-copy-completion-time")
+			result.CopyID = resp.Header.Get("x-ms-copy-id")
+			result.CopyProgress = resp.Header.Get("x-ms-copy-progress")
+			result.CopySource = resp.Header.Get("x-ms-copy-source")
+			result.CopyStatus = resp.Header.Get("x-ms-copy-status")
+			result.CopyStatusDescription = resp.Header.Get("x-ms-copy-status-description")
+			result.Encrypted = strings.EqualFold(resp.Header.Get("x-ms-server-encrypted"), "true")
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+
+			contentLengthRaw := resp.Header.Get("Content-Length")
+			if contentLengthRaw != "" {
+				var contentLength int
+				contentLength, err = strconv.Atoi(contentLengthRaw)
+				if err != nil {
+					err = fmt.Errorf("parsing %q for Content-Length as an integer: %s", contentLengthRaw, err)
+					return
+				}
+				contentLengthI64 := int64(contentLength)
+				result.ContentLength = &contentLengthI64
+			}
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.CacheControl = resp.HttpResponse.Header.Get("Cache-Control")
-			resp.ContentDisposition = resp.HttpResponse.Header.Get("Content-Disposition")
-			resp.ContentEncoding = resp.HttpResponse.Header.Get("Content-Encoding")
-			resp.ContentLanguage = resp.HttpResponse.Header.Get("Content-Language")
-			resp.ContentMD5 = resp.HttpResponse.Header.Get("Content-MD5")
-			resp.ContentType = resp.HttpResponse.Header.Get("Content-Type")
-			resp.CopyID = resp.HttpResponse.Header.Get("x-ms-copy-id")
-			resp.CopyProgress = resp.HttpResponse.Header.Get("x-ms-copy-progress")
-			resp.CopySource = resp.HttpResponse.Header.Get("x-ms-copy-source")
-			resp.CopyStatus = resp.HttpResponse.Header.Get("x-ms-copy-status")
-			resp.CopyStatusDescription = resp.HttpResponse.Header.Get("x-ms-copy-status-description")
-			resp.CopyCompletionTime = resp.HttpResponse.Header.Get("x-ms-copy-completion-time")
-			resp.Encrypted = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-server-encrypted"), "true")
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
-
-			contentLengthRaw := resp.HttpResponse.Header.Get("Content-Length")
-			if contentLengthRaw != "" {
-				contentLength, err := strconv.Atoi(contentLengthRaw)
-				if err != nil {
-					return resp, fmt.Errorf("error parsing %q for Content-Length as an integer: %s", contentLengthRaw, err)
-				}
-				contentLengthI64 := int64(contentLength)
-				resp.ContentLength = &contentLengthI64
-			}
-		}
 	}
 
 	return

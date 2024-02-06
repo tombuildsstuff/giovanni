@@ -9,12 +9,12 @@ import (
 )
 
 type SetServicePropertiesResult struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
-func (c Client) SetServiceProperties(ctx context.Context, accountName string, input StorageServiceProperties) (resp SetServicePropertiesResult, err error) {
+func (c Client) SetServiceProperties(ctx context.Context, accountName string, input StorageServiceProperties) (result SetServicePropertiesResult, err error) {
 	if accountName == "" {
-		return resp, fmt.Errorf("`accountName` cannot be an empty string")
+		return result, fmt.Errorf("`accountName` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -26,16 +26,23 @@ func (c Client) SetServiceProperties(ctx context.Context, accountName string, in
 		OptionsObject: servicePropertiesOptions{},
 		Path:          "/",
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
+
 	if err = req.Marshal(&input); err != nil {
 		err = fmt.Errorf("marshaling request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

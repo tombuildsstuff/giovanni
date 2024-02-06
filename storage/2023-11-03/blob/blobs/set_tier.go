@@ -15,22 +15,24 @@ type SetTierInput struct {
 }
 
 type SetTierResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetTier sets the tier on a blob.
-func (c Client) SetTier(ctx context.Context, containerName, blobName string, input SetTierInput) (resp SetTierResponse, err error) {
-
+func (c Client) SetTier(ctx context.Context, containerName, blobName string, input SetTierInput) (result SetTierResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -51,7 +53,11 @@ func (c Client) SetTier(ctx context.Context, containerName, blobName string, inp
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

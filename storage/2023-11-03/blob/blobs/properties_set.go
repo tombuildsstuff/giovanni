@@ -25,25 +25,24 @@ type SetPropertiesInput struct {
 }
 
 type SetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	BlobSequenceNumber string
 	Etag               string
 }
 
 // SetProperties sets system properties on the blob.
-func (c Client) SetProperties(ctx context.Context, containerName, blobName string, input SetPropertiesInput) (resp SetPropertiesResponse, err error) {
-
+func (c Client) SetProperties(ctx context.Context, containerName, blobName string, input SetPropertiesInput) (result SetPropertiesResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		return result, fmt.Errorf("`containerName` must be a lower-cased string")
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		return result, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -63,7 +62,11 @@ func (c Client) SetProperties(ctx context.Context, containerName, blobName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

@@ -1,10 +1,8 @@
 package blobs
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,7 +27,7 @@ type PutPageUpdateInput struct {
 }
 
 type PutPageUpdateResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	BlobSequenceNumber string
 	ContentMD5         string
@@ -37,32 +35,37 @@ type PutPageUpdateResponse struct {
 }
 
 // PutPageUpdate writes a range of pages to a page blob.
-func (c Client) PutPageUpdate(ctx context.Context, containerName, blobName string, input PutPageUpdateInput) (resp PutPageUpdateResponse, err error) {
-
+func (c Client) PutPageUpdate(ctx context.Context, containerName, blobName string, input PutPageUpdateInput) (result PutPageUpdateResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.StartByte < 0 {
-		return resp, fmt.Errorf("`input.StartByte` must be greater than or equal to 0")
+		err = fmt.Errorf("`input.StartByte` must be greater than or equal to 0")
+		return
 	}
 
 	if input.EndByte <= 0 {
-		return resp, fmt.Errorf("`input.EndByte` must be greater than 0")
+		err = fmt.Errorf("`input.EndByte` must be greater than 0")
+		return
 	}
 
 	expectedSize := (input.EndByte - input.StartByte) + 1
 	actualSize := int64(len(input.Content))
 	if expectedSize != actualSize {
-		return resp, fmt.Errorf(fmt.Sprintf("Content Size was defined as %d but got %d.", expectedSize, actualSize))
+		err = fmt.Errorf(fmt.Sprintf("Content Size was defined as %d but got %d.", expectedSize, actualSize))
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -82,19 +85,24 @@ func (c Client) PutPageUpdate(ctx context.Context, containerName, blobName strin
 		return
 	}
 
-	req.Body = io.NopCloser(bytes.NewReader(input.Content))
-	req.ContentLength = int64(len(input.Content))
+	// TODO commenting these out to see if they're really needed (net/http should do this) (@manicminer)
+	//req.Body = io.NopCloser(bytes.NewReader(input.Content))
+	//req.ContentLength = int64(len(input.Content))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.BlobSequenceNumber = resp.Header.Get("x-ms-blob-sequence-number")
+			result.ContentMD5 = resp.Header.Get("Content-MD5")
+			result.LastModified = resp.Header.Get("Last-Modified")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil && resp.HttpResponse.Header != nil {
-		resp.BlobSequenceNumber = resp.HttpResponse.Header.Get("x-ms-blob-sequence-number")
-		resp.ContentMD5 = resp.HttpResponse.Header.Get("Content-MD5")
-		resp.LastModified = resp.HttpResponse.Header.Get("Last-Modified")
 	}
 
 	return

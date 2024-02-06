@@ -28,27 +28,30 @@ type PutPageBlobInput struct {
 }
 
 type PutPageBlobResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // PutPageBlob is a wrapper around the Put API call (with a stricter input object)
 // which creates a new block blob, or updates the content of an existing page blob.
-func (c Client) PutPageBlob(ctx context.Context, containerName, blobName string, input PutPageBlobInput) (resp PutPageBlobResponse, err error) {
-
+func (c Client) PutPageBlob(ctx context.Context, containerName, blobName string, input PutPageBlobInput) (result PutPageBlobResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.BlobContentLengthBytes == 0 || input.BlobContentLengthBytes%512 != 0 {
-		return resp, fmt.Errorf("`input.BlobContentLengthBytes` must be aligned to a 512-byte boundary")
+		err = fmt.Errorf("`input.BlobContentLengthBytes` must be aligned to a 512-byte boundary")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -68,7 +71,11 @@ func (c Client) PutPageBlob(ctx context.Context, containerName, blobName string,
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

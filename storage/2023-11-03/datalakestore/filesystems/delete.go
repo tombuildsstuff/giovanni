@@ -9,14 +9,14 @@ import (
 )
 
 type DeleteResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete deletes a Data Lake Store Gen2 FileSystem within a Storage Account
-func (c Client) Delete(ctx context.Context, fileSystemName string) (resp DeleteResponse, err error) {
-
+func (c Client) Delete(ctx context.Context, fileSystemName string) (result DeleteResponse, err error) {
 	if fileSystemName == "" {
-		return resp, fmt.Errorf("`fileSystemName` cannot be an empty string")
+		err = fmt.Errorf("`fileSystemName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -28,12 +28,18 @@ func (c Client) Delete(ctx context.Context, fileSystemName string) (resp DeleteR
 		OptionsObject: fileSystemOptions{},
 		Path:          fmt.Sprintf("/%s", fileSystemName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

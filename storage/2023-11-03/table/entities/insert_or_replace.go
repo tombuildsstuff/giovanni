@@ -25,22 +25,22 @@ type InsertOrReplaceEntityInput struct {
 }
 
 type InsertOrReplaceResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // InsertOrReplace replaces an existing entity or inserts a new entity if it does not exist in the table.
 // Because this operation can insert or update an entity, it is also known as an upsert operation.
-func (c Client) InsertOrReplace(ctx context.Context, tableName string, input InsertOrReplaceEntityInput) (resp InsertOrReplaceResponse, err error) {
+func (c Client) InsertOrReplace(ctx context.Context, tableName string, input InsertOrReplaceEntityInput) (result InsertOrReplaceResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		return result, fmt.Errorf("`tableName` cannot be an empty string")
 	}
 
 	if input.PartitionKey == "" {
-		return resp, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
 	}
 
 	if input.RowKey == "" {
-		return resp, fmt.Errorf("`input.RowKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.RowKey` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -64,10 +64,14 @@ func (c Client) InsertOrReplace(ctx context.Context, tableName string, input Ins
 
 	err = req.Marshal(&input.Entity)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		return result, fmt.Errorf("marshalling request: %+v", err)
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

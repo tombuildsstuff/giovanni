@@ -22,26 +22,22 @@ type GetInput struct {
 	NumberOfMessages int
 }
 
-type GetResponse struct {
-	HttpResponse *client.Response
-}
-
 // Get retrieves one or more messages from the front of the queue
-func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp QueueMessagesListResponse, err error) {
+func (c Client) Get(ctx context.Context, queueName string, input GetInput) (result QueueMessagesListResponse, err error) {
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 	if input.NumberOfMessages < 1 || input.NumberOfMessages > 32 {
-		return resp, fmt.Errorf("`input.NumberOfMessages` must be between 1 and 32")
+		return result, fmt.Errorf("`input.NumberOfMessages` must be between 1 and 32")
 	}
 	if input.VisibilityTimeout != nil {
 		t := *input.VisibilityTimeout
 		maxTime := (time.Hour * 24 * 7).Seconds()
 		if t < 1 || t < int(maxTime) {
-			return resp, fmt.Errorf("`input.VisibilityTimeout` must be larger than or equal to 1 second, and cannot be larger than 7 days")
+			return result, fmt.Errorf("`input.VisibilityTimeout` must be larger than or equal to 1 second, and cannot be larger than 7 days")
 		}
 	}
 
@@ -64,16 +60,20 @@ func (c Client) Get(ctx context.Context, queueName string, input GetInput) (resp
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if err = resp.HttpResponse.Unmarshal(&resp); err != nil {
-			return resp, fmt.Errorf("unmarshalling response: %+v", err)
-		}
 	}
 
 	return
