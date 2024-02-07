@@ -3,12 +3,12 @@ package shares
 import (
 	"context"
 	"fmt"
-	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 type GetPropertiesResult struct {

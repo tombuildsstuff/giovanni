@@ -3,13 +3,13 @@ package blobs
 import (
 	"context"
 	"fmt"
-	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 type GetPropertiesInput struct {
@@ -228,7 +228,7 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 			if v := resp.Header.Get("x-ms-access-tier-inferred"); v != "" {
 				b, innerErr := strconv.ParseBool(v)
 				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
+					err = fmt.Errorf("parsing `x-ms-access-tier-inferred` header value %q: %s", v, innerErr)
 					return
 				}
 				result.AccessTierInferred = b
@@ -237,7 +237,7 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 			if v := resp.Header.Get("Content-Length"); v != "" {
 				i, innerErr := strconv.Atoi(v)
 				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as an integer: %s", v, innerErr)
+					err = fmt.Errorf("parsing `Content-Length` header value %q: %s", v, innerErr)
 				}
 				result.ContentLength = int64(i)
 			}
@@ -245,7 +245,7 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 			if v := resp.Header.Get("x-ms-incremental-copy"); v != "" {
 				b, innerErr := strconv.ParseBool(v)
 				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
+					err = fmt.Errorf("parsing `x-ms-incremental-copy` header value %q: %s", v, innerErr)
 					return
 				}
 				result.IncrementalCopy = b
@@ -254,7 +254,7 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 			if v := resp.Header.Get("x-ms-server-encrypted"); v != "" {
 				b, innerErr := strconv.ParseBool(v)
 				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
+					err = fmt.Errorf("parsing `x-ms-server-encrypted` header value %q: %s", v, innerErr)
 					return
 				}
 				result.ServerEncrypted = b

@@ -3,9 +3,10 @@ package filesystems
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"net/http"
 	"strings"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
 )
 
 type GetPropertiesResponse struct {

@@ -1,8 +1,10 @@
 package blobs
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -85,9 +87,9 @@ func (c Client) PutPageUpdate(ctx context.Context, containerName, blobName strin
 		return
 	}
 
-	// TODO commenting these out to see if they're really needed (net/http should do this) (@manicminer)
-	//req.Body = io.NopCloser(bytes.NewReader(input.Content))
-	//req.ContentLength = int64(len(input.Content))
+	// this is needed to avoid `Content-Length: 0` in the request
+	req.Body = io.NopCloser(bytes.NewReader(input.Content))
+	req.ContentLength = int64(len(input.Content))
 
 	var resp *client.Response
 	resp, err = req.Execute(ctx)

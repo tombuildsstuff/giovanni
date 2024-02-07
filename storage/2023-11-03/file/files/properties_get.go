@@ -3,12 +3,12 @@ package files
 import (
 	"context"
 	"fmt"
-	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
 )
 
 type GetResponse struct {
@@ -95,7 +95,7 @@ func (c Client) GetProperties(ctx context.Context, shareName, path, fileName str
 				var contentLength int
 				contentLength, err = strconv.Atoi(contentLengthRaw)
 				if err != nil {
-					err = fmt.Errorf("parsing %q for Content-Length as an integer: %s", contentLengthRaw, err)
+					err = fmt.Errorf("parsing `Content-Length` header value %q: %s", contentLengthRaw, err)
 					return
 				}
 				contentLengthI64 := int64(contentLength)
