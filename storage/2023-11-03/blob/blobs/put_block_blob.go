@@ -21,6 +21,7 @@ type PutBlockBlobInput struct {
 	ContentMD5         *string
 	ContentType        *string
 	LeaseID            *string
+	EncryptionScope    *string
 	MetaData           map[string]string
 }
 
@@ -120,6 +121,9 @@ func (p putBlockBlobOptions) ToHeaders() *client.Headers {
 	}
 	if p.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *p.input.LeaseID)
+	}
+	if p.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *p.input.EncryptionScope)
 	}
 	if p.input.Content != nil {
 		headers.Append("Content-Length", strconv.Itoa(len(*p.input.Content)))

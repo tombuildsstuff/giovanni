@@ -16,6 +16,9 @@ type SnapshotInput struct {
 	// This must be specified if a Lease is present on the Blob, else a 403 is returned
 	LeaseID *string
 
+	// The encryption scope to set for the request content.
+	EncryptionScope *string
+
 	// MetaData is a user-defined name-value pair associated with the blob.
 	// If no name-value pairs are specified, the operation will copy the base blob metadata to the snapshot.
 	// If one or more name-value pairs are specified, the snapshot is created with the specified metadata,
@@ -118,6 +121,10 @@ func (s snapshotOptions) ToHeaders() *client.Headers {
 
 	if s.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *s.input.LeaseID)
+	}
+
+	if s.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *s.input.EncryptionScope)
 	}
 
 	if s.input.IfModifiedSince != nil {

@@ -14,7 +14,6 @@ import (
 )
 
 type AppendBlockInput struct {
-
 	// A number indicating the byte offset to compare.
 	// Append Block will succeed only if the append position is equal to this number.
 	// If it is not, the request will fail with an AppendPositionConditionNotMet
@@ -43,6 +42,9 @@ type AppendBlockInput struct {
 	// Required if the blob has an active lease.
 	// To perform this operation on a blob with an active lease, specify the valid lease ID for this header.
 	LeaseID *string
+
+	// The encryption scope to set for the request content.
+	EncryptionScope *string
 }
 
 type AppendBlockResponse struct {
@@ -146,6 +148,9 @@ func (a appendBlockOptions) ToHeaders() *client.Headers {
 	}
 	if a.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *a.input.LeaseID)
+	}
+	if a.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *a.input.EncryptionScope)
 	}
 	if a.input.Content != nil {
 		headers.Append("Content-Length", strconv.Itoa(len(*a.input.Content)))

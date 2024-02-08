@@ -29,8 +29,9 @@ type PutBlockListInput struct {
 	ContentLanguage    *string
 	ContentMD5         *string
 	ContentType        *string
-	MetaData           map[string]string
 	LeaseID            *string
+	EncryptionScope    *string
+	MetaData           map[string]string
 }
 
 type PutBlockListResponse struct {
@@ -129,6 +130,9 @@ func (p putBlockListOptions) ToHeaders() *client.Headers {
 	}
 	if p.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *p.input.LeaseID)
+	}
+	if p.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *p.input.EncryptionScope)
 	}
 
 	headers.Merge(metadata.SetMetaDataHeaders(p.input.MetaData))

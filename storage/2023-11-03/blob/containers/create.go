@@ -14,6 +14,12 @@ type CreateInput struct {
 	// Specifies whether data in the container may be accessed publicly and the level of access
 	AccessLevel AccessLevel
 
+	// The encryption scope to set as the default on the container.
+	DefaultEncryptionScope string
+
+	// Setting this to ture indicates that every blob that's uploaded to this container uses the default encryption scope.
+	EncryptionScopeOverrideDisabled bool
+
 	// A name-value pair to associate with the container as metadata.
 	MetaData map[string]string
 }
@@ -42,8 +48,7 @@ func (c Client) Create(ctx context.Context, containerName string, input CreateIn
 		},
 		HttpMethod: http.MethodPut,
 		OptionsObject: createOptions{
-			accessLevel: input.AccessLevel,
-			metaData:    input.MetaData,
+			input: input,
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
@@ -70,18 +75,23 @@ func (c Client) Create(ctx context.Context, containerName string, input CreateIn
 var _ client.Options = createOptions{}
 
 type createOptions struct {
-	accessLevel AccessLevel
-	metaData    map[string]string
+	input CreateInput
 }
 
 func (o createOptions) ToHeaders() *client.Headers {
 	headers := containerOptions{
-		metaData: o.metaData,
+		metaData: o.input.MetaData,
 	}.ToHeaders()
 
 	// If this header is not included in the request, container data is private to the account owner.
-	if o.accessLevel != Private {
-		headers.Append("x-ms-blob-public-access", string(o.accessLevel))
+	if o.input.AccessLevel != Private {
+		headers.Append("x-ms-blob-public-access", string(o.input.AccessLevel))
+	}
+
+	if o.input.DefaultEncryptionScope != "" {
+		// These two headers must be used together.
+		headers.Append("x-ms-default-encryption-scope", o.input.DefaultEncryptionScope)
+		headers.Append("x-ms-deny-encryption-scope-override", fmt.Sprintf("%t", o.input.EncryptionScopeOverrideDisabled))
 	}
 
 	return headers

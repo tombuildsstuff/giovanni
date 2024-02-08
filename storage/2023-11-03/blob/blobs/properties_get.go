@@ -158,6 +158,9 @@ type GetPropertiesResponse struct {
 
 	// Is the Storage Account encrypted using server-side encryption? This should always return true
 	ServerEncrypted bool
+
+	// The encryption scope for the request content.
+	EncryptionScope string
 }
 
 // GetProperties returns all user-defined metadata, standard HTTP properties, and system properties for the blob
@@ -223,6 +226,7 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 			result.LeaseDuration = LeaseDuration(resp.Header.Get("x-ms-lease-duration"))
 			result.LeaseState = LeaseState(resp.Header.Get("x-ms-lease-state"))
 			result.LeaseStatus = LeaseStatus(resp.Header.Get("x-ms-lease-status"))
+			result.EncryptionScope = resp.Header.Get("x-ms-encryption-scope")
 			result.MetaData = metadata.ParseFromHeaders(resp.Header)
 
 			if v := resp.Header.Get("x-ms-access-tier-inferred"); v != "" {
