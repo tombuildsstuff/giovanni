@@ -35,7 +35,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building SharedKey authorizer: %+v", err)
 	}
-    sharesClient.Client.WithAuthorizer(auth)
+    sharesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     input := shares.CreateInput{

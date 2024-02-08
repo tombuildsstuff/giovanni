@@ -34,7 +34,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-	entitiesClient.Client.WithAuthorizer(auth)
+	entitiesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     input := entities.InsertEntityInput{

@@ -180,7 +180,7 @@ func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
 }
 
 func (c Client) PrepareWithResourceManagerAuth(input *storage.BaseClient) {
-	input.WithAuthorizer(c.storageAuth)
+	input.SetAuthorizer(c.storageAuth)
 }
 
 func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources, keyType auth.SharedKeyType) error {
@@ -188,6 +188,6 @@ func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestRe
 	if err != nil {
 		return fmt.Errorf("building SharedKey authorizer: %+v", err)
 	}
-	input.WithAuthorizer(auth)
+	input.SetAuthorizer(auth)
 	return nil
 }

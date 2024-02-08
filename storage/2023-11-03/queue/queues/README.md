@@ -35,7 +35,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-    queuesClient.Client.WithAuthorizer(auth)
+    queuesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     metadata := map[string]string{
