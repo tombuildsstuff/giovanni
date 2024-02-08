@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"net/http"
 )
 
 type QueueMessage struct {
@@ -9,7 +9,7 @@ type QueueMessage struct {
 }
 
 type QueueMessagesListResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	QueueMessages *[]QueueMessageResponse `xml:"QueueMessage"`
 }

@@ -24,36 +24,41 @@ type AcquireLeaseInput struct {
 }
 
 type AcquireLeaseResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	LeaseID string
 }
 
 // AcquireLease establishes and manages a lock on a blob for write and delete operations.
-func (c Client) AcquireLease(ctx context.Context, containerName, blobName string, input AcquireLeaseInput) (resp AcquireLeaseResponse, err error) {
-
+func (c Client) AcquireLease(ctx context.Context, containerName, blobName string, input AcquireLeaseInput) (result AcquireLeaseResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.LeaseID != nil && *input.LeaseID == "" {
-		return resp, fmt.Errorf("`input.LeaseID` cannot be an empty string, if specified")
+		err = fmt.Errorf("`input.LeaseID` cannot be an empty string, if specified")
+		return
 	}
 
 	if input.ProposedLeaseID != nil && *input.ProposedLeaseID == "" {
-		return resp, fmt.Errorf("`input.ProposedLeaseID` cannot be an empty string, if specified")
+		err = fmt.Errorf("`input.ProposedLeaseID` cannot be an empty string, if specified")
+		return
 	}
 	// An infinite lease duration is -1 seconds. A non-infinite lease can be between 15 and 60 seconds
 	if input.LeaseDuration != -1 && (input.LeaseDuration <= 15 || input.LeaseDuration >= 60) {
-		return resp, fmt.Errorf("`input.LeaseDuration` must be -1 (infinite), or between 15 and 60 seconds")
+		err = fmt.Errorf("`input.LeaseDuration` must be -1 (infinite), or between 15 and 60 seconds")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -73,16 +78,18 @@ func (c Client) AcquireLease(ctx context.Context, containerName, blobName string
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.LeaseID = resp.Header.Get("x-ms-lease-id")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.LeaseID = resp.HttpResponse.Header.Get("x-ms-lease-id")
-		}
 	}
 
 	return

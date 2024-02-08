@@ -12,7 +12,7 @@ import (
 )
 
 type SetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type SetMetaDataInput struct {
@@ -20,18 +20,21 @@ type SetMetaDataInput struct {
 }
 
 // SetMetaData sets the MetaData on the specified Storage Share
-func (c Client) SetMetaData(ctx context.Context, shareName string, input SetMetaDataInput) (resp SetMetaDataResponse, err error) {
+func (c Client) SetMetaData(ctx context.Context, shareName string, input SetMetaDataInput) (result SetMetaDataResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
-	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`metadata` is not valid: %v", err)
+	if err = metadata.Validate(input.MetaData); err != nil {
+		err = fmt.Errorf("`metadata` is not valid: %+v", err)
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -52,7 +55,11 @@ func (c Client) SetMetaData(ctx context.Context, shareName string, input SetMeta
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

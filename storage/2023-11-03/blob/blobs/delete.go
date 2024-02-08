@@ -21,22 +21,21 @@ type DeleteInput struct {
 }
 
 type DeleteResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Delete marks the specified blob or snapshot for deletion. The blob is later deleted during garbage collection.
-func (c Client) Delete(ctx context.Context, containerName, blobName string, input DeleteInput) (resp DeleteResponse, err error) {
-
+func (c Client) Delete(ctx context.Context, containerName, blobName string, input DeleteInput) (result DeleteResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		return result, fmt.Errorf("`containerName` must be a lower-cased string")
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		return result, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -56,7 +55,11 @@ func (c Client) Delete(ctx context.Context, containerName, blobName string, inpu
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

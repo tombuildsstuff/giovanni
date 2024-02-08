@@ -34,7 +34,7 @@ type PutBlockListInput struct {
 }
 
 type PutBlockListResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	ContentMD5   string
 	ETag         string
@@ -44,18 +44,20 @@ type PutBlockListResponse struct {
 // PutBlockList writes a blob by specifying the list of block IDs that make up the blob.
 // In order to be written as part of a blob, a block must have been successfully written
 // to the server in a prior Put Block operation.
-func (c Client) PutBlockList(ctx context.Context, containerName, blobName string, input PutBlockListInput) (resp PutBlockListResponse, err error) {
-
+func (c Client) PutBlockList(ctx context.Context, containerName, blobName string, input PutBlockListInput) (result PutBlockListResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -77,21 +79,24 @@ func (c Client) PutBlockList(ctx context.Context, containerName, blobName string
 
 	err = req.Marshal(&input.BlockList)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
-	}
-
-	resp.HttpResponse, err = req.Execute(ctx)
-	if err != nil {
-		err = fmt.Errorf("executing request: %+v", err)
+		err = fmt.Errorf("marshalling request: %+v", err)
 		return
 	}
 
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.ContentMD5 = resp.HttpResponse.Header.Get("Content-MD5")
-			resp.ETag = resp.HttpResponse.Header.Get("ETag")
-			resp.LastModified = resp.HttpResponse.Header.Get("Last-Modified")
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.ContentMD5 = resp.Header.Get("Content-MD5")
+			result.ETag = resp.Header.Get("ETag")
+			result.LastModified = resp.Header.Get("Last-Modified")
 		}
+	}
+	if err != nil {
+		err = fmt.Errorf("executing request: %+v", err)
+		return
 	}
 
 	return

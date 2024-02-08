@@ -28,21 +28,21 @@ type InsertEntityInput struct {
 }
 
 type InsertResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Insert inserts a new entity into a table.
-func (c Client) Insert(ctx context.Context, tableName string, input InsertEntityInput) (resp InsertResponse, err error) {
+func (c Client) Insert(ctx context.Context, tableName string, input InsertEntityInput) (result InsertResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		return result, fmt.Errorf("`tableName` cannot be an empty string")
 	}
 
 	if input.PartitionKey == "" {
-		return resp, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
 	}
 
 	if input.RowKey == "" {
-		return resp, fmt.Errorf("`input.RowKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.RowKey` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -68,10 +68,14 @@ func (c Client) Insert(ctx context.Context, tableName string, input InsertEntity
 
 	err = req.Marshal(&input.Entity)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		return result, fmt.Errorf("marshalling request: %+v", err)
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

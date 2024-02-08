@@ -16,30 +16,35 @@ type ClearByteRangeInput struct {
 }
 
 type ClearByteRangeResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // ClearByteRange clears the specified Byte Range from within the specified File
-func (c Client) ClearByteRange(ctx context.Context, shareName, path, fileName string, input ClearByteRangeInput) (resp ClearByteRangeResponse, err error) {
+func (c Client) ClearByteRange(ctx context.Context, shareName, path, fileName string, input ClearByteRangeInput) (result ClearByteRangeResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if input.StartBytes < 0 {
-		return resp, fmt.Errorf("`input.StartBytes` must be greater or equal to 0")
+		err = fmt.Errorf("`input.StartBytes` must be greater or equal to 0")
+		return
 	}
 
 	if input.EndBytes <= 0 {
-		return resp, fmt.Errorf("`input.EndBytes` must be greater than 0")
+		err = fmt.Errorf("`input.EndBytes` must be greater than 0")
+		return
 	}
 
 	if path != "" {
@@ -64,7 +69,11 @@ func (c Client) ClearByteRange(ctx context.Context, shareName, path, fileName st
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

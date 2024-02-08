@@ -9,13 +9,13 @@ import (
 )
 
 type GetServicePropertiesResult struct {
-	HttpResponse *client.Response
-	Model        *StorageServiceProperties
+	StorageServiceProperties
+	HttpResponse *http.Response
 }
 
-func (c Client) GetServiceProperties(ctx context.Context, accountName string) (resp GetServicePropertiesResult, err error) {
+func (c Client) GetServiceProperties(ctx context.Context, accountName string) (result GetServicePropertiesResult, err error) {
 	if accountName == "" {
-		return resp, fmt.Errorf("`accountName` cannot be an empty string")
+		return result, fmt.Errorf("`accountName` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -27,22 +27,27 @@ func (c Client) GetServiceProperties(ctx context.Context, accountName string) (r
 		OptionsObject: servicePropertiesOptions{},
 		Path:          "/",
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if err = resp.HttpResponse.Unmarshal(&resp.Model); err != nil {
-			err = fmt.Errorf("unmarshaling response: %+v", err)
-			return
-		}
 	}
 
 	return

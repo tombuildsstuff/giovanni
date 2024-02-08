@@ -55,18 +55,15 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("retrieving container: %+v", err)
 	}
-	if container.Model == nil {
-		t.Fatalf("retrieving container: `model` was nil")
-	}
 
-	if container.Model.AccessLevel != Private {
-		t.Fatalf("Expected Access Level to be Private but got %q", container.Model.AccessLevel)
+	if container.AccessLevel != Private {
+		t.Fatalf("Expected Access Level to be Private but got %q", container.AccessLevel)
 	}
-	if len(container.Model.MetaData) != 0 {
-		t.Fatalf("Expected MetaData to be empty but got: %s", container.Model.MetaData)
+	if len(container.MetaData) != 0 {
+		t.Fatalf("Expected MetaData to be empty but got: %s", container.MetaData)
 	}
-	if container.Model.LeaseStatus != Unlocked {
-		t.Fatalf("Expected Container Lease to be Unlocked but was: %s", container.Model.LeaseStatus)
+	if container.LeaseStatus != Unlocked {
+		t.Fatalf("Expected Container Lease to be Unlocked but was: %s", container.LeaseStatus)
 	}
 
 	// then update the metadata
@@ -87,17 +84,17 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error re-retrieving: %s", err))
 	}
-	if len(container.Model.MetaData) != 1 {
-		t.Fatalf("Expected 1 item in the metadata but got: %s", container.Model.MetaData)
+	if len(container.MetaData) != 1 {
+		t.Fatalf("Expected 1 item in the metadata but got: %s", container.MetaData)
 	}
-	if container.Model.MetaData["dont"] != "kill-my-vibe" {
-		t.Fatalf("Expected `kill-my-vibe` but got %q", container.Model.MetaData["dont"])
+	if container.MetaData["dont"] != "kill-my-vibe" {
+		t.Fatalf("Expected `kill-my-vibe` but got %q", container.MetaData["dont"])
 	}
-	if container.Model.AccessLevel != Private {
-		t.Fatalf("Expected Access Level to be Private but got %q", container.Model.AccessLevel)
+	if container.AccessLevel != Private {
+		t.Fatalf("Expected Access Level to be Private but got %q", container.AccessLevel)
 	}
-	if container.Model.LeaseStatus != Unlocked {
-		t.Fatalf("Expected Container Lease to be Unlocked but was: %s", container.Model.LeaseStatus)
+	if container.LeaseStatus != Unlocked {
+		t.Fatalf("Expected Container Lease to be Unlocked but was: %s", container.LeaseStatus)
 	}
 
 	// then update the ACL
@@ -116,14 +113,14 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(fmt.Errorf("Error re-retrieving: %s", err))
 	}
-	if container.Model.AccessLevel != Blob {
-		t.Fatalf("Expected Access Level to be Blob but got %q", container.Model.AccessLevel)
+	if container.AccessLevel != Blob {
+		t.Fatalf("Expected Access Level to be Blob but got %q", container.AccessLevel)
 	}
-	if len(container.Model.MetaData) != 1 {
-		t.Fatalf("Expected 1 item in the metadata but got: %s", container.Model.MetaData)
+	if len(container.MetaData) != 1 {
+		t.Fatalf("Expected 1 item in the metadata but got: %s", container.MetaData)
 	}
-	if container.Model.LeaseStatus != Unlocked {
-		t.Fatalf("Expected Container Lease to be Unlocked but was: %s", container.Model.LeaseStatus)
+	if container.LeaseStatus != Unlocked {
+		t.Fatalf("Expected Container Lease to be Unlocked but was: %s", container.LeaseStatus)
 	}
 
 	// acquire a lease for 30s
@@ -134,28 +131,22 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error acquiring lease: %s", err)
 	}
-	if acquireLeaseResp.Model == nil {
-		t.Fatalf("acquiring lease: `model` was nil")
-	}
-	t.Logf("[DEBUG] Lease ID: %s", acquireLeaseResp.Model.LeaseID)
+	t.Logf("[DEBUG] Lease ID: %s", acquireLeaseResp.LeaseID)
 
 	// we should then be able to update the ID
 	t.Logf("[DEBUG] Changing lease..")
 	updateLeaseInput := ChangeLeaseInput{
-		ExistingLeaseID: acquireLeaseResp.Model.LeaseID,
+		ExistingLeaseID: acquireLeaseResp.LeaseID,
 		ProposedLeaseID: "aaaabbbb-aaaa-bbbb-cccc-aaaabbbbcccc",
 	}
 	updateLeaseResp, err := containersClient.ChangeLease(ctx, containerName, updateLeaseInput)
 	if err != nil {
 		t.Fatalf("changing lease: %+v", err)
 	}
-	if updateLeaseResp.Model == nil {
-		t.Fatalf("changing lease: `model` was nil")
-	}
 
 	// then renew it
 	_, err = containersClient.RenewLease(ctx, containerName, RenewLeaseInput{
-		LeaseId: updateLeaseResp.Model.LeaseID,
+		LeaseId: updateLeaseResp.LeaseID,
 	})
 	if err != nil {
 		t.Fatalf("Error renewing lease: %s", err)
@@ -164,23 +155,20 @@ func TestContainerLifecycle(t *testing.T) {
 	// and then give it a timeout
 	breakPeriod := 20
 	breakLeaseInput := BreakLeaseInput{
-		LeaseID:     updateLeaseResp.Model.LeaseID,
+		LeaseID:     updateLeaseResp.LeaseID,
 		BreakPeriod: &breakPeriod,
 	}
 	breakLeaseResp, err := containersClient.BreakLease(ctx, containerName, breakLeaseInput)
 	if err != nil {
 		t.Fatalf("breaking lease: %+v", err)
 	}
-	if breakLeaseResp.Model == nil {
-		t.Fatalf("breaking lease: `model` was nil")
-	}
-	if breakLeaseResp.Model.LeaseTime == 0 {
-		t.Fatalf("Lease broke immediately when should have waited: %d", breakLeaseResp.Model.LeaseTime)
+	if breakLeaseResp.LeaseTime == 0 {
+		t.Fatalf("Lease broke immediately when should have waited: %d", breakLeaseResp.LeaseTime)
 	}
 
 	// and finally ditch it
 	_, err = containersClient.ReleaseLease(ctx, containerName, ReleaseLeaseInput{
-		LeaseId: updateLeaseResp.Model.LeaseID,
+		LeaseId: updateLeaseResp.LeaseID,
 	})
 	if err != nil {
 		t.Fatalf("Error releasing lease: %s", err)
@@ -192,12 +180,9 @@ func TestContainerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("listing blobs: %+v", err)
 	}
-	if listResult.Model == nil {
-		t.Fatalf("listing blobs: `model` was nil")
-	}
 
-	if len(listResult.Model.Blobs.Blobs) != 0 {
-		t.Fatalf("Expected there to be no blobs in the container but got %d", len(listResult.Model.Blobs.Blobs))
+	if len(listResult.Blobs.Blobs) != 0 {
+		t.Fatalf("Expected there to be no blobs in the container but got %d", len(listResult.Blobs.Blobs))
 	}
 
 	t.Logf("[DEBUG] Deleting..")

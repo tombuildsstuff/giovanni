@@ -19,29 +19,32 @@ type IncrementalCopyBlobInput struct {
 }
 
 type IncrementalCopyBlob struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // IncrementalCopyBlob copies a snapshot of the source page blob to a destination page blob.
 // The snapshot is copied such that only the differential changes between the previously copied
 // snapshot are transferred to the destination.
 // The copied snapshots are complete copies of the original snapshot and can be read or copied from as usual.
-func (c Client) IncrementalCopyBlob(ctx context.Context, containerName, blobName string, input IncrementalCopyBlobInput) (resp IncrementalCopyBlob, err error) {
-
+func (c Client) IncrementalCopyBlob(ctx context.Context, containerName, blobName string, input IncrementalCopyBlobInput) (result IncrementalCopyBlob, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.CopySource == "" {
-		return resp, fmt.Errorf("`input.CopySource` cannot be an empty string")
+		err = fmt.Errorf("`input.CopySource` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -61,7 +64,11 @@ func (c Client) IncrementalCopyBlob(ctx context.Context, containerName, blobName
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

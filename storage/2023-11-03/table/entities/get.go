@@ -18,23 +18,23 @@ type GetEntityInput struct {
 }
 
 type GetEntityResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	Entity map[string]interface{}
 }
 
 // Get queries entities in a table and includes the $filter and $select options.
-func (c Client) Get(ctx context.Context, tableName string, input GetEntityInput) (resp GetEntityResponse, err error) {
+func (c Client) Get(ctx context.Context, tableName string, input GetEntityInput) (result GetEntityResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		return result, fmt.Errorf("`tableName` cannot be an empty string")
 	}
 
 	if input.PartitionKey == "" {
-		return resp, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.PartitionKey` cannot be an empty string")
 	}
 
 	if input.RowKey == "" {
-		return resp, fmt.Errorf("`input.RowKey` cannot be an empty string")
+		return result, fmt.Errorf("`input.RowKey` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -54,20 +54,22 @@ func (c Client) Get(ctx context.Context, tableName string, input GetEntityInput)
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result.Entity)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Body != nil {
-			err = resp.HttpResponse.Unmarshal(&resp.Entity)
-			if err != nil {
-				return resp, fmt.Errorf("unmarshalling response: %+v", err)
-			}
-		}
-	}
 	return
 }
 

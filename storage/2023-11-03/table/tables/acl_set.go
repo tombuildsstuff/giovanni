@@ -17,13 +17,14 @@ type setAcl struct {
 }
 
 type SetACLResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetACL sets the specified Access Control List for the specified Table
-func (c Client) SetACL(ctx context.Context, tableName string, acls []SignedIdentifier) (resp SetACLResponse, err error) {
+func (c Client) SetACL(ctx context.Context, tableName string, acls []SignedIdentifier) (result SetACLResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		err = fmt.Errorf("`tableName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -44,10 +45,15 @@ func (c Client) SetACL(ctx context.Context, tableName string, acls []SignedIdent
 
 	err = req.Marshal(setAcl{SignedIdentifiers: acls})
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %+v", err)
+		err = fmt.Errorf("marshalling request: %+v", err)
+		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

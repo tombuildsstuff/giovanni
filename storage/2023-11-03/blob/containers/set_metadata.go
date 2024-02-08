@@ -16,16 +16,18 @@ type SetMetaDataInput struct {
 }
 
 type SetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetMetaData sets the specified MetaData on the Container without a Lease ID
-func (c Client) SetMetaData(ctx context.Context, containerName string, input SetMetaDataInput) (resp SetMetaDataResponse, err error) {
+func (c Client) SetMetaData(ctx context.Context, containerName string, input SetMetaDataInput) (result SetMetaDataResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
-	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`input.MetaData` is not valid: %s", err)
+	if err = metadata.Validate(input.MetaData); err != nil {
+		err = fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -40,12 +42,18 @@ func (c Client) SetMetaData(ctx context.Context, containerName string, input Set
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

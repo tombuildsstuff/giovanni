@@ -23,27 +23,30 @@ type PutAppendBlobInput struct {
 }
 
 type PutAppendBlobResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // PutAppendBlob is a wrapper around the Put API call (with a stricter input object)
 // which creates a new append blob, or updates the content of an existing blob.
-func (c Client) PutAppendBlob(ctx context.Context, containerName, blobName string, input PutAppendBlobInput) (resp PutAppendBlobResponse, err error) {
-
+func (c Client) PutAppendBlob(ctx context.Context, containerName, blobName string, input PutAppendBlobInput) (result PutAppendBlobResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
-	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf(fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
+	if err = metadata.Validate(input.MetaData); err != nil {
+		err = fmt.Errorf(fmt.Sprintf("`input.MetaData` is not valid: %s.", err))
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -63,7 +66,11 @@ func (c Client) PutAppendBlob(ctx context.Context, containerName, blobName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

@@ -14,13 +14,14 @@ type createTableRequest struct {
 }
 
 type CreateTableResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Create creates a new table in the storage account.
-func (c Client) Create(ctx context.Context, tableName string) (resp CreateTableResponse, err error) {
+func (c Client) Create(ctx context.Context, tableName string) (result CreateTableResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		err = fmt.Errorf("`tableName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -41,10 +42,14 @@ func (c Client) Create(ctx context.Context, tableName string) (resp CreateTableR
 
 	err = req.Marshal(&createTableRequest{TableName: tableName})
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request")
+		return result, fmt.Errorf("marshalling request")
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

@@ -16,7 +16,7 @@ type CreateSnapshotInput struct {
 }
 
 type CreateSnapshotResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// This header is a DateTime value that uniquely identifies the share snapshot.
 	// The value of this header may be used in subsequent requests to access the share snapshot.
@@ -27,18 +27,21 @@ type CreateSnapshotResponse struct {
 // CreateSnapshot creates a read-only snapshot of the share
 // A share can support creation of 200 share snapshots. Attempting to create more than 200 share snapshots fails with 409 (Conflict).
 // Attempting to create a share snapshot while a previous Snapshot Share operation is in progress fails with 409 (Conflict).
-func (c Client) CreateSnapshot(ctx context.Context, shareName string, input CreateSnapshotInput) (resp CreateSnapshotResponse, err error) {
+func (c Client) CreateSnapshot(ctx context.Context, shareName string, input CreateSnapshotInput) (result CreateSnapshotResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if err = metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`input.MetaData` is not valid: %v", err)
+		err = fmt.Errorf("`input.MetaData` is not valid: %+v", err)
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -59,17 +62,20 @@ func (c Client) CreateSnapshot(ctx context.Context, shareName string, input Crea
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.SnapshotDateTime = resp.Header.Get("x-ms-snapshot")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.SnapshotDateTime = resp.HttpResponse.Header.Get("x-ms-snapshot")
-		}
-	}
 	return
 }
 

@@ -23,39 +23,45 @@ type PutByteRangeInput struct {
 }
 
 type PutRangeResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // PutByteRange puts the specified Byte Range in the specified File.
-func (c Client) PutByteRange(ctx context.Context, shareName, path, fileName string, input PutByteRangeInput) (resp PutRangeResponse, err error) {
-
+func (c Client) PutByteRange(ctx context.Context, shareName, path, fileName string, input PutByteRangeInput) (result PutRangeResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if input.StartBytes < 0 {
-		return resp, fmt.Errorf("`input.StartBytes` must be greater or equal to 0")
+		err = fmt.Errorf("`input.StartBytes` must be greater or equal to 0")
+		return
 	}
 	if input.EndBytes <= 0 {
-		return resp, fmt.Errorf("`input.EndBytes` must be greater than 0")
+		err = fmt.Errorf("`input.EndBytes` must be greater than 0")
+		return
 	}
 
 	expectedBytes := input.EndBytes - input.StartBytes
 	actualBytes := len(input.Content)
 	if expectedBytes != int64(actualBytes) {
-		return resp, fmt.Errorf(fmt.Sprintf("The specified byte-range (%d) didn't match the content size (%d).", expectedBytes, actualBytes))
+		err = fmt.Errorf(fmt.Sprintf("The specified byte-range (%d) didn't match the content size (%d).", expectedBytes, actualBytes))
+		return
 	}
 
 	if expectedBytes > (4 * 1024 * 1024) {
-		return resp, fmt.Errorf("specified Byte Range must be at most 4MB")
+		err = fmt.Errorf("specified Byte Range must be at most 4MB")
+		return
 	}
 
 	if path != "" {
@@ -82,7 +88,11 @@ func (c Client) PutByteRange(ctx context.Context, shareName, path, fileName stri
 	req.Body = io.NopCloser(bytes.NewReader(input.Content))
 	req.ContentLength = int64(len(input.Content))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

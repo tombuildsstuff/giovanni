@@ -11,5 +11,5 @@ func parsePathResource(input string) (PathResource, error) {
 	case "directory":
 		return PathResourceDirectory, nil
 	}
-	return "", fmt.Errorf("Unhandled path resource type %q", input)
+	return "", fmt.Errorf("unhandled path resource type %q", input)
 }

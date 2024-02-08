@@ -33,13 +33,13 @@ type PutInput struct {
 }
 
 // Put adds a new message to the back of the message queue
-func (c Client) Put(ctx context.Context, queueName string, input PutInput) (resp QueueMessagesListResponse, err error) {
+func (c Client) Put(ctx context.Context, queueName string, input PutInput) (result QueueMessagesListResponse, err error) {
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
 	opts := client.RequestOptions{
@@ -64,7 +64,7 @@ func (c Client) Put(ctx context.Context, queueName string, input PutInput) (resp
 		MessageText: input.Message,
 	})
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		return result, fmt.Errorf("marshalling request: %+v", err)
 	}
 
 	body := xml.Header + string(marshalledMsg)
@@ -72,16 +72,20 @@ func (c Client) Put(ctx context.Context, queueName string, input PutInput) (resp
 	req.ContentLength = int64(len(body))
 	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if err = resp.HttpResponse.Unmarshal(&resp); err != nil {
-			return resp, fmt.Errorf("unmarshalling response: %+v", err)
-		}
 	}
 
 	return

@@ -10,16 +10,17 @@ import (
 )
 
 type GetACLResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	SignedIdentifiers []SignedIdentifier `xml:"SignedIdentifier"`
 }
 
 // GetACL returns the Access Control List for the specified Table
-func (c Client) GetACL(ctx context.Context, tableName string) (resp GetACLResponse, err error) {
+func (c Client) GetACL(ctx context.Context, tableName string) (result GetACLResponse, err error) {
 
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		err = fmt.Errorf("`tableName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -38,19 +39,20 @@ func (c Client) GetACL(ctx context.Context, tableName string) (resp GetACLRespon
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Body != nil {
-			err = resp.HttpResponse.Unmarshal(&resp)
-			if err != nil {
-				return resp, fmt.Errorf("unmarshalling response body: %v", err)
-			}
-		}
 	}
 
 	return

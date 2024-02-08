@@ -68,21 +68,24 @@ type SetPropertiesInput struct {
 }
 
 type SetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetProperties sets the specified properties on the specified File
-func (c Client) SetProperties(ctx context.Context, shareName, path, fileName string, input SetPropertiesInput) (resp SetPropertiesResponse, err error) {
+func (c Client) SetProperties(ctx context.Context, shareName, path, fileName string, input SetPropertiesInput) (result SetPropertiesResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if path != "" {
@@ -107,7 +110,11 @@ func (c Client) SetProperties(ctx context.Context, shareName, path, fileName str
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

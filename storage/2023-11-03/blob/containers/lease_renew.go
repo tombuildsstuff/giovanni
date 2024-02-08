@@ -14,16 +14,18 @@ type RenewLeaseInput struct {
 }
 
 type RenewLeaseResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // RenewLease renews the lock based on the Lease ID
-func (c Client) RenewLease(ctx context.Context, containerName string, input RenewLeaseInput) (resp RenewLeaseResponse, err error) {
+func (c Client) RenewLease(ctx context.Context, containerName string, input RenewLeaseInput) (result RenewLeaseResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 	if input.LeaseId == "" {
-		return resp, fmt.Errorf("`input.LeaseId` cannot be an empty string")
+		err = fmt.Errorf("`input.LeaseId` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -37,12 +39,18 @@ func (c Client) RenewLease(ctx context.Context, containerName string, input Rene
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

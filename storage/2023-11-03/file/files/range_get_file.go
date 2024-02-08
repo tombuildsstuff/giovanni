@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"runtime"
 	"sync"
-
-	"github.com/hashicorp/go-azure-sdk/sdk/client"
 )
 
 type GetFileInput struct {
@@ -16,18 +15,18 @@ type GetFileInput struct {
 }
 
 type GetFileResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	OutputBytes []byte
 }
 
 // GetFile is a helper method to download a file by chunking it automatically
-func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, input GetFileInput) (resp GetFileResponse, err error) {
+func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, input GetFileInput) (result GetFileResponse, err error) {
 
 	// first look up the file and check out how many bytes it is
 	file, e := c.GetProperties(ctx, shareName, path, fileName)
 	if err != nil {
-		resp.HttpResponse = file.HttpResponse
+		result.HttpResponse = file.HttpResponse
 		err = e
 		return
 	}
@@ -37,7 +36,7 @@ func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, i
 		return
 	}
 
-	resp.HttpResponse = file.HttpResponse
+	result.HttpResponse = file.HttpResponse
 	length := *file.ContentLength
 	chunkSize := int64(4 * 1024 * 1024) // 4MB
 
@@ -95,7 +94,7 @@ func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, i
 		copy(output[v.startBytes:v.endBytes], v.bytes)
 	}
 
-	resp.OutputBytes = output
+	result.OutputBytes = output
 	return
 }
 

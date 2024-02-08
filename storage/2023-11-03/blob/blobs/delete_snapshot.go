@@ -20,26 +20,29 @@ type DeleteSnapshotInput struct {
 }
 
 type DeleteSnapshotResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // DeleteSnapshot marks a single Snapshot of a Blob for Deletion based on it's DateTime, which will be deleted during the next Garbage Collection cycle.
-func (c Client) DeleteSnapshot(ctx context.Context, containerName, blobName string, input DeleteSnapshotInput) (resp DeleteSnapshotResponse, err error) {
-
+func (c Client) DeleteSnapshot(ctx context.Context, containerName, blobName string, input DeleteSnapshotInput) (result DeleteSnapshotResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.SnapshotDateTime == "" {
-		return resp, fmt.Errorf("`input.SnapshotDateTime` cannot be an empty string")
+		err = fmt.Errorf("`input.SnapshotDateTime` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -59,7 +62,11 @@ func (c Client) DeleteSnapshot(ctx context.Context, containerName, blobName stri
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

@@ -30,20 +30,20 @@ type UpdateInput struct {
 }
 
 type UpdateResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Update updates an existing message based on it's Pop Receipt
-func (c Client) Update(ctx context.Context, queueName string, messageID string, input UpdateInput) (resp UpdateResponse, err error) {
+func (c Client) Update(ctx context.Context, queueName string, messageID string, input UpdateInput) (result UpdateResponse, err error) {
 
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 	if input.PopReceipt == "" {
-		return resp, fmt.Errorf("`input.PopReceipt` cannot be an empty string")
+		return result, fmt.Errorf("`input.PopReceipt` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -68,7 +68,7 @@ func (c Client) Update(ctx context.Context, queueName string, messageID string, 
 		MessageText: input.Message,
 	})
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		return result, fmt.Errorf("marshalling request: %+v", err)
 	}
 
 	body := xml.Header + string(marshalledMsg)
@@ -76,7 +76,11 @@ func (c Client) Update(ctx context.Context, queueName string, messageID string, 
 	req.ContentLength = int64(len(body))
 	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

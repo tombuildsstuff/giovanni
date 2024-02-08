@@ -79,12 +79,12 @@ func TestContainerLifecycle(t *testing.T) {
 		t.Fatal(fmt.Errorf("error getting properties: %s", err))
 	}
 
-	website := result.Model.StaticWebsite
+	website := result.StaticWebsite
 	if website.Enabled != true {
 		t.Fatalf("Expected the StaticWebsite %t but got %t", true, website.Enabled)
 	}
 
-	logging := result.Model.Logging
+	logging := result.Logging
 	if logging.Version != "2.0" {
 		t.Fatalf("Expected the Logging Version %s but got %s", "2.0", logging.Version)
 	}

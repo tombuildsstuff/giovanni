@@ -10,13 +10,14 @@ import (
 )
 
 type TableExistsResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Exists checks that the specified table exists
-func (c Client) Exists(ctx context.Context, tableName string) (resp TableExistsResponse, err error) {
+func (c Client) Exists(ctx context.Context, tableName string) (result TableExistsResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		err = fmt.Errorf("`tableName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -37,10 +38,15 @@ func (c Client) Exists(ctx context.Context, tableName string) (resp TableExistsR
 
 	err = req.Marshal(&createTableRequest{TableName: tableName})
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request")
+		err = fmt.Errorf("marshalling request")
+		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

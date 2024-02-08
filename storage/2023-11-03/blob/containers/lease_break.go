@@ -3,11 +3,10 @@ package containers
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"net/http"
+	"strconv"
 )
 
 type BreakLeaseInput struct {
@@ -25,8 +24,8 @@ type BreakLeaseInput struct {
 }
 
 type BreakLeaseResponse struct {
-	HttpResponse *client.Response
-	Model        *BreakLeaseModel
+	BreakLeaseModel
+	HttpResponse *http.Response
 }
 
 type BreakLeaseModel struct {
@@ -36,12 +35,12 @@ type BreakLeaseModel struct {
 }
 
 // BreakLease breaks a lock based on it's Lease ID
-func (c Client) BreakLease(ctx context.Context, containerName string, input BreakLeaseInput) (resp BreakLeaseResponse, err error) {
+func (c Client) BreakLease(ctx context.Context, containerName string, input BreakLeaseInput) (result BreakLeaseResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 	if input.LeaseID == "" {
-		return resp, fmt.Errorf("`input.LeaseID` cannot be an empty string")
+		return result, fmt.Errorf("`input.LeaseID` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -56,26 +55,29 @@ func (c Client) BreakLease(ctx context.Context, containerName string, input Brea
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
-	if err != nil {
-		err = fmt.Errorf("executing request: %+v", err)
-		return
-	}
 
-	if resp.HttpResponse != nil {
-		leaseRaw := resp.HttpResponse.Header.Get("x-ms-lease-time")
-		if leaseRaw != "" {
-			if i, err := strconv.Atoi(leaseRaw); err == nil {
-				resp.Model = &BreakLeaseModel{
-					LeaseTime: i,
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			if leaseTimeRaw := resp.Header.Get("x-ms-lease-time"); leaseTimeRaw != "" {
+				if leaseTime, err := strconv.Atoi(leaseTimeRaw); err == nil {
+					result.LeaseTime = leaseTime
 				}
 			}
 		}
+	}
+	if err != nil {
+		err = fmt.Errorf("executing request: %+v", err)
+		return
 	}
 
 	return

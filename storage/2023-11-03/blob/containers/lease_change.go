@@ -15,8 +15,8 @@ type ChangeLeaseInput struct {
 }
 
 type ChangeLeaseResponse struct {
-	HttpResponse *client.Response
-	Model        *ChangeLeaseModel
+	ChangeLeaseModel
+	HttpResponse *http.Response
 }
 
 type ChangeLeaseModel struct {
@@ -24,15 +24,18 @@ type ChangeLeaseModel struct {
 }
 
 // ChangeLease changes the lock from one Lease ID to another Lease ID
-func (c Client) ChangeLease(ctx context.Context, containerName string, input ChangeLeaseInput) (resp ChangeLeaseResponse, err error) {
+func (c Client) ChangeLease(ctx context.Context, containerName string, input ChangeLeaseInput) (result ChangeLeaseResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 	if input.ExistingLeaseID == "" {
-		return resp, fmt.Errorf("`input.ExistingLeaseID` cannot be an empty string")
+		err = fmt.Errorf("`input.ExistingLeaseID` cannot be an empty string")
+		return
 	}
 	if input.ProposedLeaseID == "" {
-		return resp, fmt.Errorf("`input.ProposedLeaseID` cannot be an empty string")
+		err = fmt.Errorf("`input.ProposedLeaseID` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -47,21 +50,25 @@ func (c Client) ChangeLease(ctx context.Context, containerName string, input Cha
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.LeaseID = resp.Header.Get("x-ms-lease-id")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		resp.Model = &ChangeLeaseModel{
-			LeaseID: resp.HttpResponse.Header.Get("x-ms-lease-id"),
-		}
 	}
 
 	return

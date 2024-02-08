@@ -12,7 +12,7 @@ import (
 )
 
 type SetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type SetMetaDataInput struct {
@@ -20,21 +20,25 @@ type SetMetaDataInput struct {
 }
 
 // SetMetaData updates the specified File to have the specified MetaData.
-func (c Client) SetMetaData(ctx context.Context, shareName, path, fileName string, input SetMetaDataInput) (resp SetMetaDataResponse, err error) {
+func (c Client) SetMetaData(ctx context.Context, shareName, path, fileName string, input SetMetaDataInput) (result SetMetaDataResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if err = metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		err = fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		return
 	}
 
 	if path != "" {
@@ -59,7 +63,11 @@ func (c Client) SetMetaData(ctx context.Context, shareName, path, fileName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

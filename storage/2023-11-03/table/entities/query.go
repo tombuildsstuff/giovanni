@@ -35,7 +35,7 @@ type QueryEntitiesInput struct {
 }
 
 type QueryEntitiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	NextPartitionKey string
 	NextRowKey       string
@@ -45,9 +45,9 @@ type QueryEntitiesResponse struct {
 }
 
 // Query queries entities in a table and includes the $filter and $select options.
-func (c Client) Query(ctx context.Context, tableName string, input QueryEntitiesInput) (resp QueryEntitiesResponse, err error) {
+func (c Client) Query(ctx context.Context, tableName string, input QueryEntitiesInput) (result QueryEntitiesResponse, err error) {
 	if tableName == "" {
-		return resp, fmt.Errorf("`tableName` cannot be an empty string")
+		return result, fmt.Errorf("`tableName` cannot be an empty string")
 	}
 
 	additionalParameters := make([]string, 0)
@@ -82,19 +82,20 @@ func (c Client) Query(ctx context.Context, tableName string, input QueryEntities
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Body != nil {
-			err = resp.HttpResponse.Unmarshal(&resp)
-			if err != nil {
-				return resp, fmt.Errorf("unmarshalling response: %v", err)
-			}
-		}
 	}
 
 	return

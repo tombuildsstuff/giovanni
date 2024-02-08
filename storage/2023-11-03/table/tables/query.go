@@ -10,7 +10,7 @@ import (
 )
 
 type GetResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	MetaData string          `json:"odata.metadata,omitempty"`
 	Tables   []GetResultItem `json:"value"`
@@ -21,7 +21,7 @@ type QueryInput struct {
 }
 
 // Query returns a list of tables under the specified account.
-func (c Client) Query(ctx context.Context, input QueryInput) (resp GetResponse, err error) {
+func (c Client) Query(ctx context.Context, input QueryInput) (result GetResponse, err error) {
 
 	opts := client.RequestOptions{
 		ExpectedStatusCodes: []int{
@@ -40,19 +40,20 @@ func (c Client) Query(ctx context.Context, input QueryInput) (resp GetResponse, 
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Body != nil {
-			err = resp.HttpResponse.Unmarshal(&resp)
-			if err != nil {
-				return resp, fmt.Errorf("unmarshalling response: %v", err)
-			}
-		}
 	}
 
 	return

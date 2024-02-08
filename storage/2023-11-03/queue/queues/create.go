@@ -16,22 +16,22 @@ type CreateInput struct {
 }
 
 type CreateResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // Create creates the specified Queue within the specified Storage Account
-func (c Client) Create(ctx context.Context, queueName string, input CreateInput) (resp CreateResponse, err error) {
+func (c Client) Create(ctx context.Context, queueName string, input CreateInput) (result CreateResponse, err error) {
 
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
 	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`metadata` is not valid: %s", err)
+		return result, fmt.Errorf("`metadata` is not valid: %s", err)
 	}
 
 	opts := client.RequestOptions{
@@ -52,7 +52,11 @@ func (c Client) Create(ctx context.Context, queueName string, input CreateInput)
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

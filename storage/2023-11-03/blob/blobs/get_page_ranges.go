@@ -19,7 +19,7 @@ type GetPageRangesInput struct {
 }
 
 type GetPageRangesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// The size of the blob in bytes
 	ContentLength *int64
@@ -42,22 +42,21 @@ type PageRange struct {
 }
 
 // GetPageRanges returns the list of valid page ranges for a page blob or snapshot of a page blob.
-func (c Client) GetPageRanges(ctx context.Context, containerName, blobName string, input GetPageRangesInput) (resp GetPageRangesResponse, err error) {
-
+func (c Client) GetPageRanges(ctx context.Context, containerName, blobName string, input GetPageRangesInput) (result GetPageRangesResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		return result, fmt.Errorf("`containerName` must be a lower-cased string")
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		return result, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
-	if (input.StartByte != nil && input.EndByte == nil) || input.StartByte == nil && input.EndByte != nil {
-		return resp, fmt.Errorf("`input.StartByte` and `input.EndByte` must both be specified, or both be nil")
+	if (input.StartByte != nil && input.EndByte == nil) || (input.StartByte == nil && input.EndByte != nil) {
+		return result, fmt.Errorf("`input.StartByte` and `input.EndByte` must both be specified, or both be nil")
 	}
 
 	opts := client.RequestOptions{
@@ -77,33 +76,36 @@ func (c Client) GetPageRanges(ctx context.Context, containerName, blobName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
-	if err != nil {
-		err = fmt.Errorf("executing request: %+v", err)
-		return
-	}
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
 
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.ContentType = resp.HttpResponse.Header.Get("Content-Type")
-			resp.ETag = resp.HttpResponse.Header.Get("ETag")
+		if resp.Header != nil {
+			result.ContentType = resp.Header.Get("Content-Type")
+			result.ETag = resp.Header.Get("ETag")
 
-			if v := resp.HttpResponse.Header.Get("x-ms-blob-content-length"); v != "" {
+			if v := resp.Header.Get("x-ms-blob-content-length"); v != "" {
 				i, innerErr := strconv.Atoi(v)
 				if innerErr != nil {
-					err = fmt.Errorf("Error parsing %q as an integer: %s", v, innerErr)
+					err = fmt.Errorf("parsing `x-ms-blob-content-length` header value %q: %+v", v, innerErr)
 					return
 				}
 
 				i64 := int64(i)
-				resp.ContentLength = &i64
+				result.ContentLength = &i64
 			}
 		}
 
-		err = resp.HttpResponse.Unmarshal(&resp)
+		err = resp.Unmarshal(&result)
 		if err != nil {
-			return resp, fmt.Errorf("unmarshalling response: %s", err)
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
 		}
+	}
+	if err != nil {
+		err = fmt.Errorf("executing request: %+v", err)
+		return
 	}
 
 	return

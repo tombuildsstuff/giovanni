@@ -17,22 +17,22 @@ type ShareProperties struct {
 }
 
 type SetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // SetProperties lets you update the Quota for the specified Storage Share
-func (c Client) SetProperties(ctx context.Context, shareName string, properties ShareProperties) (resp SetPropertiesResponse, err error) {
+func (c Client) SetProperties(ctx context.Context, shareName string, properties ShareProperties) (result SetPropertiesResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		return result, fmt.Errorf("`shareName` cannot be an empty string")
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		return result, fmt.Errorf("`shareName` must be a lower-cased string")
 	}
 
 	if newQuotaGB := properties.QuotaInGb; newQuotaGB != nil && (*newQuotaGB <= 0 || *newQuotaGB > 102400) {
-		return resp, fmt.Errorf("`newQuotaGB` must be greater than 0, and less than/equal to 100TB (102400 GB)")
+		return result, fmt.Errorf("`newQuotaGB` must be greater than 0, and less than/equal to 100TB (102400 GB)")
 	}
 
 	opts := client.RequestOptions{
@@ -53,7 +53,11 @@ func (c Client) SetProperties(ctx context.Context, shareName string, properties 
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

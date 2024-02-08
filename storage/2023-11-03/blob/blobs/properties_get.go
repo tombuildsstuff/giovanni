@@ -19,7 +19,7 @@ type GetPropertiesInput struct {
 }
 
 type GetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// The tier of page blob on a premium storage account or tier of block blob on blob storage or general purpose v2 account.
 	AccessTier AccessTier
@@ -161,16 +161,18 @@ type GetPropertiesResponse struct {
 }
 
 // GetProperties returns all user-defined metadata, standard HTTP properties, and system properties for the blob
-func (c Client) GetProperties(ctx context.Context, containerName, blobName string, input GetPropertiesInput) (resp GetPropertiesResponse, err error) {
-
+func (c Client) GetProperties(ctx context.Context, containerName, blobName string, input GetPropertiesInput) (result GetPropertiesResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -190,76 +192,78 @@ func (c Client) GetProperties(ctx context.Context, containerName, blobName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.AccessTier = AccessTier(resp.Header.Get("x-ms-access-tier"))
+			result.AccessTierChangeTime = resp.Header.Get("x-ms-access-tier-change-time")
+			result.ArchiveStatus = ArchiveStatus(resp.Header.Get("x-ms-archive-status"))
+			result.BlobCommittedBlockCount = resp.Header.Get("x-ms-blob-committed-block-count")
+			result.BlobSequenceNumber = resp.Header.Get("x-ms-blob-sequence-number")
+			result.BlobType = BlobType(resp.Header.Get("x-ms-blob-type"))
+			result.CacheControl = resp.Header.Get("Cache-Control")
+			result.ContentDisposition = resp.Header.Get("Content-Disposition")
+			result.ContentEncoding = resp.Header.Get("Content-Encoding")
+			result.ContentLanguage = resp.Header.Get("Content-Language")
+			result.ContentMD5 = resp.Header.Get("Content-MD5")
+			result.ContentType = resp.Header.Get("Content-Type")
+			result.CopyCompletionTime = resp.Header.Get("x-ms-copy-completion-time")
+			result.CopyDestinationSnapshot = resp.Header.Get("x-ms-copy-destination-snapshot")
+			result.CopyID = resp.Header.Get("x-ms-copy-id")
+			result.CopyProgress = resp.Header.Get("x-ms-copy-progress")
+			result.CopySource = resp.Header.Get("x-ms-copy-source")
+			result.CopyStatus = CopyStatus(resp.Header.Get("x-ms-copy-status"))
+			result.CopyStatusDescription = resp.Header.Get("x-ms-copy-status-description")
+			result.CreationTime = resp.Header.Get("x-ms-creation-time")
+			result.ETag = resp.Header.Get("Etag")
+			result.LastModified = resp.Header.Get("Last-Modified")
+			result.LeaseDuration = LeaseDuration(resp.Header.Get("x-ms-lease-duration"))
+			result.LeaseState = LeaseState(resp.Header.Get("x-ms-lease-state"))
+			result.LeaseStatus = LeaseStatus(resp.Header.Get("x-ms-lease-status"))
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+
+			if v := resp.Header.Get("x-ms-access-tier-inferred"); v != "" {
+				b, innerErr := strconv.ParseBool(v)
+				if innerErr != nil {
+					err = fmt.Errorf("parsing `x-ms-access-tier-inferred` header value %q: %s", v, innerErr)
+					return
+				}
+				result.AccessTierInferred = b
+			}
+
+			if v := resp.Header.Get("Content-Length"); v != "" {
+				i, innerErr := strconv.Atoi(v)
+				if innerErr != nil {
+					err = fmt.Errorf("parsing `Content-Length` header value %q: %s", v, innerErr)
+				}
+				result.ContentLength = int64(i)
+			}
+
+			if v := resp.Header.Get("x-ms-incremental-copy"); v != "" {
+				b, innerErr := strconv.ParseBool(v)
+				if innerErr != nil {
+					err = fmt.Errorf("parsing `x-ms-incremental-copy` header value %q: %s", v, innerErr)
+					return
+				}
+				result.IncrementalCopy = b
+			}
+
+			if v := resp.Header.Get("x-ms-server-encrypted"); v != "" {
+				b, innerErr := strconv.ParseBool(v)
+				if innerErr != nil {
+					err = fmt.Errorf("parsing `x-ms-server-encrypted` header value %q: %s", v, innerErr)
+					return
+				}
+				result.ServerEncrypted = b
+			}
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.AccessTier = AccessTier(resp.HttpResponse.Header.Get("x-ms-access-tier"))
-			resp.AccessTierChangeTime = resp.HttpResponse.Header.Get("x-ms-access-tier-change-time")
-			resp.ArchiveStatus = ArchiveStatus(resp.HttpResponse.Header.Get("x-ms-archive-status"))
-			resp.BlobCommittedBlockCount = resp.HttpResponse.Header.Get("x-ms-blob-committed-block-count")
-			resp.BlobSequenceNumber = resp.HttpResponse.Header.Get("x-ms-blob-sequence-number")
-			resp.BlobType = BlobType(resp.HttpResponse.Header.Get("x-ms-blob-type"))
-			resp.CacheControl = resp.HttpResponse.Header.Get("Cache-Control")
-			resp.ContentDisposition = resp.HttpResponse.Header.Get("Content-Disposition")
-			resp.ContentEncoding = resp.HttpResponse.Header.Get("Content-Encoding")
-			resp.ContentLanguage = resp.HttpResponse.Header.Get("Content-Language")
-			resp.ContentMD5 = resp.HttpResponse.Header.Get("Content-MD5")
-			resp.ContentType = resp.HttpResponse.Header.Get("Content-Type")
-			resp.CopyCompletionTime = resp.HttpResponse.Header.Get("x-ms-copy-completion-time")
-			resp.CopyDestinationSnapshot = resp.HttpResponse.Header.Get("x-ms-copy-destination-snapshot")
-			resp.CopyID = resp.HttpResponse.Header.Get("x-ms-copy-id")
-			resp.CopyProgress = resp.HttpResponse.Header.Get("x-ms-copy-progress")
-			resp.CopySource = resp.HttpResponse.Header.Get("x-ms-copy-source")
-			resp.CopyStatus = CopyStatus(resp.HttpResponse.Header.Get("x-ms-copy-status"))
-			resp.CopyStatusDescription = resp.HttpResponse.Header.Get("x-ms-copy-status-description")
-			resp.CreationTime = resp.HttpResponse.Header.Get("x-ms-creation-time")
-			resp.ETag = resp.HttpResponse.Header.Get("Etag")
-			resp.LastModified = resp.HttpResponse.Header.Get("Last-Modified")
-			resp.LeaseDuration = LeaseDuration(resp.HttpResponse.Header.Get("x-ms-lease-duration"))
-			resp.LeaseState = LeaseState(resp.HttpResponse.Header.Get("x-ms-lease-state"))
-			resp.LeaseStatus = LeaseStatus(resp.HttpResponse.Header.Get("x-ms-lease-status"))
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
-
-			if v := resp.HttpResponse.Header.Get("x-ms-access-tier-inferred"); v != "" {
-				b, innerErr := strconv.ParseBool(v)
-				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
-					return
-				}
-				resp.AccessTierInferred = b
-			}
-
-			if v := resp.HttpResponse.Header.Get("Content-Length"); v != "" {
-				i, innerErr := strconv.Atoi(v)
-				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as an integer: %s", v, innerErr)
-				}
-				resp.ContentLength = int64(i)
-			}
-
-			if v := resp.HttpResponse.Header.Get("x-ms-incremental-copy"); v != "" {
-				b, innerErr := strconv.ParseBool(v)
-				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
-					return
-				}
-				resp.IncrementalCopy = b
-			}
-
-			if v := resp.HttpResponse.Header.Get("x-ms-server-encrypted"); v != "" {
-				b, innerErr := strconv.ParseBool(v)
-				if innerErr != nil {
-					err = fmt.Errorf("error parsing %q as a bool: %s", v, innerErr)
-					return
-				}
-				resp.ServerEncrypted = b
-			}
-		}
 	}
 
 	return

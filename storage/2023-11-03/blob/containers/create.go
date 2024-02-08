@@ -19,18 +19,20 @@ type CreateInput struct {
 }
 
 type CreateResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 	Error        *ErrorResponse `xml:"Error"`
 }
 
 // Create creates a new container under the specified account.
 // If the container with the same name already exists, the operation fails.
-func (c Client) Create(ctx context.Context, containerName string, input CreateInput) (resp CreateResponse, err error) {
+func (c Client) Create(ctx context.Context, containerName string, input CreateInput) (result CreateResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
-	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`input.MetaData` is not valid: %+v", err)
+	if err = metadata.Validate(input.MetaData); err != nil {
+		err = fmt.Errorf("`input.MetaData` is not valid: %+v", err)
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -45,12 +47,18 @@ func (c Client) Create(ctx context.Context, containerName string, input CreateIn
 		},
 		Path: fmt.Sprintf("/%s", containerName),
 	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

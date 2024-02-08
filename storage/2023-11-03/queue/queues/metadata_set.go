@@ -12,7 +12,7 @@ import (
 )
 
 type SetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type SetMetaDataInput struct {
@@ -20,18 +20,18 @@ type SetMetaDataInput struct {
 }
 
 // SetMetaData returns the metadata for this Queue
-func (c Client) SetMetaData(ctx context.Context, queueName string, input SetMetaDataInput) (resp SetMetaDataResponse, err error) {
+func (c Client) SetMetaData(ctx context.Context, queueName string, input SetMetaDataInput) (result SetMetaDataResponse, err error) {
 
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
 	if err := metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`metadata` is not valid: %v", err)
+		return result, fmt.Errorf("`metadata` is not valid: %+v", err)
 	}
 
 	opts := client.RequestOptions{
@@ -52,7 +52,11 @@ func (c Client) SetMetaData(ctx context.Context, queueName string, input SetMeta
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

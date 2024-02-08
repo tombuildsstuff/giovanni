@@ -12,20 +12,20 @@ import (
 )
 
 type GetMetaDataResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	MetaData map[string]string
 }
 
 // GetMetaData returns the metadata for this Queue
-func (c Client) GetMetaData(ctx context.Context, queueName string) (resp GetMetaDataResponse, err error) {
+func (c Client) GetMetaData(ctx context.Context, queueName string) (result GetMetaDataResponse, err error) {
 
 	if queueName == "" {
-		return resp, fmt.Errorf("`queueName` cannot be an empty string")
+		return result, fmt.Errorf("`queueName` cannot be an empty string")
 	}
 
 	if strings.ToLower(queueName) != queueName {
-		return resp, fmt.Errorf("`queueName` must be a lower-cased string")
+		return result, fmt.Errorf("`queueName` must be a lower-cased string")
 	}
 
 	opts := client.RequestOptions{
@@ -44,15 +44,23 @@ func (c Client) GetMetaData(ctx context.Context, queueName string) (resp GetMeta
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
+	if result.HttpResponse != nil {
+		if result.HttpResponse.Header != nil {
+			result.MetaData = metadata.ParseFromHeaders(result.HttpResponse.Header)
 		}
 	}
 

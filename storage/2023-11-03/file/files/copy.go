@@ -25,7 +25,7 @@ type CopyInput struct {
 }
 
 type CopyResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// The CopyID, which can be passed to AbortCopy to abort the copy.
 	CopyID string
@@ -35,26 +35,31 @@ type CopyResponse struct {
 }
 
 // Copy copies a blob or file to a destination file within the storage account asynchronously.
-func (c Client) Copy(ctx context.Context, shareName, path, fileName string, input CopyInput) (resp CopyResponse, err error) {
+func (c Client) Copy(ctx context.Context, shareName, path, fileName string, input CopyInput) (result CopyResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if input.CopySource == "" {
-		return resp, fmt.Errorf("`input.CopySource` cannot be an empty string")
+		err = fmt.Errorf("`input.CopySource` cannot be an empty string")
+		return
 	}
 
 	if err = metadata.Validate(input.MetaData); err != nil {
-		return resp, fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		err = fmt.Errorf("`input.MetaData` is not valid: %s", err)
+		return
 	}
 
 	if path != "" {
@@ -78,17 +83,20 @@ func (c Client) Copy(ctx context.Context, shareName, path, fileName string, inpu
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
-	resp.HttpResponse, err = req.Execute(ctx)
+
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.CopyID = resp.Header.Get("x-ms-copy-id")
+			result.CopySuccess = resp.Header.Get("x-ms-copy-status")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.CopyID = resp.HttpResponse.Header.Get("x-ms-copy-id")
-			resp.CopySuccess = resp.HttpResponse.Header.Get("x-ms-copy-status")
-		}
 	}
 
 	return

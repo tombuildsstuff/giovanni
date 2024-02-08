@@ -11,22 +11,22 @@ import (
 )
 
 type DeleteSnapshotResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 // DeleteSnapshot deletes the specified Snapshot of a Storage Share
-func (c Client) DeleteSnapshot(ctx context.Context, accountName, shareName string, shareSnapshot string) (resp DeleteSnapshotResponse, err error) {
+func (c Client) DeleteSnapshot(ctx context.Context, accountName, shareName string, shareSnapshot string) (result DeleteSnapshotResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		return result, fmt.Errorf("`shareName` cannot be an empty string")
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		return result, fmt.Errorf("`shareName` must be a lower-cased string")
 	}
 
 	if shareSnapshot == "" {
-		return resp, fmt.Errorf("`shareSnapshot` cannot be an empty string")
+		return result, fmt.Errorf("`shareSnapshot` cannot be an empty string")
 	}
 
 	opts := client.RequestOptions{
@@ -47,7 +47,11 @@ func (c Client) DeleteSnapshot(ctx context.Context, accountName, shareName strin
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

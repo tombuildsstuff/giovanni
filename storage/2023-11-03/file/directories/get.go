@@ -11,7 +11,7 @@ import (
 )
 
 type GetResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// A set of name-value pairs that contain metadata for the directory.
 	MetaData map[string]string
@@ -23,17 +23,20 @@ type GetResponse struct {
 
 // Get returns all system properties for the specified directory,
 // and can also be used to check the existence of a directory.
-func (c Client) Get(ctx context.Context, shareName, path string) (resp GetResponse, err error) {
+func (c Client) Get(ctx context.Context, shareName, path string) (result GetResponse, err error) {
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if path == "" {
-		return resp, fmt.Errorf("`path` cannot be an empty string")
+		err = fmt.Errorf("`path` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -52,17 +55,19 @@ func (c Client) Get(ctx context.Context, shareName, path string) (resp GetRespon
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.DirectoryMetaDataEncrypted = strings.EqualFold(resp.Header.Get("x-ms-server-encrypted"), "true")
+			result.MetaData = metadata.ParseFromHeaders(resp.Header)
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		if resp.HttpResponse.Header != nil {
-			resp.MetaData = metadata.ParseFromHeaders(resp.HttpResponse.Header)
-		}
-		resp.DirectoryMetaDataEncrypted = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-server-encrypted"), "true")
 	}
 
 	return

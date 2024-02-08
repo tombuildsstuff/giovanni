@@ -17,40 +17,47 @@ type GetByteRangeInput struct {
 }
 
 type GetByteRangeResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	Contents []byte
 }
 
 // GetByteRange returns the specified Byte Range from the specified File.
-func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName string, input GetByteRangeInput) (resp GetByteRangeResponse, err error) {
+func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName string, input GetByteRangeInput) (result GetByteRangeResponse, err error) {
 
 	if shareName == "" {
-		return resp, fmt.Errorf("`shareName` cannot be an empty string")
+		err = fmt.Errorf("`shareName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(shareName) != shareName {
-		return resp, fmt.Errorf("`shareName` must be a lower-cased string")
+		err = fmt.Errorf("`shareName` must be a lower-cased string")
+		return
 	}
 
 	if fileName == "" {
-		return resp, fmt.Errorf("`fileName` cannot be an empty string")
+		err = fmt.Errorf("`fileName` cannot be an empty string")
+		return
 	}
 
 	if input.StartBytes < 0 {
-		return resp, fmt.Errorf("`input.StartBytes` must be greater or equal to 0")
+		err = fmt.Errorf("`input.StartBytes` must be greater or equal to 0")
+		return
 	}
 
 	if input.EndBytes <= 0 {
-		return resp, fmt.Errorf("`input.EndBytes` must be greater than 0")
+		err = fmt.Errorf("`input.EndBytes` must be greater than 0")
+		return
 	}
 
 	expectedBytes := input.EndBytes - input.StartBytes
 	if expectedBytes < (4 * 1024) {
-		return resp, fmt.Errorf("requested Byte Range must be at least 4KB")
+		err = fmt.Errorf("requested Byte Range must be at least 4KB")
+		return
 	}
 	if expectedBytes > (4 * 1024 * 1024) {
-		return resp, fmt.Errorf("requested Byte Range must be at most 4MB")
+		err = fmt.Errorf("requested Byte Range must be at most 4MB")
+		return
 	}
 
 	if path != "" {
@@ -75,18 +82,19 @@ func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName stri
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if result.Contents, err = io.ReadAll(resp.Body); err != nil {
+			err = fmt.Errorf("reading response body: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		bytes, err := io.ReadAll(resp.HttpResponse.Body)
-		if err != nil {
-			return resp, fmt.Errorf("reading response body: %v", err)
-		}
-		resp.Contents = bytes
 	}
 
 	return

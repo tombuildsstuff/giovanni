@@ -10,7 +10,7 @@ import (
 )
 
 type GetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	// A map of base64-encoded strings to store as user-defined properties with the File System
 	// Note that items may only contain ASCII characters in the ISO-8859-1 character set.
@@ -23,10 +23,10 @@ type GetPropertiesResponse struct {
 }
 
 // GetProperties gets the properties for a Data Lake Store Gen2 FileSystem within a Storage Account
-func (c Client) GetProperties(ctx context.Context, fileSystemName string) (resp GetPropertiesResponse, err error) {
-
+func (c Client) GetProperties(ctx context.Context, fileSystemName string) (result GetPropertiesResponse, err error) {
 	if fileSystemName == "" {
-		return resp, fmt.Errorf("`fileSystemName` cannot be an empty string")
+		err = fmt.Errorf("`fileSystemName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -45,24 +45,27 @@ func (c Client) GetProperties(ctx context.Context, fileSystemName string) (resp 
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			propertiesRaw := resp.Header.Get("x-ms-properties")
+			var properties *map[string]string
+			properties, err = parseProperties(propertiesRaw)
+			if err != nil {
+				return
+			}
+
+			result.Properties = *properties
+			result.NamespaceEnabled = strings.EqualFold(resp.Header.Get("x-ms-namespace-enabled"), "true")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
 	}
 
-	if resp.HttpResponse != nil {
-
-		propertiesRaw := resp.HttpResponse.Header.Get("x-ms-properties")
-		var properties *map[string]string
-		properties, err = parseProperties(propertiesRaw)
-		if err != nil {
-			return
-		}
-
-		resp.Properties = *properties
-		resp.NamespaceEnabled = strings.EqualFold(resp.HttpResponse.Header.Get("x-ms-namespace-enabled"), "true")
-
-	}
 	return
 }

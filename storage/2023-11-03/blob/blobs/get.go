@@ -17,32 +17,31 @@ type GetInput struct {
 }
 
 type GetResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	Contents []byte
 }
 
 // Get reads or downloads a blob from the system, including its metadata and properties.
-func (c Client) Get(ctx context.Context, containerName, blobName string, input GetInput) (resp GetResponse, err error) {
-
+func (c Client) Get(ctx context.Context, containerName, blobName string, input GetInput) (result GetResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		return result, fmt.Errorf("`containerName` cannot be an empty string")
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		return result, fmt.Errorf("`containerName` must be a lower-cased string")
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		return result, fmt.Errorf("`blobName` cannot be an empty string")
 	}
 
 	if input.LeaseID != nil && *input.LeaseID == "" {
-		return resp, fmt.Errorf("`input.LeaseID` should either be specified or nil, not an empty string")
+		return result, fmt.Errorf("`input.LeaseID` should either be specified or nil, not an empty string")
 	}
 
 	if (input.StartByte != nil && input.EndByte == nil) || input.StartByte == nil && input.EndByte != nil {
-		return resp, fmt.Errorf("`input.StartByte` and `input.EndByte` must both be specified, or both be nil")
+		return result, fmt.Errorf("`input.StartByte` and `input.EndByte` must both be specified, or both be nil")
 	}
 
 	opts := client.RequestOptions{
@@ -63,17 +62,20 @@ func (c Client) Get(ctx context.Context, containerName, blobName string, input G
 		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		err = resp.Unmarshal(&result.Contents)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
+			return
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return
-	}
-
-	if resp.HttpResponse != nil {
-		err = resp.HttpResponse.Unmarshal(&resp.Contents)
-		if err != nil {
-			return resp, fmt.Errorf("unmarshalling response: %v", err)
-		}
 	}
 
 	return

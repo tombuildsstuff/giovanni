@@ -19,32 +19,36 @@ type PutBlockInput struct {
 }
 
 type PutBlockResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	ContentMD5 string
 }
 
 // PutBlock creates a new block to be committed as part of a blob.
-func (c Client) PutBlock(ctx context.Context, containerName, blobName string, input PutBlockInput) (resp PutBlockResponse, err error) {
-
+func (c Client) PutBlock(ctx context.Context, containerName, blobName string, input PutBlockInput) (result PutBlockResponse, err error) {
 	if containerName == "" {
-		return resp, fmt.Errorf("`containerName` cannot be an empty string")
+		err = fmt.Errorf("`containerName` cannot be an empty string")
+		return
 	}
 
 	if strings.ToLower(containerName) != containerName {
-		return resp, fmt.Errorf("`containerName` must be a lower-cased string")
+		err = fmt.Errorf("`containerName` must be a lower-cased string")
+		return
 	}
 
 	if blobName == "" {
-		return resp, fmt.Errorf("`blobName` cannot be an empty string")
+		err = fmt.Errorf("`blobName` cannot be an empty string")
+		return
 	}
 
 	if input.BlockID == "" {
-		return resp, fmt.Errorf("`input.BlockID` cannot be an empty string")
+		err = fmt.Errorf("`input.BlockID` cannot be an empty string")
+		return
 	}
 
 	if len(input.Content) == 0 {
-		return resp, fmt.Errorf("`input.Content` cannot be empty")
+		err = fmt.Errorf("`input.Content` cannot be empty")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -66,10 +70,15 @@ func (c Client) PutBlock(ctx context.Context, containerName, blobName string, in
 
 	err = req.Marshal(&input.Content)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		err = fmt.Errorf("marshalling request: %+v", err)
+		return
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

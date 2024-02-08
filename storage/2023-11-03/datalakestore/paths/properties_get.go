@@ -11,7 +11,7 @@ import (
 )
 
 type GetPropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 
 	ETag         string
 	LastModified time.Time
@@ -24,7 +24,7 @@ type GetPropertiesResponse struct {
 }
 
 type GetPropertiesInput struct {
-	action GetPropertiesAction
+	Action GetPropertiesAction
 }
 
 type GetPropertiesAction string
@@ -35,9 +35,10 @@ const (
 )
 
 // GetProperties gets the properties for a Data Lake Store Gen2 Path in a FileSystem within a Storage Account
-func (c Client) GetProperties(ctx context.Context, fileSystemName string, path string, input GetPropertiesInput) (resp GetPropertiesResponse, err error) {
+func (c Client) GetProperties(ctx context.Context, fileSystemName string, path string, input GetPropertiesInput) (result GetPropertiesResponse, err error) {
 	if fileSystemName == "" {
-		return resp, fmt.Errorf("`fileSystemName` cannot be an empty string")
+		err = fmt.Errorf("`fileSystemName` cannot be an empty string")
+		return
 	}
 
 	opts := client.RequestOptions{
@@ -47,7 +48,7 @@ func (c Client) GetProperties(ctx context.Context, fileSystemName string, path s
 		},
 		HttpMethod: http.MethodHead,
 		OptionsObject: getPropertyOptions{
-			action: input.action,
+			action: input.Action,
 		},
 		Path: fmt.Sprintf("/%s/%s", fileSystemName, path),
 	}
@@ -56,31 +57,36 @@ func (c Client) GetProperties(ctx context.Context, fileSystemName string, path s
 
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
-		return resp, err
+		return result, err
 	}
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+
+		if resp.Header != nil {
+			result.ResourceType = PathResource(resp.Header.Get("x-ms-resource-type"))
+			result.ETag = resp.Header.Get("ETag")
+
+			if lastModifiedRaw := resp.Header.Get("Last-Modified"); lastModifiedRaw != "" {
+				lastModified, err := time.Parse(time.RFC1123, lastModifiedRaw)
+				if err != nil {
+					return GetPropertiesResponse{}, err
+				}
+				result.LastModified = lastModified
+			}
+
+			result.Owner = resp.Header.Get("x-ms-owner")
+			result.Group = resp.Header.Get("x-ms-group")
+			result.ACL = resp.Header.Get("x-ms-acl")
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
-		return resp, err
+		return result, err
 	}
 
-	if resp.HttpResponse != nil {
-		resp.ResourceType = PathResource(resp.HttpResponse.Header.Get("x-ms-resource-type"))
-		resp.ETag = resp.HttpResponse.Header.Get("ETag")
-
-		if lastModifiedRaw := resp.HttpResponse.Header.Get("Last-Modified"); lastModifiedRaw != "" {
-			lastModified, err := time.Parse(time.RFC1123, lastModifiedRaw)
-			if err != nil {
-				return GetPropertiesResponse{}, err
-			}
-			resp.LastModified = lastModified
-		}
-
-		resp.Owner = resp.HttpResponse.Header.Get("x-ms-owner")
-		resp.Group = resp.HttpResponse.Header.Get("x-ms-group")
-		resp.ACL = resp.HttpResponse.Header.Get("x-ms-acl")
-	}
 	return
 }
 

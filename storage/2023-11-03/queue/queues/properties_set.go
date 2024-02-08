@@ -14,7 +14,7 @@ import (
 )
 
 type SetStorageServicePropertiesResponse struct {
-	HttpResponse *client.Response
+	HttpResponse *http.Response
 }
 
 type SetStorageServicePropertiesInput struct {
@@ -22,7 +22,7 @@ type SetStorageServicePropertiesInput struct {
 }
 
 // SetServiceProperties sets the properties for this queue
-func (c Client) SetServiceProperties(ctx context.Context, input SetStorageServicePropertiesInput) (resp SetStorageServicePropertiesResponse, err error) {
+func (c Client) SetServiceProperties(ctx context.Context, input SetStorageServicePropertiesInput) (result SetStorageServicePropertiesResponse, err error) {
 
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",
@@ -42,14 +42,18 @@ func (c Client) SetServiceProperties(ctx context.Context, input SetStorageServic
 
 	marshalledProps, err := xml.Marshal(&input.Properties)
 	if err != nil {
-		return resp, fmt.Errorf("marshalling request: %v", err)
+		return result, fmt.Errorf("marshalling request: %+v", err)
 	}
 	body := xml.Header + string(marshalledProps)
 	req.Body = io.NopCloser(bytes.NewReader([]byte(body)))
 	req.ContentLength = int64(len(body))
 	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 
-	resp.HttpResponse, err = req.Execute(ctx)
+	var resp *client.Response
+	resp, err = req.Execute(ctx)
+	if resp != nil {
+		result.HttpResponse = resp.Response
+	}
 	if err != nil {
 		err = fmt.Errorf("executing request: %+v", err)
 		return

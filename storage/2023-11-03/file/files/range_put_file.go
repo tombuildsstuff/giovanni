@@ -66,7 +66,7 @@ func (c Client) PutFile(ctx context.Context, shareName, path, fileName string, f
 
 	// TODO: we should switch to hashicorp/multi-error here
 	if len(errors) > 0 {
-		return fmt.Errorf("Error uploading file: %s", <-errors)
+		return fmt.Errorf("uploading file: %s", <-errors)
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func (c Client) uploadChunk(ctx context.Context, shareName, path, fileName strin
 	_, err = file.ReadAt(bytes, startBytes)
 	if err != nil {
 		if err != io.EOF {
-			return result, fmt.Errorf("Error reading bytes: %s", err)
+			return result, fmt.Errorf("reading bytes: %s", err)
 		}
 	}
 
@@ -105,7 +105,7 @@ func (c Client) uploadChunk(ctx context.Context, shareName, path, fileName strin
 	}
 	result, err = c.PutByteRange(ctx, shareName, path, fileName, putBytesInput)
 	if err != nil {
-		return result, fmt.Errorf("error putting bytes: %s", err)
+		return result, fmt.Errorf("putting bytes: %s", err)
 	}
 
 	return
