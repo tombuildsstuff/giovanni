@@ -33,6 +33,8 @@ github.com/hashicorp/go-azure-sdk/resource-manager v0.20240125.1111756 h1:foZtDG
 github.com/hashicorp/go-azure-sdk/resource-manager v0.20240125.1111756/go.mod h1:yWRLLjG7PVThIY1NLeLNhp0VtTewOCFrIVIZl/LgPBc=
 github.com/hashicorp/go-azure-sdk/sdk v0.20240125.1115017 h1:9to4aRjOrmfm0XVBp5IqNFnjtpChVKSdskNa88qfZzc=
 github.com/hashicorp/go-azure-sdk/sdk v0.20240125.1115017/go.mod h1:6jgkzx26qtPndLSW5u7pKIw4m3iiFiLnHlp7yDQ2Crc=
+github.com/hashicorp/go-azure-sdk/sdk v0.20240201.1165155-0.20240208140307-c38948e21a08 h1:zgmGM36cajkRHLL/kURY6f2qMdJrXq0SnktZHPgYAe4=
+github.com/hashicorp/go-azure-sdk/sdk v0.20240201.1165155-0.20240208140307-c38948e21a08/go.mod h1:6jgkzx26qtPndLSW5u7pKIw4m3iiFiLnHlp7yDQ2Crc=
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
 github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 h1:1/D3zfFHttUKaCaGKZ/dR2roBXv0vKbSCnssIldfQdI=

@@ -40,7 +40,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-    directoriesClient.Client.WithAuthorizer(auth)
+    directoriesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     metadata := map[string]string{

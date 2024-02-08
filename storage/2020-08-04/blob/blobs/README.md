@@ -37,7 +37,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building SharedKey authorizer: %+v", err)
 	}
-	blobClient.Client.WithAuthorizer(auth)
+	blobClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     copyInput := blobs.CopyInput{

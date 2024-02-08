@@ -33,7 +33,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-	tablesClient.Client.WithAuthorizer(auth)
+	tablesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     if _, err := tablesClient.Create(ctx, tableName); err != nil {

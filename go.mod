@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/hashicorp/go-azure-helpers v0.66.1
 	github.com/hashicorp/go-azure-sdk/resource-manager v0.20240125.1111756
-	github.com/hashicorp/go-azure-sdk/sdk v0.20240125.1115017
+	github.com/hashicorp/go-azure-sdk/sdk v0.20240201.1165155-0.20240208140307-c38948e21a08
 	github.com/stretchr/testify v1.8.4
 )
 
