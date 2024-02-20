@@ -3,7 +3,6 @@ package files
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -18,8 +17,7 @@ type GetByteRangeInput struct {
 
 type GetByteRangeResponse struct {
 	HttpResponse *http.Response
-
-	Contents []byte
+	Contents     *[]byte
 }
 
 // GetByteRange returns the specified Byte Range from the specified File.
@@ -85,10 +83,12 @@ func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName stri
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
 	if resp != nil {
+		result.Contents = &[]byte{}
 		result.HttpResponse = resp.Response
 
-		if result.Contents, err = io.ReadAll(resp.Body); err != nil {
-			err = fmt.Errorf("reading response body: %+v", err)
+		err = resp.Unmarshal(result.Contents)
+		if err != nil {
+			err = fmt.Errorf("unmarshalling response: %+v", err)
 			return
 		}
 	}

@@ -1,10 +1,8 @@
 package blobs
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -96,11 +94,11 @@ func (c Client) AppendBlock(ctx context.Context, containerName, blobName string,
 		return
 	}
 
-	if input.Content != nil {
-		req.Body = io.NopCloser(bytes.NewReader(*input.Content))
+	err = req.Marshal(input.Content)
+	if err != nil {
+		err = fmt.Errorf("marshalling request: %+v", err)
+		return
 	}
-
-	req.ContentLength = int64(len(*input.Content))
 
 	var resp *client.Response
 	resp, err = req.Execute(ctx)

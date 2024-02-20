@@ -68,13 +68,17 @@ func (c Client) PutBlockBlob(ctx context.Context, containerName, blobName string
 		Path: fmt.Sprintf("/%s/%s", containerName, blobName),
 	}
 
+	if input.ContentType != nil {
+		opts.ContentType = *input.ContentType
+	}
+
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
 		err = fmt.Errorf("building request: %+v", err)
 		return
 	}
 
-	err = req.Marshal(&input.Content)
+	err = req.Marshal(input.Content)
 	if err != nil {
 		err = fmt.Errorf("marshalling request: %+v", err)
 		return

@@ -1,8 +1,11 @@
 package shares
 
 import (
+	"bytes"
 	"context"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -62,6 +65,30 @@ func (c Client) Create(ctx context.Context, shareName string, input CreateInput)
 		return
 	}
 
+	// Retry the share creation if a conflicting share is still in the process of being deleted
+	retryFunc := func(resp *http.Response, _ *odata.OData) (bool, error) {
+		if resp != nil {
+			if resp.StatusCode == http.StatusConflict {
+				// TODO: move this error response parsing to a common helper function
+				respBody, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return false, fmt.Errorf("could not parse response body")
+				}
+				resp.Body.Close()
+				respBody = bytes.TrimPrefix(respBody, []byte("\xef\xbb\xbf"))
+				res := ErrorResponse{}
+				if err = xml.Unmarshal(respBody, &res); err != nil {
+					return false, err
+				}
+				resp.Body = io.NopCloser(bytes.NewBuffer(respBody))
+				if res.Code != nil {
+					return strings.Contains(*res.Code, "ShareBeingDeleted"), nil
+				}
+			}
+		}
+		return false, nil
+	}
+
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",
 		ExpectedStatusCodes: []int{
@@ -71,7 +98,8 @@ func (c Client) Create(ctx context.Context, shareName string, input CreateInput)
 		OptionsObject: CreateOptions{
 			input: input,
 		},
-		Path: fmt.Sprintf("/%s", shareName),
+		Path:      fmt.Sprintf("/%s", shareName),
+		RetryFunc: retryFunc,
 	}
 	req, err := c.Client.NewRequest(ctx, opts)
 	if err != nil {
