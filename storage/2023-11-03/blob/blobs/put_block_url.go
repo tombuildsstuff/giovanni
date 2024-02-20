@@ -14,9 +14,10 @@ type PutBlockFromURLInput struct {
 	BlockID    string
 	CopySource string
 
-	ContentMD5 *string
-	LeaseID    *string
-	Range      *string
+	ContentMD5      *string
+	LeaseID         *string
+	Range           *string
+	EncryptionScope *string
 }
 
 type PutBlockFromURLResponse struct {
@@ -102,6 +103,9 @@ func (p putBlockUrlOptions) ToHeaders() *client.Headers {
 	}
 	if p.input.Range != nil {
 		headers.Append("x-ms-source-range", *p.input.Range)
+	}
+	if p.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *p.input.EncryptionScope)
 	}
 	return headers
 }

@@ -12,10 +12,11 @@ import (
 )
 
 type PutBlockInput struct {
-	BlockID    string
-	Content    []byte
-	ContentMD5 *string
-	LeaseID    *string
+	BlockID         string
+	Content         []byte
+	ContentMD5      *string
+	LeaseID         *string
+	EncryptionScope *string
 }
 
 type PutBlockResponse struct {
@@ -100,6 +101,9 @@ func (p putBlockOptions) ToHeaders() *client.Headers {
 	}
 	if p.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *p.input.LeaseID)
+	}
+	if p.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *p.input.EncryptionScope)
 	}
 
 	return headers

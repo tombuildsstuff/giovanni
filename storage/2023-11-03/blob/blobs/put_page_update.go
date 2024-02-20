@@ -26,6 +26,7 @@ type PutPageUpdateInput struct {
 	IfMatch            *string
 	IfNoneMatch        *string
 	LeaseID            *string
+	EncryptionScope    *string
 }
 
 type PutPageUpdateResponse struct {
@@ -122,6 +123,10 @@ func (p putPageUpdateOptions) ToHeaders() *client.Headers {
 
 	if p.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *p.input.LeaseID)
+	}
+
+	if p.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *p.input.EncryptionScope)
 	}
 
 	if p.input.IfSequenceNumberEQ != nil {

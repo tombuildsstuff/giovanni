@@ -19,13 +19,15 @@ var (
 )
 
 type ContainerProperties struct {
-	AccessLevel           AccessLevel
-	LeaseStatus           LeaseStatus
-	LeaseState            LeaseState
-	LeaseDuration         *LeaseDuration
-	MetaData              map[string]string
-	HasImmutabilityPolicy bool
-	HasLegalHold          bool
+	AccessLevel                     AccessLevel
+	DefaultEncryptionScope          string
+	EncryptionScopeOverrideDisabled bool
+	LeaseStatus                     LeaseStatus
+	LeaseState                      LeaseState
+	LeaseDuration                   *LeaseDuration
+	MetaData                        map[string]string
+	HasImmutabilityPolicy           bool
+	HasLegalHold                    bool
 }
 
 type Dataset string

@@ -14,7 +14,8 @@ type PutPageClearInput struct {
 	StartByte int64
 	EndByte   int64
 
-	LeaseID *string
+	LeaseID         *string
+	EncryptionScope *string
 }
 
 type PutPageClearResponse struct {
@@ -91,6 +92,10 @@ func (p putPageClearOptions) ToHeaders() *client.Headers {
 	if p.input.LeaseID != nil {
 		headers.Append("x-ms-lease-id", *p.input.LeaseID)
 	}
+	if p.input.EncryptionScope != nil {
+		headers.Append("x-ms-encryption-scope", *p.input.EncryptionScope)
+	}
+
 	return headers
 }
 

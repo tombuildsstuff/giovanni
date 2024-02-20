@@ -51,6 +51,7 @@ func (c Client) GetProperties(ctx context.Context, containerName string, input G
 		result.HttpResponse = resp.Response
 
 		if resp.Header != nil {
+			result.DefaultEncryptionScope = resp.Header.Get("x-ms-default-encryption-scope")
 			result.LeaseStatus = LeaseStatus(resp.Header.Get("x-ms-lease-status"))
 			result.LeaseState = LeaseState(resp.Header.Get("x-ms-lease-state"))
 			if result.LeaseStatus == Locked {
@@ -67,8 +68,10 @@ func (c Client) GetProperties(ctx context.Context, containerName string, input G
 			}
 
 			// we can't necessarily use strconv.ParseBool here since this could be nil (only in some API versions)
+			result.EncryptionScopeOverrideDisabled = strings.EqualFold(resp.Header.Get("x-ms-deny-encryption-scope-override"), "true")
 			result.HasImmutabilityPolicy = strings.EqualFold(resp.Header.Get("x-ms-has-immutability-policy"), "true")
 			result.HasLegalHold = strings.EqualFold(resp.Header.Get("x-ms-has-legal-hold"), "true")
+
 			result.MetaData = metadata.ParseFromHeaders(resp.Header)
 		}
 	}
