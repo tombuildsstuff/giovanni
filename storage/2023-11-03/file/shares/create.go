@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
@@ -68,7 +69,7 @@ func (c Client) Create(ctx context.Context, shareName string, input CreateInput)
 	// Retry the share creation if a conflicting share is still in the process of being deleted
 	retryFunc := func(resp *http.Response, _ *odata.OData) (bool, error) {
 		if resp != nil {
-			if resp.StatusCode == http.StatusConflict {
+			if response.WasStatusCode(resp, http.StatusConflict) {
 				// TODO: move this error response parsing to a common helper function
 				respBody, err := io.ReadAll(resp.Body)
 				if err != nil {
