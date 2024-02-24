@@ -35,7 +35,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-    messagesClient.Client.WithAuthorizer(auth)
+    messagesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     input := messages.PutInput{

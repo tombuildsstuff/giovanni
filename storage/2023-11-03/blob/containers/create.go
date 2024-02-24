@@ -1,10 +1,15 @@
 package containers
 
 import (
+	"bytes"
 	"context"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/tombuildsstuff/giovanni/storage/internal/metadata"
@@ -26,7 +31,6 @@ type CreateInput struct {
 
 type CreateResponse struct {
 	HttpResponse *http.Response
-	Error        *ErrorResponse `xml:"Error"`
 }
 
 // Create creates a new container under the specified account.
@@ -41,6 +45,30 @@ func (c Client) Create(ctx context.Context, containerName string, input CreateIn
 		return
 	}
 
+	// Retry the container creation if a conflicting container is still in the process of being deleted
+	retryFunc := func(resp *http.Response, _ *odata.OData) (bool, error) {
+		if resp != nil {
+			if response.WasStatusCode(resp, http.StatusConflict) {
+				// TODO: move this error response parsing to a common helper function
+				respBody, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return false, fmt.Errorf("could not parse response body")
+				}
+				resp.Body.Close()
+				respBody = bytes.TrimPrefix(respBody, []byte("\xef\xbb\xbf"))
+				res := ErrorResponse{}
+				if err = xml.Unmarshal(respBody, &res); err != nil {
+					return false, err
+				}
+				resp.Body = io.NopCloser(bytes.NewBuffer(respBody))
+				if res.Code != nil {
+					return strings.Contains(*res.Code, "ContainerBeingDeleted"), nil
+				}
+			}
+		}
+		return false, nil
+	}
+
 	opts := client.RequestOptions{
 		ContentType: "application/xml; charset=utf-8",
 		ExpectedStatusCodes: []int{
@@ -50,7 +78,8 @@ func (c Client) Create(ctx context.Context, containerName string, input CreateIn
 		OptionsObject: createOptions{
 			input: input,
 		},
-		Path: fmt.Sprintf("/%s", containerName),
+		Path:      fmt.Sprintf("/%s", containerName),
+		RetryFunc: retryFunc,
 	}
 
 	req, err := c.Client.NewRequest(ctx, opts)

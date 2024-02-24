@@ -1,5 +1,7 @@
 package containers
 
+import "encoding/xml"
+
 type AccessLevel string
 
 var (
@@ -41,8 +43,9 @@ var (
 )
 
 type ErrorResponse struct {
-	Code    *string `xml:"Code"`
-	Message *string `xml:"Message"`
+	XMLName xml.Name `xml:"Error"`
+	Code    *string  `xml:"Code"`
+	Message *string  `xml:"Message"`
 }
 
 type LeaseDuration string

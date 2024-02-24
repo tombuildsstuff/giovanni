@@ -1,5 +1,7 @@
 package shares
 
+import "encoding/xml"
+
 type SignedIdentifier struct {
 	Id           string       `xml:"Id"`
 	AccessPolicy AccessPolicy `xml:"AccessPolicy"`
@@ -20,3 +22,9 @@ const (
 	// NFS indicates the share can be accessed by NFSv4.1. A premium account is required for this option.
 	NFS ShareProtocol = "NFS"
 )
+
+type ErrorResponse struct {
+	XMLName xml.Name `xml:"Error"`
+	Code    *string  `xml:"Code"`
+	Message *string  `xml:"Message"`
+}

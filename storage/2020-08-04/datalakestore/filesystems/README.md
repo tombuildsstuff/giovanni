@@ -38,7 +38,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-	fileSystemsClient.Client.WithAuthorizer(auth)
+	fileSystemsClient.Client.SetAuthorizer(auth)
 
 	input := filesystems.CreateInput{
 		Properties: map[string]string{},

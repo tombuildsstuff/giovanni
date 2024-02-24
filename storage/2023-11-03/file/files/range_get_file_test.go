@@ -99,15 +99,16 @@ func testGetFile(t *testing.T, fileName string, contentType string) {
 	t.Logf("[DEBUG] Asserting the files are the same size..")
 	expectedBytes := make([]byte, info.Size())
 	file.Read(expectedBytes)
-	if len(expectedBytes) != len(resp.OutputBytes) {
-		t.Fatalf("Expected %d bytes but got %d", len(expectedBytes), len(resp.OutputBytes))
+	outputBytes := *resp.OutputBytes
+	if len(expectedBytes) != len(*resp.OutputBytes) {
+		t.Fatalf("Expected %d bytes but got %d", len(expectedBytes), len(outputBytes))
 	}
 
 	t.Logf("[DEBUG] Asserting the files are the same content-wise..")
 	// overkill, but it's this or shasum-ing
 	for i := int64(0); i < info.Size(); i++ {
-		if expectedBytes[i] != resp.OutputBytes[i] {
-			t.Fatalf("Expected byte %d to be %q but got %q", i, expectedBytes[i], resp.OutputBytes[i])
+		if expectedBytes[i] != outputBytes[i] {
+			t.Fatalf("Expected byte %d to be %q but got %q", i, expectedBytes[i], outputBytes[i])
 		}
 	}
 

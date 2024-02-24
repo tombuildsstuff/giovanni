@@ -1,8 +1,10 @@
 package blobs
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,8 +23,7 @@ type PutBlockInput struct {
 
 type PutBlockResponse struct {
 	HttpResponse *http.Response
-
-	ContentMD5 string
+	ContentMD5   string
 }
 
 // PutBlock creates a new block to be committed as part of a blob.
@@ -69,11 +70,8 @@ func (c Client) PutBlock(ctx context.Context, containerName, blobName string, in
 		return
 	}
 
-	err = req.Marshal(&input.Content)
-	if err != nil {
-		err = fmt.Errorf("marshalling request: %+v", err)
-		return
-	}
+	req.ContentLength = int64(len(input.Content))
+	req.Body = io.NopCloser(bytes.NewReader(input.Content))
 
 	var resp *client.Response
 	resp, err = req.Execute(ctx)

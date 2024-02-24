@@ -20,8 +20,7 @@ type SetAclResponse struct {
 
 type SetAclInput struct {
 	SignedIdentifiers []SignedIdentifier `xml:"SignedIdentifier"`
-
-	XMLName xml.Name `xml:"SignedIdentifiers"`
+	XMLName           xml.Name           `xml:"SignedIdentifiers"`
 }
 
 // SetACL sets the specified Access Control List on the specified Storage Share

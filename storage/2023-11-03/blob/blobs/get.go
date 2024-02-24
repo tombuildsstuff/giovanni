@@ -19,7 +19,7 @@ type GetInput struct {
 type GetResponse struct {
 	HttpResponse *http.Response
 
-	Contents []byte
+	Contents *[]byte
 }
 
 // Get reads or downloads a blob from the system, including its metadata and properties.
@@ -65,9 +65,10 @@ func (c Client) Get(ctx context.Context, containerName, blobName string, input G
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
 	if resp != nil {
+		result.Contents = &[]byte{}
 		result.HttpResponse = resp.Response
 
-		err = resp.Unmarshal(&result.Contents)
+		err = resp.Unmarshal(result.Contents)
 		if err != nil {
 			err = fmt.Errorf("unmarshalling response: %+v", err)
 			return

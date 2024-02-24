@@ -41,7 +41,7 @@ func Example() error {
 	if err != nil {
 		return fmt.Errorf("building client for environment: %+v", err)
 	}
-    filesClient.Client.WithAuthorizer(auth)
+    filesClient.Client.SetAuthorizer(auth)
     
     ctx := context.TODO()
     input := files.CreateInput{}

@@ -16,8 +16,7 @@ type GetFileInput struct {
 
 type GetFileResponse struct {
 	HttpResponse *http.Response
-
-	OutputBytes []byte
+	OutputBytes  *[]byte
 }
 
 // GetFile is a helper method to download a file by chunking it automatically
@@ -91,10 +90,10 @@ func (c Client) GetFile(ctx context.Context, shareName, path, fileName string, i
 	// then finally put it all together, in order and return it
 	output := make([]byte, length)
 	for _, v := range results {
-		copy(output[v.startBytes:v.endBytes], v.bytes)
+		copy(output[v.startBytes:v.endBytes], *v.bytes)
 	}
 
-	result.OutputBytes = output
+	*result.OutputBytes = output
 	return
 }
 
@@ -107,7 +106,7 @@ type downloadFileChunkInput struct {
 type downloadFileChunkResult struct {
 	startBytes int64
 	endBytes   int64
-	bytes      []byte
+	bytes      *[]byte
 }
 
 func (c Client) downloadFileChunk(ctx context.Context, shareName, path, fileName string, input downloadFileChunkInput) (*downloadFileChunkResult, error) {

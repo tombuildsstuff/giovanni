@@ -8,11 +8,11 @@ import (
 
 // Client is the base client for Blob Storage Blobs.
 type Client struct {
-	Client *storage.BaseClient
+	Client *storage.Client
 }
 
 func NewWithBaseUri(baseUri string) (*Client, error) {
-	baseClient, err := storage.NewBaseClient(baseUri, componentName, apiVersion)
+	baseClient, err := storage.NewStorageClient(baseUri, componentName, apiVersion)
 	if err != nil {
 		return nil, fmt.Errorf("building base client: %+v", err)
 	}

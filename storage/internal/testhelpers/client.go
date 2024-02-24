@@ -179,15 +179,15 @@ func (c Client) Configure(client *client.Client, authorizer auth.Authorizer) {
 	// TODO: add logging
 }
 
-func (c Client) PrepareWithResourceManagerAuth(input *storage.BaseClient) {
-	input.WithAuthorizer(c.storageAuth)
+func (c Client) PrepareWithResourceManagerAuth(input *storage.Client) {
+	input.SetAuthorizer(c.storageAuth)
 }
 
-func (c Client) PrepareWithSharedKeyAuth(input *storage.BaseClient, data *TestResources, keyType auth.SharedKeyType) error {
+func (c Client) PrepareWithSharedKeyAuth(input *storage.Client, data *TestResources, keyType auth.SharedKeyType) error {
 	auth, err := auth.NewSharedKeyAuthorizer(data.StorageAccountName, data.StorageAccountKey, keyType)
 	if err != nil {
 		return fmt.Errorf("building SharedKey authorizer: %+v", err)
 	}
-	input.WithAuthorizer(auth)
+	input.SetAuthorizer(auth)
 	return nil
 }
