@@ -16,6 +16,34 @@ func TestGetResourceManagerResourceID(t *testing.T) {
 }
 
 func TestParseTableIDStandard(t *testing.T) {
+	input := "https://example1.table.core.windows.net/Tables('table1')"
+	expected := TableId{
+		AccountId: accounts.AccountId{
+			AccountName:   "example1",
+			SubDomainType: accounts.TableSubDomainType,
+			DomainSuffix:  "core.windows.net",
+		},
+		TableName: "table1",
+	}
+	actual, err := ParseTableID(input, "core.windows.net")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if actual.AccountId.AccountName != expected.AccountId.AccountName {
+		t.Fatalf("expected AccountName to be %q but got %q", expected.AccountId.AccountName, actual.AccountId.AccountName)
+	}
+	if actual.AccountId.SubDomainType != expected.AccountId.SubDomainType {
+		t.Fatalf("expected SubDomainType to be %q but got %q", expected.AccountId.SubDomainType, actual.AccountId.SubDomainType)
+	}
+	if actual.AccountId.DomainSuffix != expected.AccountId.DomainSuffix {
+		t.Fatalf("expected DomainSuffix to be %q but got %q", expected.AccountId.DomainSuffix, actual.AccountId.DomainSuffix)
+	}
+	if actual.TableName != expected.TableName {
+		t.Fatalf("expected TableName to be %q but got %q", expected.TableName, actual.TableName)
+	}
+}
+
+func TestParseTableIDLegacy(t *testing.T) {
 	input := "https://example1.table.core.windows.net/table1"
 	expected := TableId{
 		AccountId: accounts.AccountId{
@@ -44,7 +72,7 @@ func TestParseTableIDStandard(t *testing.T) {
 }
 
 func TestParseTableIDInADNSZone(t *testing.T) {
-	input := "https://example1.zone1.table.storage.azure.net/table1"
+	input := "https://example1.zone1.table.storage.azure.net/Tables('table1')"
 	expected := TableId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
@@ -76,7 +104,7 @@ func TestParseTableIDInADNSZone(t *testing.T) {
 }
 
 func TestParseTableIDInAnEdgeZone(t *testing.T) {
-	input := "https://example1.table.zone1.edgestorage.azure.net/table1"
+	input := "https://example1.table.zone1.edgestorage.azure.net/Tables('table1')"
 	expected := TableId{
 		AccountId: accounts.AccountId{
 			AccountName:   "example1",
@@ -121,7 +149,7 @@ func TestFormatTableIDStandard(t *testing.T) {
 		},
 		TableName: "table1",
 	}.ID()
-	expected := "https://example1.table.core.windows.net/table1"
+	expected := "https://example1.table.core.windows.net/Tables('table1')"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}
@@ -138,7 +166,7 @@ func TestFormatTableIDInDNSZone(t *testing.T) {
 		},
 		TableName: "table1",
 	}.ID()
-	expected := "https://example1.zone2.table.storage.azure.net/table1"
+	expected := "https://example1.zone2.table.storage.azure.net/Tables('table1')"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}
@@ -155,7 +183,7 @@ func TestFormatTableIDInEdgeZone(t *testing.T) {
 		},
 		TableName: "table1",
 	}.ID()
-	expected := "https://example1.table.zone2.edgestorage.azure.net/table1"
+	expected := "https://example1.table.zone2.edgestorage.azure.net/Tables('table1')"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}

@@ -52,7 +52,7 @@ func (b EntityId) String() string {
 
 // ParseEntityID parses `input` into a Entity ID using a known `domainSuffix`
 func ParseEntityID(input, domainSuffix string) (*EntityId, error) {
-	// example: https://foo.table.core.windows.net/Bar1(PartitionKey='partition1',RowKey='row1')
+	// example: https://foo.table.core.windows.net/bar(PartitionKey='partition1',RowKey='row1')
 	if input == "" {
 		return nil, fmt.Errorf("`input` was empty")
 	}
@@ -79,23 +79,28 @@ func ParseEntityID(input, domainSuffix string) (*EntityId, error) {
 
 	// Tables and Table Entities are similar with table being `table1` and entities
 	// being `table1(PartitionKey='samplepartition',RowKey='samplerow')` so we need to validate this is a table
-	key := strings.TrimPrefix(uri.Path, "/")
-	if !strings.Contains(key, "(") || !strings.HasSuffix(key, ")") {
-		return nil, fmt.Errorf("expected the path to be an entity name but got a table name %q", key)
+	slug := strings.TrimPrefix(uri.Path, "/")
+	if strings.HasPrefix(slug, "Tables('") && strings.HasSuffix(slug, "')") {
+		// Ensure we do not parse a Table ID in the format: https://foo.table.core.windows.net/Table('foo')
+		return nil, fmt.Errorf("expected the path to be an entity name but got a table name: %q", slug)
+	} else if !strings.Contains(slug, "(") || !strings.HasSuffix(slug, ")") {
+		// Ensure we do not try to parse a bare table name
+		return nil, fmt.Errorf("expected the path to be an entity name but got an invalid format, possibly a table name: %q", slug)
 	}
 
-	indexOfFirstBracket := strings.Index(key, "(")
-	tableName := key[0:indexOfFirstBracket]
-	componentString := key[indexOfFirstBracket:]
+	indexOfFirstBracket := strings.Index(slug, "(")
+	tableName := slug[0:indexOfFirstBracket]
+	componentString := slug[indexOfFirstBracket:]
 	componentString = strings.TrimPrefix(componentString, "(")
 	componentString = strings.TrimSuffix(componentString, ")")
 	components := strings.Split(componentString, ",")
 	if len(components) != 2 {
-		return nil, fmt.Errorf("expected the path to be an entity name but got %q", key)
+		return nil, fmt.Errorf("expected the path to be an entity name but got %q", slug)
 	}
 
 	partitionKey := parseValueFromKey(components[0], "PartitionKey")
 	rowKey := parseValueFromKey(components[1], "RowKey")
+
 	return &EntityId{
 		AccountId:    *account,
 		TableName:    tableName,
