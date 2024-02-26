@@ -36,12 +36,6 @@ func (c Client) Exists(ctx context.Context, tableName string) (result TableExist
 		return
 	}
 
-	err = req.Marshal(&createTableRequest{TableName: tableName})
-	if err != nil {
-		err = fmt.Errorf("marshalling request")
-		return
-	}
-
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
 	if resp != nil {
