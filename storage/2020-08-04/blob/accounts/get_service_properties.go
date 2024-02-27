@@ -19,7 +19,7 @@ func (c Client) GetServiceProperties(ctx context.Context, accountName string) (r
 	}
 
 	opts := client.RequestOptions{
-		ContentType: "text/xml",
+		ContentType: "application/xml",
 		ExpectedStatusCodes: []int{
 			http.StatusOK,
 		},
