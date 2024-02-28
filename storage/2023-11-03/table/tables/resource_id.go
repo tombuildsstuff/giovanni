@@ -36,7 +36,7 @@ func NewTableID(accountId accounts.AccountId, tableName string) TableId {
 }
 
 func (b TableId) ID() string {
-	return fmt.Sprintf("%s/%s", b.AccountId.ID(), b.TableName)
+	return fmt.Sprintf("%s/Tables('%s')", b.AccountId.ID(), b.TableName)
 }
 
 func (b TableId) String() string {
@@ -48,7 +48,7 @@ func (b TableId) String() string {
 
 // ParseTableID parses `input` into a Table ID using a known `domainSuffix`
 func ParseTableID(input, domainSuffix string) (*TableId, error) {
-	// example: https://foo.table.core.windows.net/Bar
+	// example: https://foo.table.core.windows.net/Table('bar')
 	if input == "" {
 		return nil, fmt.Errorf("`input` was empty")
 	}
@@ -73,12 +73,27 @@ func ParseTableID(input, domainSuffix string) (*TableId, error) {
 		return nil, fmt.Errorf("expected the path to contain 1 segment but got %d", len(segments))
 	}
 
-	// Tables and Table Entities are similar with table being `table1` and entities
-	// being `table1(PartitionKey='samplepartition',RowKey='samplerow')` so we need to validate this is a table
-	tableName := strings.TrimPrefix(uri.Path, "/")
-	if strings.Contains(tableName, "(") || strings.Contains(tableName, ")") {
+	// Tables and Table Entities are similar however Tables use a reserved namespace, for example:
+	//   Table('tableName')
+	// whereas Entities begin with the actual table name, for example:
+	//   tableName(PartitionKey='samplepartition',RowKey='samplerow')
+	// However, there was a period of time when Table IDs did not use the reserved namespace, so we attempt to parse
+	// both forms for maximum compatibility.
+	var tableName string
+	slug := strings.TrimPrefix(uri.Path, "/")
+	if strings.HasPrefix(slug, "Tables('") && strings.HasSuffix(slug, "')") {
+		// Ensure both prefix and suffix are present before trimming them out
+		tableName = strings.TrimSuffix(strings.TrimPrefix(slug, "Tables('"), "')")
+	} else if !strings.Contains(slug, "(") && !strings.HasSuffix(slug, ")") {
+		// Also accept a bare table name
+		tableName = slug
+	} else {
 		return nil, fmt.Errorf("expected the path to a table name and not an entity name but got %q", tableName)
 	}
+	if tableName == "" {
+		return nil, fmt.Errorf("expected the path to a table name but the path was empty")
+	}
+
 	return &TableId{
 		AccountId: *account,
 		TableName: tableName,
