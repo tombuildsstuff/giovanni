@@ -7,8 +7,8 @@ toolchain go1.21.3
 require (
 	github.com/google/uuid v1.4.0
 	github.com/hashicorp/go-azure-helpers v0.66.2
-	github.com/hashicorp/go-azure-sdk/resource-manager v0.20240227.1130345
-	github.com/hashicorp/go-azure-sdk/sdk v0.20240227.1130345
+	github.com/hashicorp/go-azure-sdk/resource-manager v0.20240227.1172434
+	github.com/hashicorp/go-azure-sdk/sdk v0.20240227.1172434
 	github.com/stretchr/testify v1.8.4
 )
 
