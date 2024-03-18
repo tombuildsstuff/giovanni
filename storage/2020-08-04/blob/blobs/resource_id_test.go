@@ -181,6 +181,21 @@ func TestFormatNestedBlobIDStandard(t *testing.T) {
 	}
 }
 
+func TestParseInvalidBlobIDStandard(t *testing.T) {
+	input := "https://example1.blob.core.windows.net/blobby.vhd"
+	actual, err := ParseBlobID(input, "core.windows.net")
+	if err == nil {
+		if actual != nil {
+			t.Fatalf("expected an error but got: %#v", *actual)
+		} else {
+			t.Fatalf("expected an error but got no error and a nil result")
+		}
+	}
+	if err.Error() != "expected the path to contain at least 2 segments but got 1" {
+		t.Fatalf("unexpected error received: %+v", err)
+	}
+}
+
 func TestFormatBlobIDInDNSZone(t *testing.T) {
 	actual := BlobId{
 		AccountId: accounts.AccountId{
