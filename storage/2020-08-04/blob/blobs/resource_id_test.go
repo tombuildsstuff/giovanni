@@ -39,6 +39,38 @@ func TestParseBlobIDStandard(t *testing.T) {
 	}
 }
 
+func TestParseNestedBlobIDStandard(t *testing.T) {
+	input := "https://example1.blob.core.windows.net/container1/more/deeply/nested/blob1.vhd"
+	expected := BlobId{
+		AccountId: accounts.AccountId{
+			AccountName:   "example1",
+			SubDomainType: accounts.BlobSubDomainType,
+			DomainSuffix:  "core.windows.net",
+		},
+		ContainerName: "container1",
+		BlobName:      "more/deeply/nested/blob1.vhd",
+	}
+	actual, err := ParseBlobID(input, "core.windows.net")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if actual.AccountId.AccountName != expected.AccountId.AccountName {
+		t.Fatalf("expected AccountName to be %q but got %q", expected.AccountId.AccountName, actual.AccountId.AccountName)
+	}
+	if actual.AccountId.SubDomainType != expected.AccountId.SubDomainType {
+		t.Fatalf("expected SubDomainType to be %q but got %q", expected.AccountId.SubDomainType, actual.AccountId.SubDomainType)
+	}
+	if actual.AccountId.DomainSuffix != expected.AccountId.DomainSuffix {
+		t.Fatalf("expected DomainSuffix to be %q but got %q", expected.AccountId.DomainSuffix, actual.AccountId.DomainSuffix)
+	}
+	if actual.ContainerName != expected.ContainerName {
+		t.Fatalf("expected ContainerName to be %q but got %q", expected.ContainerName, actual.ContainerName)
+	}
+	if actual.BlobName != expected.BlobName {
+		t.Fatalf("expected BlobName to be %q but got %q", expected.BlobName, actual.BlobName)
+	}
+}
+
 func TestParseBlobIDInADNSZone(t *testing.T) {
 	input := "https://example1.zone1.blob.storage.azure.net/container1/blob1.vhd"
 	expected := BlobId{
@@ -127,6 +159,23 @@ func TestFormatBlobIDStandard(t *testing.T) {
 		BlobName:      "somefile.vhd",
 	}.ID()
 	expected := "https://example1.blob.core.windows.net/container1/somefile.vhd"
+	if actual != expected {
+		t.Fatalf("expected %q but got %q", expected, actual)
+	}
+}
+
+func TestFormatNestedBlobIDStandard(t *testing.T) {
+	actual := BlobId{
+		AccountId: accounts.AccountId{
+			AccountName:   "example1",
+			SubDomainType: accounts.BlobSubDomainType,
+			DomainSuffix:  "core.windows.net",
+			IsEdgeZone:    false,
+		},
+		ContainerName: "container1",
+		BlobName:      "more/deeply/nested/somefile.vhd",
+	}.ID()
+	expected := "https://example1.blob.core.windows.net/container1/more/deeply/nested/somefile.vhd"
 	if actual != expected {
 		t.Fatalf("expected %q but got %q", expected, actual)
 	}
