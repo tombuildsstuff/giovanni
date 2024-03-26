@@ -37,7 +37,11 @@ func NewFileID(accountId accounts.AccountId, shareName, directoryPath, fileName 
 }
 
 func (b FileId) ID() string {
-	return fmt.Sprintf("%s/%s/%s/%s", b.AccountId.ID(), b.ShareName, b.DirectoryPath, b.FileName)
+	path := ""
+	if b.DirectoryPath != "" {
+		path = fmt.Sprintf("%s/", b.DirectoryPath)
+	}
+	return fmt.Sprintf("%s/%s/%s%s", b.AccountId.ID(), b.ShareName, path, b.FileName)
 }
 
 func (b FileId) String() string {
