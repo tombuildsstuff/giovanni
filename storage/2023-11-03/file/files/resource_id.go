@@ -76,8 +76,8 @@ func ParseFileID(input, domainSuffix string) (*FileId, error) {
 
 	path := strings.TrimPrefix(uri.Path, "/")
 	segments := strings.Split(path, "/")
-	if len(segments) < 3 {
-		return nil, fmt.Errorf("expected the path to contain at least 3 segments but got %d", len(segments))
+	if len(segments) < 2 {
+		return nil, fmt.Errorf("expected the path to contain at least 2 segments but got %d", len(segments))
 	}
 	shareName := segments[0]
 	directoryPath := strings.Join(segments[1:len(segments)-1], "/")
