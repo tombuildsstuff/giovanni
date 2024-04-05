@@ -82,7 +82,7 @@ func (c Client) GetByteRange(ctx context.Context, shareName, path, fileName stri
 
 	var resp *client.Response
 	resp, err = req.Execute(ctx)
-	if resp != nil {
+	if resp != nil && resp.Response != nil {
 		result.Contents = &[]byte{}
 		result.HttpResponse = resp.Response
 
