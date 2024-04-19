@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/hashicorp/go-azure-helpers v0.66.2
 	github.com/hashicorp/go-azure-sdk/resource-manager v0.20240227.1172434
-	github.com/hashicorp/go-azure-sdk/sdk v0.20240227.1172434
+	github.com/hashicorp/go-azure-sdk/sdk v0.20240422.1112441
 	github.com/stretchr/testify v1.8.4
 )
 
@@ -44,10 +44,10 @@ require (
 	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
