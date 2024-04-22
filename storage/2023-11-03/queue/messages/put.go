@@ -77,10 +77,12 @@ func (c Client) Put(ctx context.Context, queueName string, input PutInput) (resu
 	if resp != nil && resp.Response != nil {
 		result.HttpResponse = resp.Response
 
-		err = resp.Unmarshal(&result)
-		if err != nil {
-			err = fmt.Errorf("unmarshalling response: %+v", err)
-			return
+		if err == nil {
+			err = resp.Unmarshal(&result)
+			if err != nil {
+				err = fmt.Errorf("unmarshalling response: %+v", err)
+				return
+			}
 		}
 	}
 	if err != nil {
