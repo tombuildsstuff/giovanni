@@ -14,8 +14,15 @@ type DeleteResponse struct {
 	HttpResponse *http.Response
 }
 
+type DeleteSnapshotsType string
+
+const (
+	DeleteSnapshotsInclude       DeleteSnapshotsType = "include"
+	DeleteSnapshotsIncludeLeased DeleteSnapshotsType = "leased"
+)
+
 type DeleteInput struct {
-	DeleteSnapshots bool
+	DeleteSnapshotsType DeleteSnapshotsType
 }
 
 // Delete deletes the specified Storage Share from within a Storage Account
@@ -37,7 +44,7 @@ func (c Client) Delete(ctx context.Context, shareName string, input DeleteInput)
 		},
 		HttpMethod: http.MethodDelete,
 		OptionsObject: DeleteOptions{
-			deleteSnapshots: input.DeleteSnapshots,
+			deleteSnapshotsType: input.DeleteSnapshotsType,
 		},
 		Path: fmt.Sprintf("/%s", shareName),
 	}
@@ -61,13 +68,13 @@ func (c Client) Delete(ctx context.Context, shareName string, input DeleteInput)
 }
 
 type DeleteOptions struct {
-	deleteSnapshots bool
+	deleteSnapshotsType DeleteSnapshotsType
 }
 
 func (d DeleteOptions) ToHeaders() *client.Headers {
 	headers := &client.Headers{}
-	if d.deleteSnapshots {
-		headers.Append("x-ms-delete-snapshots", "include")
+	if d.deleteSnapshotsType != "" {
+		headers.Append("x-ms-delete-snapshots", string(d.deleteSnapshotsType))
 	}
 	return headers
 }

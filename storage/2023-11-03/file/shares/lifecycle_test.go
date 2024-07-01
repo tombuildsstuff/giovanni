@@ -175,7 +175,7 @@ func TestSharesLifecycle(t *testing.T) {
 		t.Fatalf("Expected 2 identifiers but got %d", len(acls.SignedIdentifiers))
 	}
 
-	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{DeleteSnapshots: false})
+	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{})
 	if err != nil {
 		t.Fatalf("Error deleting Share: %s", err)
 	}
@@ -329,7 +329,7 @@ func TestSharesLifecycleLargeQuota(t *testing.T) {
 		t.Fatalf("Expected 2 identifiers but got %d", len(acls.SignedIdentifiers))
 	}
 
-	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{DeleteSnapshots: false})
+	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{})
 	if err != nil {
 		t.Fatalf("Error deleting Share: %s", err)
 	}
@@ -380,7 +380,7 @@ func TestSharesLifecycleNFSProtocol(t *testing.T) {
 		t.Fatalf(`Expected enabled protocol to be "NFS" but got: %q`, share.EnabledProtocol)
 	}
 
-	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{DeleteSnapshots: false})
+	_, err = sharesClient.Delete(ctx, shareName, DeleteInput{})
 	if err != nil {
 		t.Fatalf("Error deleting Share: %s", err)
 	}
