@@ -18,7 +18,7 @@ type DeleteSnapshotsType string
 
 const (
 	DeleteSnapshotsInclude       DeleteSnapshotsType = "include"
-	DeleteSnapshotsIncludeLeased DeleteSnapshotsType = "leased"
+	DeleteSnapshotsIncludeLeased DeleteSnapshotsType = "include-leased"
 )
 
 type DeleteInput struct {
